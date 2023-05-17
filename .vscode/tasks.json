@@ -2,11 +2,11 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "npm",
-			"script": "start",
+			"type": "shell",
+			"command": "poetry run python flow-pdf/main.py",
 			"problemMatcher": [],
-			"label": "npm: start",
-			"detail": "tsc && node dist/index.js",
+			"label": "main.py",
+			// "detail": "tsc && node dist/index.js",
 			"group": {
 				"kind": "build",
 				"isDefault": true
