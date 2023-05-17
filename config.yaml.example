@@ -1,0 +1,5 @@
+files:
+  - input: ./data/bitcoin.pdf
+    output: ./data/bitcoin
+  - input: ./data/raft.pdf
+    output: ./data/raft

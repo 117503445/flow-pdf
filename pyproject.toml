@@ -7,7 +7,10 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-
+pillow = "^9.5.0"
+pymupdf = "^1.22.2"
+htutil = "^3.0.1"
+pyyaml = "^6.0"
 
 [build-system]
 requires = ["poetry-core"]
