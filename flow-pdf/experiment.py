@@ -106,7 +106,7 @@ def mark_text(dir_input: Path, dir_output: Path, doc: Document ):
     # doc.close()
 
 
-def repaint(dir_input: Path, dir_output: Path, doc: Document ):
+def repaint(dir_input: Path, dir_output: Path, doc: Document):
     for i in range(doc.page_count):
         page = doc.load_page(i)
 
@@ -115,7 +115,7 @@ def repaint(dir_input: Path, dir_output: Path, doc: Document ):
         # -------------------------------------------------------------------------
         #
         # define some output page with the same dimensions
-        outpdf = fitz.open()
+        outpdf = fitz.open() # type: ignore
         outpage = outpdf.new_page(width=page.rect.width, height=page.rect.height)
         shape = outpage.new_shape()  # make a drawing canvas for the output page
         # --------------------------------------
@@ -159,3 +159,12 @@ def repaint(dir_input: Path, dir_output: Path, doc: Document ):
         # all paths processed - commit the shape to its page
         shape.commit()
         outpdf.save(dir_output / f'page_{i}.pdf')
+
+
+def render_image(dir_input: Path, dir_output: Path, doc: Document):
+    for i in range(doc.page_count):
+        page = doc.load_page(i)
+
+        # 150 dpi, A little blurry
+        # 200 dpi, clear but slow
+        page.get_pixmap(dpi = 150).save(dir_output /  f'raw_{i}.png')
