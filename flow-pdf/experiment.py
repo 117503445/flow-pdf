@@ -3,6 +3,11 @@ from fitz import Document, Page
 from pathlib import Path
 import json
 from htutil import file
+import numpy as np
+from sklearn.cluster import DBSCAN
+from sklearn import metrics
+import fitz.utils
+from sklearn.preprocessing import StandardScaler
 
 # official example
 def get_image(dir_input: Path, dir_output: Path, doc: Document):
@@ -75,20 +80,78 @@ def get_draws(dir_input: Path, dir_output: Path, doc: Document):
 def mark_drawings(dir_input: Path, dir_output: Path, doc: Document):
     for i in range(doc.page_count):
         page: Page = doc.load_page(i)
+        print(f'page {i}')
+
+        # points = [[],[]]
+        points = []
 
         drawings = page.get_drawings()
         for drawing in drawings:
-            # print()
-            # rect = fitz.Rect(drawing["rect"])
             rect = drawing["rect"] 
-            if rect[0] == rect[2]:
-                rect[2] +=1
-            if rect[1] == rect[3]:
-                rect[3] +=1
-            annot = page.add_rect_annot(drawing["rect"])
-            
-            annot.update()
-    doc.save(dir_output / dir_input.name)
+            # if rect[0] == rect[2]:
+            #     rect[2] += 1
+            # if rect[1] == rect[3]:
+            #     rect[3] += 1
+            # annot = page.add_rect_annot(rect)
+            # annot.update()
+
+            # points[0].append(rect[0])
+            # points[0].append(rect[2])
+            # points[1].append(rect[1])
+            # points[1].append(rect[3])
+
+            (x0,y0,x1,y1) = rect
+
+            # sample 5 points for a rect
+            points.append([x0, y0])
+            points.append([x1, y0])
+            points.append([x0, y1])
+            points.append([x1, y1])
+            points.append([(rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2])
+
+        # if points[0]:
+        if points:
+            points = np.array(points)
+            # points = StandardScaler().fit_transform(points)
+            # print(points)
+            db = DBSCAN(
+                eps = 40
+                # eps=0.3, min_samples=10
+                ).fit(points)
+            labels = db.labels_
+            # print(labels)
+
+            colors = {
+                -1: 'red',
+                0: 'blue',
+                1: 'green',
+                2: 'yellow',
+                3: 'pink',
+                4: 'purple',
+                5: 'orange',
+                6: 'brown',
+                7: 'black',
+            }
+
+            n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+            n_noise_ = list(labels).count(-1)
+
+            print(f'points count: {len(points)}')
+            print("Estimated number of clusters: %d" % n_clusters_)
+            print("Estimated number of noise points: %d" % n_noise_)
+
+            for j, drawing in enumerate(drawings):
+                rect = drawing["rect"] 
+
+                if rect[0] == rect[2]:
+                    rect[2] += 1
+                if rect[1] == rect[3]:
+                    rect[3] += 1
+                page.draw_rect(rect, color = fitz.utils.getColor(colors[labels[j * 5]]))
+
+            page.get_pixmap(dpi = 150).save(dir_output /  f'draw_{i}.png') # type: ignore
+        
+
 
 def mark_text(dir_input: Path, dir_output: Path, doc: Document ):
     for i in range(doc.page_count):
