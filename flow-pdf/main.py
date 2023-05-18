@@ -1,33 +1,44 @@
-import fitz
-from fitz import Document, Page
 import yaml
 from pathlib import Path
+import experiment
+import fitz
+from fitz import Document, Page
+import shutil
 
-cfg = yaml.load(Path('./config.yaml').read_text(), Loader=yaml.FullLoader)
+def get_files_from_cfg():
+   cfg = yaml.load(Path('./config.yaml').read_text(), Loader=yaml.FullLoader)
+   for file in cfg['files']:
+      yield (Path(file['input']),Path(file['output']))
 
-for file in cfg['files']:
+def get_files_from_dir():
+   for file in Path('./data').glob('*.pdf'):
+         yield (file, Path('./data') / file.stem)
 
-    dir_input = Path(file['input'])
-    dir_output = Path(file['output'])
+for file_input, dir_output in get_files_from_cfg():
+# for file_input, dir_output in get_files_from_dir():
+    print('Processing file_input:', file_input, 'dir_output:', dir_output)
 
-    if not dir_output.exists():
-        dir_output.mkdir()
+    if dir_output.exists():
+       shutil.rmtree(dir_output)
+    dir_output.mkdir()
 
-    # 打开 PDF 文件
-    doc: Document = fitz.open(dir_input) # type: ignore
+    doc: Document = fitz.open(file_input) # type: ignore
 
-    for i in range(doc.page_count):
+    # experiment.mark_text(file_input, dir_output, doc)
+    # experiment.get_text(file_input, dir_output, doc, 'json')
+   #  experiment.repaint(file_input, dir_output, doc)
+   #  experiment.get_draws(file_input, dir_output, doc)
+    experiment.mark_drawings(file_input, dir_output, doc)
 
-        page = doc.load_page(i)
+    # experiment.get_image_2(file_input, dir_output, doc)
+    # experiment.get_image(file_input, dir_output)
+    # experiment.get_toc(file_input, dir_output)
+    # experiment.get_text(file_input, dir_output, doc, 'rawjson')
+    # experiment.get_text(file_input, dir_output, doc, 'xhtml')
+    # experiment.get_text(file_input, dir_output, doc, 'xml')
+    
 
-        blocks = page.get_text("dict")["blocks"]
 
-        for block in blocks:
-            rect = fitz.Rect(block["bbox"])
-            
-            annot = page.add_rect_annot(rect)
-            
-            annot.update()
-            # annot.update_color(fitz.utils.getColor("red"))
-    doc.save(dir_output / dir_input.name)
-    doc.close()
+
+    print('Done', file_input)
+    print()
