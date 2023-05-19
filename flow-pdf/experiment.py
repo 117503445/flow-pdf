@@ -5,7 +5,7 @@ import json
 from htutil import file
 import numpy as np
 from sklearn.cluster import DBSCAN
-from sklearn import metrics
+# from sklearn import metrics
 import fitz.utils
 from sklearn.preprocessing import StandardScaler
 
@@ -133,23 +133,50 @@ def mark_drawings(dir_input: Path, dir_output: Path, doc: Document):
                 7: 'black',
             }
 
-            n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-            n_noise_ = list(labels).count(-1)
+            labels = labels[::5]
 
-            print(f'points count: {len(points)}')
-            print("Estimated number of clusters: %d" % n_clusters_)
-            print("Estimated number of noise points: %d" % n_noise_)
+            # n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+            # n_noise_ = list(labels).count(-1)
 
-            for j, drawing in enumerate(drawings):
-                rect = drawing["rect"] 
+            # print(f'points count: {len(points)}')
+            # print("Estimated number of clusters: %d" % n_clusters_)
+            # print("Estimated number of noise points: %d" % n_noise_)
 
-                if rect[0] == rect[2]:
-                    rect[2] += 1
-                if rect[1] == rect[3]:
-                    rect[3] += 1
-                page.draw_rect(rect, color = fitz.utils.getColor(colors[labels[j * 5]]))
+            images = {} # label -> drawing list
+            for j, label in enumerate(labels):
+                if label not in images:
+                    images[label] = []
+                images[label].append(drawings[j])
+            
+            # print(images)
+
+
+            for j, drawings in images.items():
+                x0 = page.rect.width
+                y0 = page.rect.height
+                x1 = 0
+                y1 = 0
+                for drawing in drawings:
+                    rect = drawing["rect"] 
+                    x0 = min(x0, rect[0])
+                    y0 = min(y0, rect[1])
+                    x1 = max(x1, rect[2])
+                    y1 = max(y1, rect[3])
+                # print('draw rect',x0, y0, x1, y1)
+                rect = fitz.Rect(x0, y0, x1, y1)
+                page.draw_rect(rect, color = fitz.utils.getColor(colors[j]))
+
+            # for j, drawing in enumerate(drawings):
+            #     rect = drawing["rect"] 
+
+            #     if rect[0] == rect[2]:
+            #         rect[2] += 1
+            #     if rect[1] == rect[3]:
+            #         rect[3] += 1
+            #     page.draw_rect(rect, color = fitz.utils.getColor(colors[labels[j]]))
 
             page.get_pixmap(dpi = 150).save(dir_output /  f'draw_{i}.png') # type: ignore
+            # exit(0)
         
 
 
@@ -231,3 +258,18 @@ def render_image(dir_input: Path, dir_output: Path, doc: Document):
         # 150 dpi, A little blurry
         # 200 dpi, clear but slow
         page.get_pixmap(dpi = 150).save(dir_output /  f'raw_{i}.png')
+
+def parse(dir_input: Path, dir_output: Path, doc: Document):
+    for i in range(doc.page_count):
+        page = doc.load_page(i)
+
+        html = ''
+
+        for block in page.get_text("dict")["blocks"]:
+            if 'lines' in block:
+                for line in block["lines"]:
+                    for span in line["spans"]:
+                        html += span["text"]
+                    html += '\n'
+        
+        file.write_text(dir_output / f'page_{i}.html', html)
