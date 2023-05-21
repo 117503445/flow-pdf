@@ -12,6 +12,8 @@ from functools import cache
 from typing import Any
 
 
+END_CHARACTERS = '.!?'
+
 class Processor():
     def __init__(self, file_input: Path, dir_output: Path):
         self.file_input = file_input
@@ -36,7 +38,8 @@ class Processor():
             for page_index in range(self.get_page_count()):
                 futures.append(executor.submit(self.process_page, page_index))
 
-            for future in concurrent.futures.as_completed(futures):
+            # for future in concurrent.futures.as_completed(futures):
+            for future in futures:
                 results.append(future.result())
             
         return results
@@ -53,7 +56,15 @@ class RenderImageProcessor(Processor):
             
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'raw.png')) # type: ignore
 
+# out: blocks
+
+# blocks: page index -> blocks
 class BigBlockProcessor(Processor):
+    def process(self, params: dict[str, Any] = {}):
+        params['blocks'] = {}
+        for i, blocks in enumerate(self.process_page_parallel()):
+            params['blocks'][i] = blocks
+
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
@@ -62,15 +73,75 @@ class BigBlockProcessor(Processor):
 
             def is_big_block(block: Block):
                 BIG_BLOCK_MIN_WORDS = 5
-                END_CHARACTERS = '.!?'
+                
 
                 words = block.lines.split(' ')
                 return words[-1][-1] in END_CHARACTERS or len(words) > BIG_BLOCK_MIN_WORDS
 
             blocks = list(filter(is_big_block, blocks))
 
-            file.write_text(self.get_page_output_path(page_index, 'blocks.json'), json.dumps(blocks, indent=2, default=lambda x: x.__dict__)) # type: ignore
 
+            file.write_json(self.get_page_output_path(page_index, 'blocks.json'), blocks)
+            # file.write_text(self.get_page_output_path(page_index, 'blocks.json'), json.dumps(blocks, indent=2, default=lambda x: x.__dict__)) # type: ignore
+
+            return blocks
+
+# The first line indent causes the line to become a separate block, which should be merged into the next block.
+# in: blocks
+# out: blocks
+class FirstLineCombineProcessor(Processor):
+    def process(self, params: dict[str, Any] = {}):
+        # file.write_json(self.dir_output / 'blocks.json', params['blocks'])
+        for page_index, page_blocks in params['blocks'].items():
+            print('page_index', page_index)
+            page_blocks: list[Block]
+            i = 0
+            while i < len(page_blocks):
+                block = page_blocks[i]
+                lines = block.lines.split('\n')
+
+
+                def is_far_to_next_block():
+                    if i == len(page_blocks) - 1:
+                        return False
+                        # return True # or False, doesn't matter
+                    
+                    next_block = page_blocks[i + 1]
+
+                    LINE_DISTANCE_THRESHOLD = 5
+
+                    if next_block.y0 - block.y1 < LINE_DISTANCE_THRESHOLD:
+                        return False
+                    else:
+                        return True
+
+
+                conditions = {
+                    'lines > 1': lambda: len(list(filter(lambda x: x.strip(), lines))) > 1,
+                    'has end': lambda: lines[0][-1] in END_CHARACTERS,
+                    'is last block': lambda: i == len(page_blocks) - 1,
+                    'far from next block': lambda: is_far_to_next_block()
+                }
+
+
+                labels = ','.join([label for label, condition in conditions.items() if condition()])
+                if not labels:
+                    labels = '[]'
+                print(f'page {page_index} block {i}, labels = {labels}')
+
+                if any([c() for c in conditions.values()]):
+                    i += 1
+                    continue
+
+                page_blocks[i + 1].lines = lines[0] + page_blocks[i + 1].lines
+                # assert page_blocks[i + 1].y0 > block.y0
+                # TODO algorithm, code ..
+                page_blocks[i + 1].y0 = block.y0
+
+                page_blocks[i + 1].x1 = max(page_blocks[i + 1].x1, block.x1)
+                page_blocks.pop(i)
+                i += 1
+            file.write_json(self.get_page_output_path(page_index, 'blocks_combined.json'), page_blocks)
 
 class Block:
     # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)
@@ -79,6 +150,6 @@ class Block:
         self.y0 = block[1]
         self.x1 = block[2]
         self.y1 = block[3]
-        self.lines = block[4]
+        self.lines: str = block[4]
         self.block_no = block[5]
         self.block_type = block[6]

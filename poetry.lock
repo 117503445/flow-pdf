@@ -2,14 +2,14 @@
 
 [[package]]
 name = "htutil"
-version = "3.0.1"
+version = "3.1.0"
 description = "HaoTian's Python Util"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "htutil-3.0.1-py3-none-any.whl", hash = "sha256:99f5de470cfb8ce835b36b068cf1bdf74f52be0b414d29e9b61cfd34bc6c3343"},
-    {file = "htutil-3.0.1.tar.gz", hash = "sha256:91d86f386c3525b1e23cc8dee5abb48c0d9d55b73ab2db36b42ccba9c38a3a4d"},
+    {file = "htutil-3.1.0-py3-none-any.whl", hash = "sha256:98f852fdf68d29c97ce4bfd1020490c62467ea4061d8f8a925bdda8a359d3711"},
+    {file = "htutil-3.1.0.tar.gz", hash = "sha256:ee6f861537a6a30911b3fbabbeb54cfbc30d019af8cbc5d4e51ae6c872fb948c"},
 ]
 
 [[package]]
@@ -329,4 +329,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "09cab39d8539c711398364260d14b07d222d0ab7dd3541589a684b16c8d37d3c"
+content-hash = "908712d648bcecf77f52408ec430c68dd1a15443cad07c35960c49db3035594a"

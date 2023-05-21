@@ -15,7 +15,7 @@ def get_files_from_dir():
    for file in Path('./data').glob('*.pdf'):
          yield (file, Path('./data') / file.stem)
 
-processors = [processor.RenderImageProcessor, processor.BigBlockProcessor]
+processors = [processor.RenderImageProcessor, processor.BigBlockProcessor, processor.FirstLineCombineProcessor]
 
 for file_input, dir_output in get_files_from_cfg():
 # for file_input, dir_output in get_files_from_dir():
