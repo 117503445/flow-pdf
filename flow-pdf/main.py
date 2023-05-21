@@ -4,6 +4,7 @@ import experiment
 import fitz
 from fitz import Document, Page
 import shutil
+import processor
 
 def get_files_from_cfg():
    cfg = yaml.load(Path('./config.yaml').read_text(), Loader=yaml.FullLoader)
@@ -22,14 +23,16 @@ for file_input, dir_output in get_files_from_cfg():
       shutil.rmtree(dir_output)
    dir_output.mkdir()
 
-   doc: Document = fitz.open(file_input) # type: ignore
+   p = processor.RenderImageProcessor(file_input, dir_output)
+   p.process()
+   # doc: Document = fitz.open(file_input) # type: ignore
 
-   # experiment.render_image(file_input, dir_output, doc)
+   # experiment.render_image(file_input, dir_output)
    # experiment.get_draws(file_input, dir_output, doc)
    # experiment.mark_drawings(file_input, dir_output, doc)
 
    # experiment.get_text(file_input, dir_output, doc, 'json')
-   experiment.parse(file_input, dir_output, doc)
+   # experiment.parse(file_input, dir_output, doc)
 
    # experiment.mark_text(file_input, dir_output, doc)
    # experiment.repaint(file_input, dir_output, doc)

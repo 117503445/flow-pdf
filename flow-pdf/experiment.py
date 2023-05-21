@@ -8,6 +8,7 @@ from sklearn.cluster import DBSCAN
 # from sklearn import metrics
 import fitz.utils
 from sklearn.preprocessing import StandardScaler
+import concurrent.futures
 
 # official example
 def get_image(dir_input: Path, dir_output: Path, doc: Document):
@@ -251,13 +252,35 @@ def repaint(dir_input: Path, dir_output: Path, doc: Document):
         outpdf.save(dir_output / f'page_{i}.pdf')
 
 
-def render_image(dir_input: Path, dir_output: Path, doc: Document):
-    for i in range(doc.page_count):
-        page = doc.load_page(i)
+def render_image(file_input: Path, dir_output: Path):
+    # params = []
+    # for i in range(doc.page_count):
+    #     page = doc.load_page(i)
+        # params.append((dir_output / f'page_{i}.png', page))
+
+    doc: Document = fitz.open(file_input) # type: ignore
+    page_count = doc.page_count
+    doc.close()
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        for i in range(page_count):
+            r = executor.submit(render_image_page, file_input = file_input,  dest=dir_output / f'page_{i}.png', page_index = i)
+            # print(r.exception())
+        # r = executor.map(render_image_page, *zip(*params))
+        # for rr in r:
+            # print(rr)
+
 
         # 150 dpi, A little blurry
         # 200 dpi, clear but slow
-        page.get_pixmap(dpi = 150).save(dir_output /  f'raw_{i}.png')
+        # page.get_pixmap(dpi = 150).save(dir_output /  f'raw_{i}.png')
+
+def render_image_page(file_input: Path, dest: Path, page_index: int):
+    doc = fitz.open(file_input)
+    page = doc.load_page(page_index)
+    print('render_image_page')
+    page.get_pixmap(dpi = 150).save(dest) # type: ignore
+    
 
 def parse(dir_input: Path, dir_output: Path, doc: Document):
     for i in range(doc.page_count):
