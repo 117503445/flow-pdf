@@ -15,6 +15,8 @@ def get_files_from_dir():
    for file in Path('./data').glob('*.pdf'):
          yield (file, Path('./data') / file.stem)
 
+processors = [processor.RenderImageProcessor, processor.BigBlockProcessor]
+
 for file_input, dir_output in get_files_from_cfg():
 # for file_input, dir_output in get_files_from_dir():
    print('Processing file_input:', file_input, 'dir_output:', dir_output)
@@ -23,8 +25,10 @@ for file_input, dir_output in get_files_from_cfg():
       shutil.rmtree(dir_output)
    dir_output.mkdir()
 
-   p = processor.RenderImageProcessor(file_input, dir_output)
-   p.process()
+   params = {}
+   for p in processors:
+      p(file_input, dir_output).process(params)
+
    # doc: Document = fitz.open(file_input) # type: ignore
 
    # experiment.render_image(file_input, dir_output)
