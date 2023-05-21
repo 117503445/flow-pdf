@@ -16,6 +16,7 @@ def get_files_from_dir():
          yield (file, Path('./data') / file.stem)
 
 processors = [processor.RenderImageProcessor, processor.BigBlockProcessor, processor.FirstLineCombineProcessor]
+processors = [processor.RenderImageProcessor, processor.DrawingExtraProcessor]
 
 for file_input, dir_output in get_files_from_cfg():
 # for file_input, dir_output in get_files_from_dir():

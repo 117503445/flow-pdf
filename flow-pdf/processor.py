@@ -143,6 +143,80 @@ class FirstLineCombineProcessor(Processor):
                 i += 1
             file.write_json(self.get_page_output_path(page_index, 'blocks_combined.json'), page_blocks)
 
+
+class DrawingExtraProcessor(Processor):
+    def process_page(self, page_index: int):
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+            
+            points:list[list] = []
+
+            drawings = page.get_drawings()
+            for drawing in drawings:
+                rect = drawing["rect"]
+
+                (x0,y0,x1,y1) = rect
+
+                # sample 5 points for a rect
+                points.append([x0, y0])
+                points.append([x1, y0])
+                points.append([x0, y1])
+                points.append([x1, y1])
+                points.append([(rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2])
+
+            if points:
+                points = np.array(points) # type: ignore
+
+                db = DBSCAN(
+                    eps = 40
+                    # eps=0.3, min_samples=10
+                    ).fit(points)
+                labels = db.labels_
+
+
+                labels = labels[::5]
+
+                # n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+                # n_noise_ = list(labels).count(-1)
+
+                # print(f'points count: {len(points)}')
+                # print("Estimated number of clusters: %d" % n_clusters_)
+                # print("Estimated number of noise points: %d" % n_noise_)
+
+                images = {} # label -> drawing list
+                for j, label in enumerate(labels):
+                    if label not in images:
+                        images[label] = []
+                    images[label].append(drawings[j])
+                
+                # print(images)
+
+
+                counter = 0
+                for j, drawings in images.items():
+                    MIN_DRAWINGS = 10
+                    if len(drawings) < MIN_DRAWINGS:
+                        continue
+                    
+                    x0 = page.rect.width
+                    y0 = page.rect.height
+                    x1 = 0
+                    y1 = 0
+                    for drawing in drawings:
+                        rect = drawing["rect"] 
+                        x0 = min(x0, rect[0])
+                        y0 = min(y0, rect[1])
+                        x1 = max(x1, rect[2])
+                        y1 = max(y1, rect[3])
+                    # print('draw rect',x0, y0, x1, y1)
+                    rect = fitz.Rect(x0, y0, x1, y1)
+                    page.get_pixmap(dpi = 150, clip = rect).save(self.dir_output /  f'page_{page_index}_image_{counter}.png')
+                    counter += 1
+
+            # page.get_pixmap(dpi = 150).save(dir_output /  f'draw_{i}.png') # type: ignore
+            # exit(0)
+        
+
 class Block:
     # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)
     def __init__(self, block: list) -> None:
