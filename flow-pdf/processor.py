@@ -170,7 +170,7 @@ class DrawingExtraProcessor(Processor):
                 db = DBSCAN(
                     eps = 40
                     # eps=0.3, min_samples=10
-                    ).fit(points)
+                    ).fit(points) # type: ignore
                 labels = db.labels_
 
 
@@ -210,11 +210,32 @@ class DrawingExtraProcessor(Processor):
                         y1 = max(y1, rect[3])
                     # print('draw rect',x0, y0, x1, y1)
                     rect = fitz.Rect(x0, y0, x1, y1)
-                    page.get_pixmap(dpi = 150, clip = rect).save(self.dir_output /  f'page_{page_index}_image_{counter}.png')
+                    
+                    page.get_pixmap(dpi = 150, clip = rect).save(self.dir_output /  f'page_{page_index}_image_{counter}.png') # type: ignore
                     counter += 1
 
-            # page.get_pixmap(dpi = 150).save(dir_output /  f'draw_{i}.png') # type: ignore
-            # exit(0)
+class FontCounterProcessor(Processor):
+    def process_page(self, page_index: int):
+        f_font_count = {}
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+            file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
+            d = page.get_text('rawdict') # type: ignore
+
+            for block in d['blocks']:
+                if block['type'] != 0:
+                    # ignore non-text blocks
+                    continue
+                # if 'lines' not in block:
+                #     print(f'page {page_index} block {block["bbox"]} has no lines')
+                #     continue
+                for line in block['lines']:
+                    for span in line['spans']:
+                        font = span['font']
+                        if font not in f_font_count:
+                            f_font_count[font] = 0
+                        f_font_count[font] += len(span['chars'])
+        file.write_json(self.get_page_output_path(page_index, 'f_font_count.json'), f_font_count)
         
 
 class Block:
