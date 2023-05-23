@@ -65,26 +65,46 @@ class RenderImageProcessor(Processor):
             
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'raw.png')) # type: ignore
 
+            if 'text' in self.params:
+                for block in self.params['text'][page_index]:
+                    page.draw_rect(block['bbox'], color = fitz.utils.getColor(COLORS['text'])) # type: ignore
+            
+            page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
+
 # out: blocks
 
 # blocks: page index -> blocks
 class BigBlockProcessor(Processor):
     def process(self):
-        self.params['blocks'] = {}
-        for i, blocks in enumerate(self.process_page_parallel()):
-            self.params['blocks'][i] = blocks
+        self.params['text'] = {}
+        for i, texts in enumerate(self.process_page_parallel()):
+            self.params['text'][i] = texts
 
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
-            blocks = [Block(b) for b in page.get_text('blocks')] # type: ignore
-            # TODO - use block_type to filter out images
+            d = page.get_text('rawdict') # type: ignore
 
-            def is_big_block(block: Block):
+            file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
+
+            blocks = [b for b in d['blocks'] if b['type'] == 0] # type: ignore
+
+            def is_big_block(block):
                 BIG_BLOCK_MIN_WORDS = 5
                 
+                text = ''
+                for line in block['lines']:
+                    for span in line['spans']:
+                        for char in span['chars']:
+                            text += char['c']
 
-                words = block.lines.split(' ')
+
+                            # speed up
+                            if len(text) == 200:
+                                if len(text.split()) > BIG_BLOCK_MIN_WORDS:
+                                    return True
+
+                words = text.split()
                 return words[-1][-1] in END_CHARACTERS or len(words) > BIG_BLOCK_MIN_WORDS
 
             blocks = list(filter(is_big_block, blocks))
@@ -293,6 +313,27 @@ class MarkNonCommonFontProcessor(Processor):
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'non-common.png')) # type: ignore
 
         file.write_text(self.get_page_output_path(page_index, 'non-common.txt'), text) # type: ignore
+
+
+class MarkStructProcessor(Processor):
+    def process_page(self, page_index: int):
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+            # file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
+            d = page.get_text('rawdict') # type: ignore
+
+            for block in d['blocks']:
+                if block['type'] != 0:
+                    # ignore non-text blocks
+                    continue
+                # page.draw_rect(block['bbox'], color = fitz.utils.getColor('red')) # type: ignore
+                for line in block['lines']:
+                    # page.draw_rect(line['bbox'], color = fitz.utils.getColor('yellow')) # type: ignore
+                    for span in line['spans']:
+                        page.draw_rect(span['bbox'], color = fitz.utils.getColor('green')) # type: ignore
+                
+            page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'struct.png')) # type: ignore
+
 class Block:
     # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)
     def __init__(self, block: list) -> None:
