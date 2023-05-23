@@ -30,7 +30,7 @@ for file_input, dir_output in get_files_from_cfg():
 
    params = {}
    for p in processors:
-      p(file_input, dir_output).process(params)
+      p(file_input, dir_output, params).process()
 
    # doc: Document = fitz.open(file_input) # type: ignore
 

@@ -14,10 +14,19 @@ from typing import Any
 
 END_CHARACTERS = '.!?'
 
+COLORS = {
+    'text': 'blue',
+    'inline-image': 'green',
+    'block-image': 'red',
+
+    'drawings': 'purple',
+}
+
 class Processor():
-    def __init__(self, file_input: Path, dir_output: Path):
+    def __init__(self, file_input: Path, dir_output: Path, params: dict[str, Any] = {}):
         self.file_input = file_input
         self.dir_output = dir_output
+        self.params = params
     
     @cache
     def get_page_count(self):
@@ -27,8 +36,7 @@ class Processor():
     def get_page_output_path(self, page_index: int, suffix: str):
         return self.dir_output / f'page_{page_index}_{suffix}'
         
-    def process(self, params: dict[str, Any] = {}):
-        self.params = params
+    def process(self):
         self.process_page_parallel()
 
     def process_page_parallel(self):
@@ -61,10 +69,10 @@ class RenderImageProcessor(Processor):
 
 # blocks: page index -> blocks
 class BigBlockProcessor(Processor):
-    def process(self, params: dict[str, Any] = {}):
-        params['blocks'] = {}
+    def process(self):
+        self.params['blocks'] = {}
         for i, blocks in enumerate(self.process_page_parallel()):
-            params['blocks'][i] = blocks
+            self.params['blocks'][i] = blocks
 
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
@@ -91,9 +99,9 @@ class BigBlockProcessor(Processor):
 # in: blocks
 # out: blocks
 class FirstLineCombineProcessor(Processor):
-    def process(self, params: dict[str, Any] = {}):
+    def process(self):
         # file.write_json(self.dir_output / 'blocks.json', params['blocks'])
-        for page_index, page_blocks in params['blocks'].items():
+        for page_index, page_blocks in self.params['blocks'].items():
             print('page_index', page_index)
             page_blocks: list[Block]
             i = 0
@@ -216,26 +224,26 @@ class DrawingExtraProcessor(Processor):
                     counter += 1
 
 class FontCounterProcessor(Processor):
-    def process(self, params: dict[str, Any] = {}):
-        params['fonts'] = {}
+    def process(self):
+        self.params['fonts'] = {}
         for i, font_counter in enumerate(self.process_page_parallel()):
             # combine fonts
             for font, count in font_counter.items():
-                if font not in params['fonts']:
-                    params['fonts'][font] = 0
+                if font not in self.params['fonts']:
+                    self.params['fonts'][font] = 0
 
-                params['fonts'][font] += count
+                self.params['fonts'][font] += count
         
-        params['common_font'] = sorted(params['fonts'].items(), key=lambda x: x[1], reverse=True)[0][0]
+        self.params['common_font'] = sorted(self.params['fonts'].items(), key=lambda x: x[1], reverse=True)[0][0]
         
-        file.write_json(self.dir_output / 'fonts.json', params['fonts'])
-        file.write_json(self.dir_output / 'common_font.json', params['common_font'])
+        file.write_json(self.dir_output / 'fonts.json', self.params['fonts'])
+        file.write_json(self.dir_output / 'common_font.json', self.params['common_font'])
 
     def process_page(self, page_index: int):
         f_font_count = {}
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
-            file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
+            # file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
             d = page.get_text('rawdict') # type: ignore
 
             for block in d['blocks']:
