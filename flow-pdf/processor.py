@@ -28,6 +28,7 @@ class Processor():
         return self.dir_output / f'page_{page_index}_{suffix}'
         
     def process(self, params: dict[str, Any] = {}):
+        self.params = params
         self.process_page_parallel()
 
     def process_page_parallel(self):
@@ -252,8 +253,38 @@ class FontCounterProcessor(Processor):
                         f_font_count[font] += len(span['chars'])
         return f_font_count
         # file.write_json(self.get_page_output_path(page_index, 'f_font_count.json'), f_font_count)
-        
 
+class MarkNonCommonFontProcessor(Processor):
+    def process_page(self, page_index: int):
+        text = ''
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+            # file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
+            d = page.get_text('rawdict') # type: ignore
+
+            for block in d['blocks']:
+                if block['type'] != 0:
+                    # ignore non-text blocks
+                    continue
+                for line in block['lines']:
+                    for span in line['spans']:
+                        font = span['font']
+                        if font != self.params['common_font']:
+                            a = span["ascender"]
+                            d = span["descender"]
+                            r = fitz.Rect(span["bbox"])
+                            o = fitz.Point(span["origin"])
+                            r.y1 = o.y - span["size"] * d / (a - d)
+                            r.y0 = r.y1 - span["size"]
+                            page.draw_rect(r, color = fitz.utils.getColor('green')) # type: ignore
+                        else:
+                            text += ''.join([c['c'] for c in span['chars']])
+
+                text += '\n'
+                
+            page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'non-common.png')) # type: ignore
+
+        file.write_text(self.get_page_output_path(page_index, 'non-common.txt'), text) # type: ignore
 class Block:
     # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)
     def __init__(self, block: list) -> None:
