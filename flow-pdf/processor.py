@@ -215,6 +215,21 @@ class DrawingExtraProcessor(Processor):
                     counter += 1
 
 class FontCounterProcessor(Processor):
+    def process(self, params: dict[str, Any] = {}):
+        params['fonts'] = {}
+        for i, font_counter in enumerate(self.process_page_parallel()):
+            # combine fonts
+            for font, count in font_counter.items():
+                if font not in params['fonts']:
+                    params['fonts'][font] = 0
+
+                params['fonts'][font] += count
+        
+        params['common_font'] = sorted(params['fonts'].items(), key=lambda x: x[1], reverse=True)[0][0]
+        
+        file.write_json(self.dir_output / 'fonts.json', params['fonts'])
+        file.write_json(self.dir_output / 'common_font.json', params['common_font'])
+
     def process_page(self, page_index: int):
         f_font_count = {}
         with fitz.open(self.file_input) as doc: # type: ignore
@@ -235,7 +250,8 @@ class FontCounterProcessor(Processor):
                         if font not in f_font_count:
                             f_font_count[font] = 0
                         f_font_count[font] += len(span['chars'])
-        file.write_json(self.get_page_output_path(page_index, 'f_font_count.json'), f_font_count)
+        return f_font_count
+        # file.write_json(self.get_page_output_path(page_index, 'f_font_count.json'), f_font_count)
         
 
 class Block:
