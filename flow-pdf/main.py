@@ -5,6 +5,7 @@ import fitz
 from fitz import Document, Page
 import shutil
 import processor
+import time
 
 def get_files_from_cfg():
    cfg = yaml.load(Path('./config.yaml').read_text(), Loader=yaml.FullLoader)
@@ -19,7 +20,8 @@ def get_files_from_dir():
 # processors = [processor.RenderImageProcessor, processor.DrawingExtraProcessor]
 # processors = [processor.RenderImageProcessor, processor.FontCounterProcessor, processor.MarkNonCommonFontProcessor]
 # processors = [ processor.MarkStructProcessor]
-processors = [processor.BigBlockProcessor, processor.RenderImageProcessor]
+# processors = [processor.WidthCounterProcessor ,processor.BigBlockProcessor, processor.RenderImageProcessor]
+processors = [processor.WidthCounterProcessor]
 
 for file_input, dir_output in get_files_from_cfg():
 # for file_input, dir_output in get_files_from_dir():
@@ -31,7 +33,10 @@ for file_input, dir_output in get_files_from_cfg():
 
    params = {}
    for p in processors:
+      print(f'{p.__name__} start')
+      start = time.perf_counter()
       p(file_input, dir_output, params).process()
+      print(f'{p.__name__} finished, time = {(time.perf_counter() - start):.2f}s')
 
    # doc: Document = fitz.open(file_input) # type: ignore
 

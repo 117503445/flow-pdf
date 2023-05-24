@@ -1,3 +1,4 @@
+from collections import Counter
 import fitz
 from fitz import Document, Page, TextPage
 from pathlib import Path
@@ -333,6 +334,57 @@ class MarkStructProcessor(Processor):
                         page.draw_rect(span['bbox'], color = fitz.utils.getColor('green')) # type: ignore
                 
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'struct.png')) # type: ignore
+
+class WidthCounterProcessor(Processor):
+    def process(self):
+        widths = []
+        for i, results in enumerate(self.process_page_parallel()):
+            widths.extend(results)
+        # file.write_json(self.dir_output / '0_widths.json', widths)
+
+        if widths:
+            db = DBSCAN(eps = 5
+                        # eps=0.3, min_samples=10
+                        ).fit(np.array(widths).reshape(-1, 1)) # type: ignore
+            labels = db.labels_
+            # get most common label
+            label_counts = Counter(labels)
+            most_common_label = sorted(label_counts.items(), key=lambda x: x[1], reverse=True)[0][0]
+
+            big_text_width = [w for i, w in enumerate(widths) if labels[i] == most_common_label]
+
+            BIG_TEXT_THRESHOLD = 0.6
+            if len(big_text_width) / len(widths) < BIG_TEXT_THRESHOLD:
+                print(f'WARNING: most common label only has {len(big_text_width)} items, less than {BIG_TEXT_THRESHOLD * 100}% of total {len(widths)} items')
+
+            width_range = {
+                'min': min(big_text_width),
+                'max': max(big_text_width)
+            }
+            self.params['width_range'] = width_range
+            # file.write_json(self.dir_output / 'width_range.json', width_range)
+        else:
+            print('WARNING: no big text found')
+
+
+    def process_page(self, page_index: int):
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+            blocks = [Block(b) for b in page.get_text('blocks')] # type: ignore
+
+            def is_big_block(block: Block):
+                BIG_BLOCK_MIN_WORDS = 50
+
+                words = block.lines.split(' ')
+                return len(words) > BIG_BLOCK_MIN_WORDS
+
+            blocks = list(filter(is_big_block, blocks))
+            widths = [b.x1 - b.x0 for b in blocks]
+
+            # file.write_json(self.get_page_output_path(page_index, 'blocks.json'), blocks)
+            # file.write_text(self.get_page_output_path(page_index, 'blocks.json'), json.dumps(blocks, indent=2, default=lambda x: x.__dict__)) # type: ignore
+
+            return widths
 
 class Block:
     # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)
