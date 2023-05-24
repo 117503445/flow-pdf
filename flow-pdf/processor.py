@@ -91,22 +91,28 @@ class BigBlockProcessor(Processor):
             blocks = [b for b in d['blocks'] if b['type'] == 0] # type: ignore
 
             def is_big_block(block):
-                BIG_BLOCK_MIN_WORDS = 5
-                
-                text = ''
-                for line in block['lines']:
+                # if len(block['lines']) >= 2:
+                #     return True
+                def get_bbox_area(bbox: list):
+                    return (bbox[2] - bbox[0]) * ( bbox[3] - bbox[1])
+
+                def is_full_line(line):
+                    line_area =get_bbox_area( line['bbox'])
+                    char_area = 0
                     for span in line['spans']:
-                        for char in span['chars']:
-                            text += char['c']
+                        char_area += get_bbox_area(span['bbox'])
+                    
+                    return char_area / line_area > 0.8
+                    
 
-
-                            # speed up
-                            if len(text) == 200:
-                                if len(text.split()) > BIG_BLOCK_MIN_WORDS:
-                                    return True
-
-                words = text.split()
-                return words[-1][-1] in END_CHARACTERS or len(words) > BIG_BLOCK_MIN_WORDS
+                lines = block['lines']
+                if len(lines) >= 2:
+                    full_line_count = len(list(filter(is_full_line, lines)))
+                    return full_line_count / len(lines) > 0.8
+                else:
+                    return is_full_line(lines[0])
+                
+                # return self.params['big_text_width_range']['min']*0.9 <= block['bbox'][2] - block['bbox'][0] <= self.params['big_text_width_range']['max']*1.1 and self.params['big_text_x0_range']['min']*0.9 <=  block['bbox'][0] <= self.params['big_text_x0_range']['max']*1.1 
 
             blocks = list(filter(is_big_block, blocks))
 
@@ -332,14 +338,17 @@ class MarkStructProcessor(Processor):
                     # page.draw_rect(line['bbox'], color = fitz.utils.getColor('yellow')) # type: ignore
                     for span in line['spans']:
                         page.draw_rect(span['bbox'], color = fitz.utils.getColor('green')) # type: ignore
+                        pass
                 
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'struct.png')) # type: ignore
 
 class WidthCounterProcessor(Processor):
     def process(self):
-        widths = []
+        blocks = []
         for i, results in enumerate(self.process_page_parallel()):
-            widths.extend(results)
+            blocks.extend(results)
+
+        widths = [b.x1 - b.x0 for b in blocks]
         # file.write_json(self.dir_output / '0_widths.json', widths)
 
         if widths:
@@ -351,7 +360,8 @@ class WidthCounterProcessor(Processor):
             label_counts = Counter(labels)
             most_common_label = sorted(label_counts.items(), key=lambda x: x[1], reverse=True)[0][0]
 
-            big_text_width = [w for i, w in enumerate(widths) if labels[i] == most_common_label]
+            big_text_block = [b for i, b in enumerate(blocks) if labels[i] == most_common_label]
+            big_text_width = [b.x1 - b.x0 for b in big_text_block]
 
             BIG_TEXT_THRESHOLD = 0.6
             if len(big_text_width) / len(widths) < BIG_TEXT_THRESHOLD:
@@ -361,7 +371,13 @@ class WidthCounterProcessor(Processor):
                 'min': min(big_text_width),
                 'max': max(big_text_width)
             }
-            self.params['width_range'] = width_range
+            self.params['big_text_width_range'] = width_range
+
+            x0_range = {
+                'min': min([b.x0 for b in big_text_block]),
+                'max': max([b.x0 for b in big_text_block])
+            }
+            self.params['big_text_x0_range'] = x0_range
             # file.write_json(self.dir_output / 'width_range.json', width_range)
         else:
             print('WARNING: no big text found')
@@ -379,12 +395,12 @@ class WidthCounterProcessor(Processor):
                 return len(words) > BIG_BLOCK_MIN_WORDS
 
             blocks = list(filter(is_big_block, blocks))
-            widths = [b.x1 - b.x0 for b in blocks]
+            
 
             # file.write_json(self.get_page_output_path(page_index, 'blocks.json'), blocks)
             # file.write_text(self.get_page_output_path(page_index, 'blocks.json'), json.dumps(blocks, indent=2, default=lambda x: x.__dict__)) # type: ignore
 
-            return widths
+            return blocks
 
 class Block:
     # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)

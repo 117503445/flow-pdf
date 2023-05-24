@@ -20,8 +20,7 @@ def get_files_from_dir():
 # processors = [processor.RenderImageProcessor, processor.DrawingExtraProcessor]
 # processors = [processor.RenderImageProcessor, processor.FontCounterProcessor, processor.MarkNonCommonFontProcessor]
 # processors = [ processor.MarkStructProcessor]
-# processors = [processor.WidthCounterProcessor ,processor.BigBlockProcessor, processor.RenderImageProcessor]
-processors = [processor.WidthCounterProcessor]
+processors = [processor.WidthCounterProcessor, processor.BigBlockProcessor, processor.RenderImageProcessor]
 
 for file_input, dir_output in get_files_from_cfg():
 # for file_input, dir_output in get_files_from_dir():
