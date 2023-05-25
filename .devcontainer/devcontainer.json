@@ -1,0 +1,13 @@
+{
+    "image": "117503445/dev-base",
+    "customizations": {
+      "vscode": {
+        // Add the IDs of extensions you want installed when the container is created.
+        "extensions": [
+          "ms-python.python",
+          "humao.rest-client",
+          "github.copilot"
+        ]
+      }
+    }
+  }

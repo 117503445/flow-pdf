@@ -2,15 +2,18 @@
 
 [[package]]
 name = "htutil"
-version = "3.1.0"
+version = "3.2.0"
 description = "HaoTian's Python Util"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "htutil-3.1.0-py3-none-any.whl", hash = "sha256:98f852fdf68d29c97ce4bfd1020490c62467ea4061d8f8a925bdda8a359d3711"},
-    {file = "htutil-3.1.0.tar.gz", hash = "sha256:ee6f861537a6a30911b3fbabbeb54cfbc30d019af8cbc5d4e51ae6c872fb948c"},
+    {file = "htutil-3.2.0-py3-none-any.whl", hash = "sha256:601306ca12693e366fa6274e0a48329fdde3c329996ead422eb8ecf1d0fbca4d"},
+    {file = "htutil-3.2.0.tar.gz", hash = "sha256:e56da9d5c8d8b45d60536e8b872246b902873370fd10a3009bfee2f4727c6855"},
 ]
+
+[package.dependencies]
+pyyaml = "*"
 
 [[package]]
 name = "joblib"

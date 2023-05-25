@@ -279,7 +279,7 @@ def render_image_page(file_input: Path, dest: Path, page_index: int):
     doc = fitz.open(file_input)
     page = doc.load_page(page_index)
     print('render_image_page')
-    page.get_pixmap(dpi = 150).save(dest) # type: ignore
+    page.get_pixmap(dpi = 300).save(dest) # type: ignore
     
 
 def parse(dir_input: Path, dir_output: Path, doc: Document):

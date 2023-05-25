@@ -1,0 +1,10 @@
+GET http://localhost:8000 HTTP/1.1
+
+###
+
+POST http://localhost:8000/api/parse_images HTTP/1.1
+
+{
+    "username": "qht",
+    "password": "hello"
+}
