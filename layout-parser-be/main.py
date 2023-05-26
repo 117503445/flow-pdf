@@ -17,6 +17,8 @@ import fitz
 from fitz import Document, Page
 import concurrent.futures
 
+
+
 dir_data = Path('data')
 dir_input = dir_data / 'input'
 dir_output = dir_data / 'output'
@@ -36,7 +38,6 @@ def render_image_page(file_input: Path, dest: Path, page_index: int):
     page = doc.load_page(page_index)
 
     img = page.get_pixmap()
-    print(img)
     img.save(dest) # type: ignore
 
 
@@ -53,23 +54,28 @@ def process_task(task):
     if not dir_task_output.exists():
         dir_task_output.mkdir()
 
-    doc: Document = fitz.open(file_input) # type: ignore
-    page_count = doc.page_count
+    file_layout = dir_task_output / 'layout.json'
+    if not file_layout.exists():
+
+        doc: Document = fitz.open(file_input) # type: ignore
+        page_count = doc.page_count
 
 
 
-    results = []
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        futures = []
-        for i in range(page_count):
-            futures.append( executor.submit(render_image_page, file_input = file_input,  dest=dir_task_output / f'page_{i}.png', page_index = i) )
-        for future in futures:
-            results.append(future.result())
-    doc.close()
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = [ executor.submit(render_image_page, file_input = file_input,  dest=dir_task_output / f'page_{i}.png', page_index = i)  for i in range(page_count)]
 
-    for p in sorted(dir_task_output.glob('page_*.png')):
-        convert(p)
+            results = [future.result() for future in concurrent.futures.as_completed(futures)]
+        doc.close()
+
+
+        print('doc to image done')
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=3) as executor:
+            futures = [ executor.submit(convert, path = p)  for p in sorted(dir_task_output.glob('page_*.png'))]
+            results = [future.result() for future in concurrent.futures.as_completed(futures)]
+            write_json(dir_task_output / 'layout.json', results)
 
     print(f"完成处理任务 {task}")
 
@@ -103,7 +109,7 @@ def make_common_data(code: int, msg: str, data):
 def hello():
     return make_common_data(0, "Hello", None)
 
-@app.post("/api/parse_pdf")
+@app.post("/api/task")
 async def parse_pdf(file: UploadFile):
 
     content = await file.read()
@@ -130,6 +136,23 @@ async def parse_pdf(file: UploadFile):
     #         buffer.write()
 
 
+@app.get("/api/task/{task_id}")
+async def query_task(task_id: str):
+    dir_input_task = dir_input / f'{task_id}.pdf'
+    dir_output_task = dir_output / task_id
+    if not dir_input_task.exists():
+        return make_common_data(1, "Task not found", None)
+
+    if not dir_output_task.exists():
+        return make_common_data(1, "Task is pending", None)
+    
+    file_layout = dir_output_task / 'layout.json'
+
+    if not file_layout.exists():
+        return make_common_data(2, "Task is executing", None)
+
+    return make_common_data(0, "Success", read_json(file_layout))
+
 
 def write_pkl(path, content) -> None:
     with open(path, 'wb') as f:
@@ -144,6 +167,13 @@ def write_text(path, content: str) -> None:
         f.write(content)
 def write_json(path, content, indent=4) -> None:
     write_text(path, json.dumps(content, indent=indent, ensure_ascii=False, default=lambda x: x.__dict__))
+def read_json(path):
+    return json.loads(read_text(path))
+def read_text(path) -> str:
+    with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+        lines = f.readlines()
+        text = ''.join(lines)
+        return text
 
 def convert(path):
     image = cv2.imread(str(path.absolute()))
@@ -157,7 +187,9 @@ def convert(path):
     write_json(str(path.absolute()) + '.layout.json', layout)
 
     im = lp.draw_box(image, layout)
-    im.save(str(path.absolute()) + '.marked.png')
+    im.save(str(path.absolute()).replace('.png', '_marked.png'))
+
+    return layout
 
 def dev_run():
     names = ['bitcoin', 'raft', 'hotstuff']

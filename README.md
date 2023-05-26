@@ -55,5 +55,5 @@ pip install pymupdf pyyaml htutil scikit-learn layoutparser fastapi "uvicorn[sta
 pacman -S opencv
 
 cd layout-parser-be
-uvicorn main:app --reload
+uvicorn main:app --reload --host 0.0.0.0
 ```

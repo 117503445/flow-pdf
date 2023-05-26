@@ -1,10 +1,12 @@
 from collections import Counter
+import time
 import fitz
 from fitz import Document, Page, TextPage
 from pathlib import Path
 import json
 from htutil import file
 import numpy as np
+import requests
 from sklearn.cluster import DBSCAN
 import fitz.utils
 from sklearn.preprocessing import StandardScaler
@@ -401,6 +403,23 @@ class WidthCounterProcessor(Processor):
             # file.write_text(self.get_page_output_path(page_index, 'blocks.json'), json.dumps(blocks, indent=2, default=lambda x: x.__dict__)) # type: ignore
 
             return blocks
+
+class LayoutParserProcessor(Processor):
+    def process(self):
+        url = "http://172.17.0.2:8000/api/task"
+        resp = requests.post(url, files={"file": open(self.file_input, "rb")})
+        task_id = resp.json()['data']['taskID']
+
+        while True:
+            resp = requests.get(url+f'/{task_id}').json()
+            print(resp['code'], resp['msg'])
+            if resp['code'] == 0:
+                break
+            time.sleep(5)
+        
+        layout = resp['data']
+        file.write_json(self.dir_output / 'layout.json', layout)
+                
 
 class Block:
     # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)

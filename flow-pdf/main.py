@@ -21,6 +21,7 @@ def get_files_from_dir():
 # processors = [processor.RenderImageProcessor, processor.FontCounterProcessor, processor.MarkNonCommonFontProcessor]
 # processors = [ processor.MarkStructProcessor]
 # processors = [processor.WidthCounterProcessor, processor.BigBlockProcessor, processor.RenderImageProcessor]
+processors = [ processor.LayoutParserProcessor]
 
 for file_input, dir_output in get_files_from_cfg():
 # for file_input, dir_output in get_files_from_dir():
@@ -30,16 +31,16 @@ for file_input, dir_output in get_files_from_cfg():
       shutil.rmtree(dir_output)
    dir_output.mkdir()
 
-   # params = {}
-   # for p in processors:
-   #    print(f'{p.__name__} start')
-   #    start = time.perf_counter()
-   #    p(file_input, dir_output, params).process()
-   #    print(f'{p.__name__} finished, time = {(time.perf_counter() - start):.2f}s')
+   params = {}
+   for p in processors:
+      print(f'{p.__name__} start')
+      start = time.perf_counter()
+      p(file_input, dir_output, params).process()
+      print(f'{p.__name__} finished, time = {(time.perf_counter() - start):.2f}s')
 
    # doc: Document = fitz.open(file_input) # type: ignore
 
-   experiment.render_image(file_input, dir_output)
+   # experiment.render_image(file_input, dir_output)
    # experiment.get_draws(file_input, dir_output, doc)
    # experiment.mark_drawings(file_input, dir_output, doc)
 
