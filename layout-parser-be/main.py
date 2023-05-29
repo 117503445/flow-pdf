@@ -37,8 +37,14 @@ def render_image_page(file_input: Path, dest: Path, page_index: int):
     doc = fitz.open(file_input)
     page = doc.load_page(page_index)
 
-    img = page.get_pixmap()
+
+    zoom = 2    # zoom factor
+    mat = fitz.Matrix(zoom, zoom)
+
+    img = page.get_pixmap(matrix = mat)
     img.save(dest) # type: ignore
+
+    return dest
 
 
 
@@ -63,19 +69,26 @@ def process_task(task):
 
 
 
+
         with concurrent.futures.ProcessPoolExecutor() as executor:
             futures = [ executor.submit(render_image_page, file_input = file_input,  dest=dir_task_output / f'page_{i}.png', page_index = i)  for i in range(page_count)]
 
-            results = [future.result() for future in concurrent.futures.as_completed(futures)]
+            file_dest_list = [future.result() for future in futures]
+
         doc.close()
 
 
         print('doc to image done')
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=3) as executor:
-            futures = [ executor.submit(convert, path = p)  for p in sorted(dir_task_output.glob('page_*.png'))]
-            results = [future.result() for future in concurrent.futures.as_completed(futures)]
-            write_json(dir_task_output / 'layout.json', results)
+            futures = [ executor.submit(convert, path = p)  for p in file_dest_list]
+            layout = [future.result() for future in futures]
+            for i in range(len(layout)):
+                layout[i] = layout[i].__dict__
+                layout[i]['_page'] = i
+
+            # layout = { i:r for i , r in enumerate(results)}
+            write_json(dir_task_output / 'layout.json', layout)
 
     print(f"完成处理任务 {task}")
 

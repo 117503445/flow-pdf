@@ -23,6 +23,9 @@ COLORS = {
     'block-image': 'red',
 
     'drawings': 'purple',
+    'title': 'yellow',
+    'list': 'orange',
+    'table': 'pink',
 }
 
 class Processor():
@@ -407,7 +410,7 @@ class WidthCounterProcessor(Processor):
 class LayoutParserProcessor(Processor):
     def process(self):
         url = "http://172.17.0.2:8000/api/task"
-        resp = requests.post(url, files={"file": open(self.file_input, "rb")})
+        resp = requests.post(url, files={"file": open(self.file_input, "rb")}) # type: ignore
         task_id = resp.json()['data']['taskID']
 
         while True:
@@ -418,8 +421,47 @@ class LayoutParserProcessor(Processor):
             time.sleep(5)
         
         layout = resp['data']
+        layout = { i:r for i , r in enumerate(layout)}
+        self.params['layout'] = layout
+
         file.write_json(self.dir_output / 'layout.json', layout)
-                
+
+        self.process_page_parallel()
+
+    def process_page(self, page_index: int):
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+
+            page_layout = self.params['layout'][page_index]
+            
+            # page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'raw.png')) # type: ignore
+
+            for block in page_layout['_blocks']:
+
+                if block['type'] == 'Title':
+                    pass
+                    # if block['score'] < 0.9:
+                    #     continue
+                else:
+                    continue
+                # elif block['type'] not in ['Figure']:
+                #     continue
+
+                b = block['block']
+                r = (b['x_1'] / 2, b['y_1'] / 2 , b['x_2'] / 2, b['y_2'] / 2)
+
+                d_t = {
+                    'Text': 'text',
+                    'Title': 'title',
+                    'List': 'list',
+                    'Table': 'table',
+                    'Figure': 'block-image',
+                }
+
+                page.draw_rect(r, color = fitz.utils.getColor(COLORS[d_t[block['type']]])) # type: ignore
+        
+            page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
+
 
 class Block:
     # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)
