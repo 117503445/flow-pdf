@@ -106,6 +106,10 @@ class RenderImageProcessor(Processor):
                 rects = [(self.params['big_text_columns'][0]['min'], self.params['core-y']['min'], self.params['big_text_columns'][-1]['max'], self.params['core-y']['max'])]
                 add_annot(page, rects, 'core', 'yellow')
 
+            if 'shot' in self.params:
+                rects = self.params['shot'][page_index]
+                add_annot(page, rects, 'shot', 'green')
+
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
 
 
@@ -180,15 +184,31 @@ class ImageProcessor(Processor):
 
             return blocks
 
+# 截图
+class ShotProcessor(Processor):
+    def process(self):
+        self.params['shot'] = {}
+        for i, page_result in enumerate(self.process_page_parallel()):
+            self.params['shot'][i] = page_result
 
-# def debug_mark(page, rects, annot: str, color, dest: str):
-#     if not rects:
-#         return
+    def process_page(self, page_index: int):
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+            d = page.get_text('rawdict') # type: ignore
 
-#     for rect in rects:
-#         page.add_freetext_annot(rect, annot, fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
-#         page.draw_rect(rect, color = fitz.utils.getColor(color)) # type: ignore
-#     page.get_pixmap(dpi = 150).save(dest) # type: ignore
+            rects = []
+
+            for column in self.params['big_text_columns']:
+                blocks = [b for b in self.params['big-block'][page_index] if b['bbox'][0] >= column['min'] and b['bbox'][2] <= column['max']]
+                last_y = self.params['core-y']['min']
+                for  block in blocks:
+                    r = (column['min'], last_y, column['max'], block['bbox'][1])
+                    rects.append(r)
+                    last_y = block['bbox'][3]
+                rects.append((column['min'], last_y, column['max'], self.params['core-y']['max']))
+
+
+            return rects
 
 
 # The first line indent causes the line to become a separate block, which should be merged into the next block.
