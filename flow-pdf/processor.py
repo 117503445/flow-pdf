@@ -63,7 +63,7 @@ class Processor():
     def process_page(self, page_index: int):
         pass
 
-
+# 渲染标记，打印 params 信息
 class RenderImageProcessor(Processor):
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
@@ -103,6 +103,15 @@ class RenderImageProcessor(Processor):
             
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
 
+
+            keys = ['big_text_width_range', 'big_text_columns']
+            content = {}
+            for k in keys:
+                content[k] = self.params[k]
+
+            file.write_json(self.get_page_output_path(page_index, 'meta.json'), content)
+
+# 判断正文块
 # out: blocks
 
 # blocks: page index -> blocks
@@ -120,6 +129,18 @@ class BigBlockProcessor(Processor):
             blocks = [b for b in d['blocks'] if b['type'] == 0] # type: ignore
 
             def is_big_block(block):
+
+# big_text_columns
+
+                if self.params['big_text_width_range']['min']*0.9 <= block['bbox'][2] - block['bbox'][0] <= self.params['big_text_width_range']['max']*1.1:
+                    for column in self.params['big_text_columns']:
+                        if column['min']*0.9 <= block['bbox'][0] <= column['max']*1.1:
+                            return True
+                    return False
+                else:
+                    return False
+
+
                 is_big = self.params['big_text_width_range']['min']*0.9 <= block['bbox'][2] - block['bbox'][0] <= self.params['big_text_width_range']['max']*1.1 and self.params['big_text_x0_range']['min']*0.9 <=  block['bbox'][0] <= self.params['big_text_x0_range']['max']*1.1
                 # if is_big:
                 #     r = (block['bbox'][0], block['bbox'][1], block['bbox'][0] +20, block['bbox'][1] + 10)
@@ -133,7 +154,9 @@ class BigBlockProcessor(Processor):
             # page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'BigBlock-debug.png')) # type: ignore
             # file.write_json(self.get_page_output_path(page_index, 'blocks.json'), blocks)
             return blocks
-        
+
+# 提取位图
+# output: images
 
 class ImageProcessor(Processor):
     def process(self):
@@ -228,6 +251,8 @@ class FirstLineCombineProcessor(Processor):
             file.write_json(self.get_page_output_path(page_index, 'blocks_combined.json'), page_blocks)
 
 
+# drawings 聚类 提取
+# out: drawings
 class DrawingExtraProcessor(Processor):
     def process(self):
         self.params['drawings'] = {}
@@ -329,7 +354,7 @@ class FontCounterProcessor(Processor):
         f_font_count = {}
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
-            file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
+            # file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
             d = page.get_text('rawdict') # type: ignore
 
             for block in d['blocks']:
@@ -399,6 +424,8 @@ class MarkStructProcessor(Processor):
                 
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'struct.png')) # type: ignore
 
+# 统计大段文字的宽度和位置
+# out: big_text_width_range, big_text_x0_range
 class WidthCounterProcessor(Processor):
     def process(self):
         blocks = []
@@ -406,7 +433,6 @@ class WidthCounterProcessor(Processor):
             blocks.extend(results)
 
         widths = [b.x1 - b.x0 for b in blocks]
-        # file.write_json(self.dir_output / '0_widths.json', widths)
 
         if widths:
             db = DBSCAN(eps = 5
@@ -430,12 +456,22 @@ class WidthCounterProcessor(Processor):
             }
             self.params['big_text_width_range'] = width_range
 
-            x0_range = {
-                'min': min([b.x0 for b in big_text_block]),
-                'max': max([b.x0 for b in big_text_block])
-            }
-            self.params['big_text_x0_range'] = x0_range
-            # file.write_json(self.dir_output / 'width_range.json', width_range)
+
+            db = DBSCAN(eps = 30
+            # eps=0.3, min_samples=10
+            ).fit(np.array([b.x0 for b in big_text_block]).reshape(-1, 1)) # type: ignore
+            labels = db.labels_
+
+
+            columns=[]
+            for i in range(len(set(labels))):
+                blocks = [b for j, b in enumerate(big_text_block) if labels[j] == i]
+                column = {
+                    'min': min([b.x0 for b in blocks]),
+                    'max': max([b.x0 for b in blocks])
+                }
+                columns.append(column)
+            self.params['big_text_columns'] = columns
         else:
             print('WARNING: no big text found')
 
