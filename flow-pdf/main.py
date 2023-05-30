@@ -21,7 +21,9 @@ def get_files_from_dir():
 # processors = [processor.RenderImageProcessor, processor.FontCounterProcessor, processor.MarkNonCommonFontProcessor]
 # processors = [ processor.MarkStructProcessor]
 # processors = [processor.WidthCounterProcessor, processor.BigBlockProcessor, processor.RenderImageProcessor]
-processors = [ processor.LayoutParserProcessor]
+# processors = [processor.TOCProcessor]
+# processors = [ processor.LayoutParserProcessor]
+processors = [ processor.ImageProcessor, processor.DrawingExtraProcessor,  processor.WidthCounterProcessor, processor.BigBlockProcessor,processor.RenderImageProcessor]
 
 for file_input, dir_output in get_files_from_cfg():
 # for file_input, dir_output in get_files_from_dir():

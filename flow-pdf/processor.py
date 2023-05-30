@@ -71,9 +71,35 @@ class RenderImageProcessor(Processor):
             
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'raw.png')) # type: ignore
 
-            if 'text' in self.params:
-                for block in self.params['text'][page_index]:
-                    page.draw_rect(block['bbox'], color = fitz.utils.getColor(COLORS['text'])) # type: ignore
+
+            def add_annot(page, rects, annot: str, color):
+                if not rects:
+                    return
+
+                for rect in rects:
+                    page.add_freetext_annot((rect[0], rect[1], rect[0]+len(annot) * 5, rect[1]+10), annot, fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
+                    
+                    page.draw_rect(rect, color = fitz.utils.getColor(color)) # type: ignore
+                
+
+
+            if 'big-block' in self.params:
+                rects = []
+                for block in self.params['big-block'][page_index]:
+                    rects.append(block['bbox'])
+                add_annot(page, rects, 'big-block', 'blue')
+
+            if 'drawings' in self.params:
+                add_annot(page, self.params['drawings'][page_index], 'drawings', 'red')
+
+            if 'images' in self.params:
+                rects = []
+                for block in self.params['images'][page_index]:
+                    rects.append(block['bbox'])
+                add_annot(page, rects, 'images', 'red')
+                    # page.draw_rect(block['bbox'], color = fitz.utils.getColor(COLORS['text'])) # type: ignore
+                    # r = (block['bbox'][0], block['bbox'][1], block['bbox'][0] +20, block['bbox'][1] + 10)
+                    # page.add_freetext_annot(r, 'text', fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
             
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
 
@@ -82,50 +108,67 @@ class RenderImageProcessor(Processor):
 # blocks: page index -> blocks
 class BigBlockProcessor(Processor):
     def process(self):
-        self.params['text'] = {}
+        self.params['big-block'] = {}
         for i, texts in enumerate(self.process_page_parallel()):
-            self.params['text'][i] = texts
+            self.params['big-block'][i] = texts
 
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
             d = page.get_text('rawdict') # type: ignore
 
-            file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
-
             blocks = [b for b in d['blocks'] if b['type'] == 0] # type: ignore
 
             def is_big_block(block):
-                # if len(block['lines']) >= 2:
-                #     return True
-                def get_bbox_area(bbox: list):
-                    return (bbox[2] - bbox[0]) * ( bbox[3] - bbox[1])
-
-                def is_full_line(line):
-                    line_area =get_bbox_area( line['bbox'])
-                    char_area = 0
-                    for span in line['spans']:
-                        char_area += get_bbox_area(span['bbox'])
+                is_big = self.params['big_text_width_range']['min']*0.9 <= block['bbox'][2] - block['bbox'][0] <= self.params['big_text_width_range']['max']*1.1 and self.params['big_text_x0_range']['min']*0.9 <=  block['bbox'][0] <= self.params['big_text_x0_range']['max']*1.1
+                # if is_big:
+                #     r = (block['bbox'][0], block['bbox'][1], block['bbox'][0] +20, block['bbox'][1] + 10)
+                #     page.add_freetext_annot(r, 'text', fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
+                #     page.draw_rect(block['bbox'], color = fitz.utils.getColor(COLORS['text'])) # type: ignore
                     
-                    return char_area / line_area > 0.8
-                    
-
-                lines = block['lines']
-                if len(lines) >= 2:
-                    full_line_count = len(list(filter(is_full_line, lines)))
-                    return full_line_count / len(lines) > 0.8
-                else:
-                    return is_full_line(lines[0])
-                
-                # return self.params['big_text_width_range']['min']*0.9 <= block['bbox'][2] - block['bbox'][0] <= self.params['big_text_width_range']['max']*1.1 and self.params['big_text_x0_range']['min']*0.9 <=  block['bbox'][0] <= self.params['big_text_x0_range']['max']*1.1 
+                return is_big
 
             blocks = list(filter(is_big_block, blocks))
 
+            # page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'BigBlock-debug.png')) # type: ignore
+            # file.write_json(self.get_page_output_path(page_index, 'blocks.json'), blocks)
+            return blocks
+        
 
-            file.write_json(self.get_page_output_path(page_index, 'blocks.json'), blocks)
-            # file.write_text(self.get_page_output_path(page_index, 'blocks.json'), json.dumps(blocks, indent=2, default=lambda x: x.__dict__)) # type: ignore
+class ImageProcessor(Processor):
+    def process(self):
+        self.params['images'] = {}
+        for i, images in enumerate(self.process_page_parallel()):
+            self.params['images'][i] = images
+
+    def process_page(self, page_index: int):
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+            d = page.get_text('rawdict') # type: ignore
+
+            blocks = [b for b in d['blocks'] if b['type'] == 1] # type: ignore
+
+            # for block in blocks:
+            #     r = (block['bbox'][0], block['bbox'][1], block['bbox'][0] +20, block['bbox'][1] + 10)
+            #     page.add_freetext_annot(r, 'image', fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
+            #     page.draw_rect(block['bbox'], color = fitz.utils.getColor('red')) # type: ignore
+                
+
+
+            # page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'image-debug.png')) # type: ignore
 
             return blocks
+
+
+# def debug_mark(page, rects, annot: str, color, dest: str):
+#     if not rects:
+#         return
+
+#     for rect in rects:
+#         page.add_freetext_annot(rect, annot, fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
+#         page.draw_rect(rect, color = fitz.utils.getColor(color)) # type: ignore
+#     page.get_pixmap(dpi = 150).save(dest) # type: ignore
+
 
 # The first line indent causes the line to become a separate block, which should be merged into the next block.
 # in: blocks
@@ -186,6 +229,10 @@ class FirstLineCombineProcessor(Processor):
 
 
 class DrawingExtraProcessor(Processor):
+    def process(self):
+        self.params['drawings'] = {}
+        for i, drawings in enumerate(self.process_page_parallel()):
+            self.params['drawings'][i] = drawings
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
@@ -233,7 +280,8 @@ class DrawingExtraProcessor(Processor):
                 # print(images)
 
 
-                counter = 0
+                # counter = 0
+                rects =[]
                 for j, drawings in images.items():
                     MIN_DRAWINGS = 10
                     if len(drawings) < MIN_DRAWINGS:
@@ -251,9 +299,15 @@ class DrawingExtraProcessor(Processor):
                         y1 = max(y1, rect[3])
                     # print('draw rect',x0, y0, x1, y1)
                     rect = fitz.Rect(x0, y0, x1, y1)
+                    rects.append(rect)
+                return rects
+            else:
+                return []
+
+                # debug_mark(page, rects, 'drawing', 'red', self.get_page_output_path(page_index, 'drawing.png')) # type: ignore
                     
-                    page.get_pixmap(dpi = 150, clip = rect).save(self.dir_output /  f'page_{page_index}_image_{counter}.png') # type: ignore
-                    counter += 1
+                    # page.get_pixmap(dpi = 150, clip = rect).save(self.dir_output /  f'page_{page_index}_image_{counter}.png') # type: ignore
+                    # counter += 1
 
 class FontCounterProcessor(Processor):
     def process(self):
@@ -275,7 +329,7 @@ class FontCounterProcessor(Processor):
         f_font_count = {}
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
-            # file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
+            file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
             d = page.get_text('rawdict') # type: ignore
 
             for block in d['blocks']:
@@ -299,7 +353,6 @@ class MarkNonCommonFontProcessor(Processor):
         text = ''
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
-            # file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
             d = page.get_text('rawdict') # type: ignore
 
             for block in d['blocks']:
@@ -331,7 +384,6 @@ class MarkStructProcessor(Processor):
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
-            # file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
             d = page.get_text('rawdict') # type: ignore
 
             for block in d['blocks']:
@@ -461,6 +513,13 @@ class LayoutParserProcessor(Processor):
                 page.draw_rect(r, color = fitz.utils.getColor(COLORS[d_t[block['type']]])) # type: ignore
         
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
+
+class TOCProcessor(Processor):
+    def process(self):
+        with fitz.open(self.file_input) as doc:# type: ignore
+            toc = doc.get_toc()
+            file.write_json(self.dir_output / 'toc.json', toc)
+
 
 
 class Block:
