@@ -253,7 +253,7 @@ class JSONProcessor(Processor):
                 for s in shots:
                     
                     file_shot = self.dir_output / 'output' / 'assets'  / f'page_{page_index}_shot_{shot_counter}.png'
-                    page.get_pixmap(clip = s).save(file_shot) # type: ignore
+                    page.get_pixmap(clip = s, dpi = 144).save(file_shot) # type: ignore
                     shot_counter += 1
 
                     column_block_elements.append({
@@ -633,6 +633,24 @@ class TOCProcessor(Processor):
         with fitz.open(self.file_input) as doc:# type: ignore
             toc = doc.get_toc()
             file.write_json(self.dir_output / 'toc.json', toc)
+
+
+class HTMLProcessor(Processor):
+    def process(self):
+        elements = file.read_json(self.dir_output /'output'/ 'elements.json')
+        from bs4 import BeautifulSoup
+        html = file.read_text(Path(__file__).parent / 'template.html')
+
+        soup = BeautifulSoup(html, 'html.parser')
+        for element in elements:
+            if element['type'] == 'text':
+                t = soup.new_tag('p')
+                t.append(element['text'])
+                soup.html.body.append(t)
+            elif element['type'] == 'shot':
+                t = soup.new_tag('img', src = element['path'])
+                soup.html.body.append(t)
+        file.write_text(self.dir_output / 'output'/ 'index.html', soup.prettify())
 
 
 

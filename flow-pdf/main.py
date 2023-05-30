@@ -23,8 +23,8 @@ def get_files_from_dir():
 # processors = [processor.WidthCounterProcessor, processor.BigBlockProcessor, processor.RenderImageProcessor]
 # processors = [processor.TOCProcessor]
 # processors = [ processor.LayoutParserProcessor]
-processors = [processor.ImageProcessor, processor.DrawingExtraProcessor, processor.WidthCounterProcessor, processor.BigBlockProcessor, processor.ShotProcessor,processor.JSONProcessor, processor.RenderImageProcessor]
-
+processors = [processor.ImageProcessor, processor.DrawingExtraProcessor, processor.WidthCounterProcessor, processor.BigBlockProcessor, processor.ShotProcessor,processor.JSONProcessor, processor.RenderImageProcessor, processor.HTMLProcessor]
+# processors = [processor.HTMLProcessor]
 for file_input, dir_output in get_files_from_cfg():
 # for file_input, dir_output in get_files_from_dir():
    print('Processing file_input:', file_input, 'dir_output:', dir_output)
