@@ -101,6 +101,11 @@ class RenderImageProcessor(Processor):
                     # r = (block['bbox'][0], block['bbox'][1], block['bbox'][0] +20, block['bbox'][1] + 10)
                     # page.add_freetext_annot(r, 'text', fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
             
+
+            if 'core-y' in self.params:
+                rects = [(self.params['big_text_columns'][0]['min'], self.params['core-y']['min'], self.params['big_text_columns'][-1]['max'], self.params['core-y']['max'])]
+                add_annot(page, rects, 'core', 'yellow')
+
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
 
 
@@ -112,14 +117,20 @@ class RenderImageProcessor(Processor):
             file.write_json(self.get_page_output_path(page_index, 'meta.json'), content)
 
 # 判断正文块
-# out: blocks
+# out: blocks, core-y
 
 # blocks: page index -> blocks
 class BigBlockProcessor(Processor):
     def process(self):
         self.params['big-block'] = {}
-        for i, texts in enumerate(self.process_page_parallel()):
-            self.params['big-block'][i] = texts
+        block_list = []
+        for i, blocks in enumerate(self.process_page_parallel()):
+            block_list.extend(blocks)
+            self.params['big-block'][i] = blocks
+        self.params['core-y'] = {
+            'min': min([b['bbox'][1] for b in block_list]),
+            'max': max([b['bbox'][3] for b in block_list])
+        }
 
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
@@ -129,9 +140,6 @@ class BigBlockProcessor(Processor):
             blocks = [b for b in d['blocks'] if b['type'] == 0] # type: ignore
 
             def is_big_block(block):
-
-# big_text_columns
-
                 if self.params['big_text_width_range']['min']*0.9 <= block['bbox'][2] - block['bbox'][0] <= self.params['big_text_width_range']['max']*1.1:
                     for column in self.params['big_text_columns']:
                         if column['min']*0.9 <= block['bbox'][0] <= column['max']*1.1:
@@ -139,15 +147,6 @@ class BigBlockProcessor(Processor):
                     return False
                 else:
                     return False
-
-
-                is_big = self.params['big_text_width_range']['min']*0.9 <= block['bbox'][2] - block['bbox'][0] <= self.params['big_text_width_range']['max']*1.1 and self.params['big_text_x0_range']['min']*0.9 <=  block['bbox'][0] <= self.params['big_text_x0_range']['max']*1.1
-                # if is_big:
-                #     r = (block['bbox'][0], block['bbox'][1], block['bbox'][0] +20, block['bbox'][1] + 10)
-                #     page.add_freetext_annot(r, 'text', fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
-                #     page.draw_rect(block['bbox'], color = fitz.utils.getColor(COLORS['text'])) # type: ignore
-                    
-                return is_big
 
             blocks = list(filter(is_big_block, blocks))
 
@@ -157,7 +156,6 @@ class BigBlockProcessor(Processor):
 
 # 提取位图
 # output: images
-
 class ImageProcessor(Processor):
     def process(self):
         self.params['images'] = {}
@@ -468,7 +466,7 @@ class WidthCounterProcessor(Processor):
                 blocks = [b for j, b in enumerate(big_text_block) if labels[j] == i]
                 column = {
                     'min': min([b.x0 for b in blocks]),
-                    'max': max([b.x0 for b in blocks])
+                    'max': max([b.x1 for b in blocks])
                 }
                 columns.append(column)
             self.params['big_text_columns'] = columns
