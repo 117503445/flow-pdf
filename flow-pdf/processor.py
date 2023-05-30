@@ -14,7 +14,6 @@ import concurrent.futures
 from functools import cache
 from typing import Any
 
-
 END_CHARACTERS = '.!?'
 
 COLORS = {
@@ -113,7 +112,7 @@ class RenderImageProcessor(Processor):
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
 
 
-            keys = ['big_text_width_range', 'big_text_columns']
+            keys = ['big_text_width_range', 'big_text_columns','most_common_font']
             content = {}
             for k in keys:
                 content[k] = self.params[k]
@@ -253,7 +252,10 @@ class JSONProcessor(Processor):
                 for s in shots:
                     
                     file_shot = self.dir_output / 'output' / 'assets'  / f'page_{page_index}_shot_{shot_counter}.png'
-                    page.get_pixmap(clip = s, dpi = 144).save(file_shot) # type: ignore
+                    r = tuple(x for x in s)
+                    # r = tuple(x * 2 for x in s)
+                    print(r)
+                    page.get_pixmap(clip = r, dpi = 288).save(file_shot) # type: ignore
                     shot_counter += 1
 
                     column_block_elements.append({
@@ -412,6 +414,8 @@ class DrawingExtraProcessor(Processor):
                     # page.get_pixmap(dpi = 150, clip = rect).save(self.dir_output /  f'page_{page_index}_image_{counter}.png') # type: ignore
                     # counter += 1
 
+
+# 统计字数
 class FontCounterProcessor(Processor):
     def process(self):
         self.params['fonts'] = {}
@@ -423,10 +427,10 @@ class FontCounterProcessor(Processor):
 
                 self.params['fonts'][font] += count
         
-        self.params['common_font'] = sorted(self.params['fonts'].items(), key=lambda x: x[1], reverse=True)[0][0]
+        self.params['most_common_font'] = sorted(self.params['fonts'].items(), key=lambda x: x[1], reverse=True)[0][0]
         
-        file.write_json(self.dir_output / 'fonts.json', self.params['fonts'])
-        file.write_json(self.dir_output / 'common_font.json', self.params['common_font'])
+        # file.write_json(self.dir_output / 'fonts.json', self.params['fonts'])
+        # file.write_json(self.dir_output / 'common_font.json', self.params['common_font'])
 
     def process_page(self, page_index: int):
         f_font_count = {}
