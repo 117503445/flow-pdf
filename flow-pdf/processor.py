@@ -203,12 +203,72 @@ class ShotProcessor(Processor):
                 last_y = self.params['core-y']['min']
                 for  block in blocks:
                     r = (column['min'], last_y, column['max'], block['bbox'][1])
-                    rects.append(r)
+                    if r[3] - r[1] > 0:
+                        rects.append(r)
+                    else:
+                        print('warn', r)
                     last_y = block['bbox'][3]
                 rects.append((column['min'], last_y, column['max'], self.params['core-y']['max']))
 
 
             return rects
+
+# JSON 生成
+class JSONProcessor(Processor):
+    def process(self):
+        dir_assets = self.dir_output / 'output' / 'assets'
+        dir_assets.mkdir(parents=True, exist_ok=True)
+
+        elements = []
+        # self.params['shot'] = {}
+        for i, page_result in enumerate(self.process_page_parallel()):
+            elements.extend(page_result)
+        file.write_json(self.dir_output / 'output' / 'elements.json', elements)
+
+    def process_page(self, page_index: int):
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+
+            shot_counter = 0
+
+            block_elements = []
+
+            for column in self.params['big_text_columns']:
+                blocks = [b for b in self.params['big-block'][page_index] if b['bbox'][0] >= column['min'] and b['bbox'][2] <= column['max']]
+                shots = [b for b in self.params['shot'][page_index] if b[0] >= column['min'] and b[2] <= column['max']]
+
+                column_block_elements = []
+                for b in blocks:
+                    t = ''
+                    for line in b['lines']:
+                        for span in line['spans']:
+                            for char in span['chars']:
+                                t += char['c']
+                    column_block_elements.append({
+                        'type': 'text',
+                        'child': [],
+                        'y0': b['bbox'][1],
+                        'text': t,
+                    })
+                for s in shots:
+                    
+                    file_shot = self.dir_output / 'output' / 'assets'  / f'page_{page_index}_shot_{shot_counter}.png'
+                    page.get_pixmap(clip = s).save(file_shot) # type: ignore
+                    shot_counter += 1
+
+                    column_block_elements.append({
+                        'type': 'shot',
+                        'child': [],
+                        'y0': s[1],
+                        'path': f'./assets/{file_shot.name}' 
+                    })
+
+                column_block_elements.sort(key=lambda x: x['y0'])
+                for e in column_block_elements:
+                    del e['y0']
+                block_elements.extend(column_block_elements)
+
+            return block_elements
 
 
 # The first line indent causes the line to become a separate block, which should be merged into the next block.
