@@ -134,8 +134,7 @@ class BigBlockProcessor(Processor):
 
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
-            page: Page = doc.load_page(page_index)
-            d = page.get_text('rawdict') # type: ignore
+            d = self.params['raw-dict'][page_index]
 
             blocks = [b for b in d['blocks'] if b['type'] == 0] # type: ignore
 
@@ -164,20 +163,9 @@ class ImageProcessor(Processor):
 
     def process_page(self, page_index: int):
         with fitz.open(self.file_input) as doc: # type: ignore
-            page: Page = doc.load_page(page_index)
-            d = page.get_text('rawdict') # type: ignore
+            d = self.params['raw-dict'][page_index]
 
             blocks = [b for b in d['blocks'] if b['type'] == 1] # type: ignore
-
-            # for block in blocks:
-            #     r = (block['bbox'][0], block['bbox'][1], block['bbox'][0] +20, block['bbox'][1] + 10)
-            #     page.add_freetext_annot(r, 'image', fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
-            #     page.draw_rect(block['bbox'], color = fitz.utils.getColor('red')) # type: ignore
-                
-
-
-            # page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'image-debug.png')) # type: ignore
-
             return blocks
 
 
@@ -554,6 +542,19 @@ class TOCProcessor(Processor):
             toc = doc.get_toc()
             file.write_json(self.dir_output / 'toc.json', toc)
 
+# out: raw-dict
+class RawDictProcessor(Processor):
+    def process(self):
+        self.params['raw-dict'] = {}
+        for i, page_result in enumerate(self.process_page_parallel()):
+            self.params['raw-dict'][i] = page_result
+        
+
+    def process_page(self, page_index: int):
+        with fitz.open(self.file_input) as doc: # type: ignore
+            page: Page = doc.load_page(page_index)
+            return page.get_text('rawdict') # type: ignore
+            
 
 
 class Block:
