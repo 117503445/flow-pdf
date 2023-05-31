@@ -31,21 +31,33 @@ def get_files_from_dir():
 # processors = [processor.TOCProcessor]
 # processors = [ processor.LayoutParserProcessor]
 processors = [processor.ImageProcessor, processor.FontCounterProcessor,processor.DrawingExtraProcessor, processor.WidthCounterProcessor, processor.BigBlockProcessor, processor.ShotProcessor,processor.JSONProcessor,processor.HTMLProcessor,processor.RenderImageProcessor, ]
+
+
+
+
 # processors = [processor.HTMLProcessor]
 for file_input, dir_output in get_files_from_cfg():
 # for file_input, dir_output in get_files_from_dir():
    print('Processing file_input:', file_input, 'dir_output:', dir_output)
 
-   if dir_output.exists():
-      shutil.rmtree(dir_output)
-   dir_output.mkdir()
+   from worker import Executer
+   from worker import ReadDocWorker, DumpWorker
+   e = Executer(file_input, dir_output)
+   e.register([ReadDocWorker, DumpWorker])
+   e.execute()
 
-   params = {}
-   for p in processors:
-      print(f'{p.__name__} start')
-      start = time.perf_counter()
-      p(file_input, dir_output, params).process()
-      print(f'{p.__name__} finished, time = {(time.perf_counter() - start):.2f}s')
+
+
+   # if dir_output.exists():
+   #    shutil.rmtree(dir_output)
+   # dir_output.mkdir()
+
+   # params = {}
+   # for p in processors:
+   #    print(f'{p.__name__} start')
+   #    start = time.perf_counter()
+   #    p(file_input, dir_output, params).process()
+   #    print(f'{p.__name__} finished, time = {(time.perf_counter() - start):.2f}s')
 
    # doc: Document = fitz.open(file_input) # type: ignore
 
@@ -71,3 +83,4 @@ for file_input, dir_output in get_files_from_cfg():
 
    print('Done', file_input)
    print()
+   exit(0)

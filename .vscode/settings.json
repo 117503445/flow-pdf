@@ -6,5 +6,6 @@
                 ".py"
             ]
         }
-    }
+    },
+    "python.formatting.provider": "black"
 }
