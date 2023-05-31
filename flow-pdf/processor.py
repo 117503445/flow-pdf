@@ -69,7 +69,7 @@ class RenderImageProcessor(Processor):
             page: Page = doc.load_page(page_index)
             
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'raw.png')) # type: ignore
-
+            file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
 
             def add_annot(page, rects, annot: str, color):
                 if not rects:
@@ -82,32 +82,37 @@ class RenderImageProcessor(Processor):
                 
 
 
-            if 'big-block' in self.params:
-                rects = []
+            # if 'big-block' in self.params:
+            #     rects = []
+            #     for block in self.params['big-block'][page_index]:
+            #         rects.append(block['bbox'])
+            #     add_annot(page, rects, 'big-block', 'blue')
+
+            # if 'drawings' in self.params:
+            #     add_annot(page, self.params['drawings'][page_index], 'drawings', 'red')
+
+            # if 'images' in self.params:
+            #     rects = []
+            #     for block in self.params['images'][page_index]:
+            #         rects.append(block['bbox'])
+            #     add_annot(page, rects, 'images', 'red')
+
+            # if 'core-y' in self.params:
+            #     rects = [(self.params['big_text_columns'][0]['min'], self.params['core-y']['min'], self.params['big_text_columns'][-1]['max'], self.params['core-y']['max'])]
+            #     add_annot(page, rects, 'core', 'yellow')
+
+            # if 'shot' in self.params:
+            #     rects = self.params['shot'][page_index]
+            #     add_annot(page, rects, 'shot', 'green')
+
+            if 'most_common_font' in self.params:
                 for block in self.params['big-block'][page_index]:
-                    rects.append(block['bbox'])
-                add_annot(page, rects, 'big-block', 'blue')
-
-            if 'drawings' in self.params:
-                add_annot(page, self.params['drawings'][page_index], 'drawings', 'red')
-
-            if 'images' in self.params:
-                rects = []
-                for block in self.params['images'][page_index]:
-                    rects.append(block['bbox'])
-                add_annot(page, rects, 'images', 'red')
-                    # page.draw_rect(block['bbox'], color = fitz.utils.getColor(COLORS['text'])) # type: ignore
-                    # r = (block['bbox'][0], block['bbox'][1], block['bbox'][0] +20, block['bbox'][1] + 10)
-                    # page.add_freetext_annot(r, 'text', fill_color=fitz.utils.getColor('white'), border_color = fitz.utils.getColor('black'))
-            
-
-            if 'core-y' in self.params:
-                rects = [(self.params['big_text_columns'][0]['min'], self.params['core-y']['min'], self.params['big_text_columns'][-1]['max'], self.params['core-y']['max'])]
-                add_annot(page, rects, 'core', 'yellow')
-
-            if 'shot' in self.params:
-                rects = self.params['shot'][page_index]
-                add_annot(page, rects, 'shot', 'green')
+                    for line in block['lines']:
+                        for span in line['spans']:
+                            if span['font'] != self.params['most_common_font'] or span['size'] != self.params['most_common_size']:
+                                r = fitz.Rect(span["bbox"])
+                                page.draw_rect(r, color = fitz.utils.getColor('green')) # type: ignore
+                    
 
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
 
@@ -250,12 +255,8 @@ class JSONProcessor(Processor):
                         'text': t,
                     })
                 for s in shots:
-                    
                     file_shot = self.dir_output / 'output' / 'assets'  / f'page_{page_index}_shot_{shot_counter}.png'
-                    r = tuple(x for x in s)
-                    # r = tuple(x * 2 for x in s)
-                    print(r)
-                    page.get_pixmap(clip = r, dpi = 288).save(file_shot) # type: ignore
+                    page.get_pixmap(clip = s, dpi = 288).save(file_shot) # type: ignore
                     shot_counter += 1
 
                     column_block_elements.append({
@@ -418,25 +419,35 @@ class DrawingExtraProcessor(Processor):
 # 统计字数
 class FontCounterProcessor(Processor):
     def process(self):
-        self.params['fonts'] = {}
-        for i, font_counter in enumerate(self.process_page_parallel()):
-            # combine fonts
-            for font, count in font_counter.items():
-                if font not in self.params['fonts']:
-                    self.params['fonts'][font] = 0
+        font_counter = {}
+        size_counter = {}
+        for i, counter in enumerate(self.process_page_parallel()):
+            for font, count in counter['font'].items():
+                if font not in font_counter:
+                    font_counter[font] = 0
 
-                self.params['fonts'][font] += count
+                font_counter[font] += count
+            for size, count in counter['size'].items():
+                if size not in size_counter:
+                    size_counter[size] = 0
+
+                size_counter[size] += count 
+
         
-        self.params['most_common_font'] = sorted(self.params['fonts'].items(), key=lambda x: x[1], reverse=True)[0][0]
+        self.params['most_common_font'] = sorted(font_counter.items(), key=lambda x: x[1], reverse=True)[0][0]
+        self.params['most_common_size'] = sorted(size_counter.items(), key=lambda x: x[1], reverse=True)[0][0]
         
         # file.write_json(self.dir_output / 'fonts.json', self.params['fonts'])
         # file.write_json(self.dir_output / 'common_font.json', self.params['common_font'])
 
     def process_page(self, page_index: int):
-        f_font_count = {}
+        counter = {
+            "font": {},
+            "size": {}
+        }
         with fitz.open(self.file_input) as doc: # type: ignore
             page: Page = doc.load_page(page_index)
-            # file.write_text(self.get_page_output_path(page_index, 'rawdict.json'), page.get_text('rawjson')) # type: ignore
+            
             d = page.get_text('rawdict') # type: ignore
 
             for block in d['blocks']:
@@ -449,10 +460,15 @@ class FontCounterProcessor(Processor):
                 for line in block['lines']:
                     for span in line['spans']:
                         font = span['font']
-                        if font not in f_font_count:
-                            f_font_count[font] = 0
-                        f_font_count[font] += len(span['chars'])
-        return f_font_count
+                        if font not in counter['font']:
+                            counter['font'][font] = 0
+                        counter['font'][font] += len(span['chars'])
+
+                        size = span['size']
+                        if size not in counter['size']:
+                            counter['size'][size] = 0
+                        counter['size'][size] += len(span['chars'])
+        return counter
         # file.write_json(self.get_page_output_path(page_index, 'f_font_count.json'), f_font_count)
 
 class MarkNonCommonFontProcessor(Processor):
