@@ -24,24 +24,7 @@ class PageOutParams(NamedTuple):
 
 
 class ReadDocWorker(PageWorker):
-    def run(
-        self, doc_in: DocInParams, page_in: list[PageInParams]
-    ) -> tuple[DocOutParams, list[PageOutParams]]:
-        results: list[PageOutParams] = []
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = []
-            for page_index in range(doc_in.page_count):
-                futures.append(
-                    executor.submit(
-                        self.page_run, page_index, doc_in, page_in[page_index]
-                    )
-                )
-            for future in futures:
-                results.append(future.result())
-
-        return (DocOutParams(), results)
-
-    def page_run(
+    def run_page(
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> PageOutParams:
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
