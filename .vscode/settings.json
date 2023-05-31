@@ -1,3 +1,10 @@
 {
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "VSCodeCounter.languages": {
+        "python": {
+            "extensions": [
+                ".py"
+            ]
+        }
+    }
 }
