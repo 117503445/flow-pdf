@@ -9,19 +9,22 @@ import time
 from htutil import file
 
 
-version = file.read_text(Path(__file__).parent / 'git.txt')
+version = file.read_text(Path(__file__).parent / "git.txt")
 
-print(f'version: {version}')
+print(f"version: {version}")
 fitz.TOOLS.set_small_glyph_heights(True)
 
+
 def get_files_from_cfg():
-   cfg = yaml.load(Path('./config.yaml').read_text(), Loader=yaml.FullLoader)
-   for file in cfg['files']:
-      yield (Path(file['input']),Path(file['output']))
+    cfg = yaml.load(Path("./config.yaml").read_text(), Loader=yaml.FullLoader)
+    for file in cfg["files"]:
+        yield (Path(file["input"]), Path(file["output"]))
+
 
 def get_files_from_dir():
-   for file in Path('./data').glob('*.pdf'):
-         yield (file, Path('./data') / file.stem)
+    for file in Path("./data").glob("*.pdf"):
+        yield (file, Path("./data") / file.stem)
+
 
 # processors = [processor.RenderImageProcessor, processor.BigBlockProcessor, processor.FirstLineCombineProcessor]
 # processors = [processor.RenderImageProcessor, processor.DrawingExtraProcessor]
@@ -30,57 +33,59 @@ def get_files_from_dir():
 # processors = [processor.WidthCounterProcessor, processor.BigBlockProcessor, processor.RenderImageProcessor]
 # processors = [processor.TOCProcessor]
 # processors = [ processor.LayoutParserProcessor]
-processors = [processor.ImageProcessor, processor.FontCounterProcessor,processor.DrawingExtraProcessor, processor.WidthCounterProcessor, processor.BigBlockProcessor, processor.ShotProcessor,processor.JSONProcessor,processor.HTMLProcessor,processor.RenderImageProcessor, ]
-
-
+processors = [
+    processor.ImageProcessor,
+    processor.FontCounterProcessor,
+    processor.DrawingExtraProcessor,
+    processor.WidthCounterProcessor,
+    processor.BigBlockProcessor,
+    processor.ShotProcessor,
+    processor.JSONProcessor,
+    processor.HTMLProcessor,
+    processor.RenderImageProcessor,
+]
 
 
 # processors = [processor.HTMLProcessor]
 for file_input, dir_output in get_files_from_cfg():
-# for file_input, dir_output in get_files_from_dir():
-   print('Processing file_input:', file_input, 'dir_output:', dir_output)
+    # for file_input, dir_output in get_files_from_dir():
+    print("Processing file_input:", file_input, "dir_output:", dir_output)
 
-   from worker import Executer
-   from worker import ReadDocWorker, DumpWorker
-   e = Executer(file_input, dir_output)
-   e.register([ReadDocWorker, DumpWorker])
-   e.execute()
+    from worker import Executer, workers
 
+    e = Executer(file_input, dir_output)
+    e.register(workers)
+    e.execute()
 
+    # if dir_output.exists():
+    #    shutil.rmtree(dir_output)
+    # dir_output.mkdir()
 
-   # if dir_output.exists():
-   #    shutil.rmtree(dir_output)
-   # dir_output.mkdir()
+    # params = {}
+    # for p in processors:
+    #    print(f'{p.__name__} start')
+    #    start = time.perf_counter()
+    #    p(file_input, dir_output, params).process()
+    #    print(f'{p.__name__} finished, time = {(time.perf_counter() - start):.2f}s')
 
-   # params = {}
-   # for p in processors:
-   #    print(f'{p.__name__} start')
-   #    start = time.perf_counter()
-   #    p(file_input, dir_output, params).process()
-   #    print(f'{p.__name__} finished, time = {(time.perf_counter() - start):.2f}s')
+    # doc: Document = fitz.open(file_input) # type: ignore
 
-   # doc: Document = fitz.open(file_input) # type: ignore
+    # experiment.render_image(file_input, dir_output)
+    # experiment.get_draws(file_input, dir_output, doc)
+    # experiment.mark_drawings(file_input, dir_output, doc)
 
-   # experiment.render_image(file_input, dir_output)
-   # experiment.get_draws(file_input, dir_output, doc)
-   # experiment.mark_drawings(file_input, dir_output, doc)
+    # experiment.get_text(file_input, dir_output, doc, 'json')
+    # experiment.parse(file_input, dir_output, doc)
 
-   # experiment.get_text(file_input, dir_output, doc, 'json')
-   # experiment.parse(file_input, dir_output, doc)
+    # experiment.mark_text(file_input, dir_output, doc)
+    # experiment.repaint(file_input, dir_output, doc)
 
-   # experiment.mark_text(file_input, dir_output, doc)
-   # experiment.repaint(file_input, dir_output, doc)
+    # experiment.get_image_2(file_input, dir_output, doc)
+    # experiment.get_image(file_input, dir_output)
+    # experiment.get_toc(file_input, dir_output)
+    # experiment.get_text(file_input, dir_output, doc, 'rawjson')
+    # experiment.get_text(file_input, dir_output, doc, 'xhtml')
+    # experiment.get_text(file_input, dir_output, doc, 'xml')
 
-   # experiment.get_image_2(file_input, dir_output, doc)
-   # experiment.get_image(file_input, dir_output)
-   # experiment.get_toc(file_input, dir_output)
-   # experiment.get_text(file_input, dir_output, doc, 'rawjson')
-   # experiment.get_text(file_input, dir_output, doc, 'xhtml')
-   # experiment.get_text(file_input, dir_output, doc, 'xml')
-    
-
-
-
-   print('Done', file_input)
-   print()
-   exit(0)
+    print("Done", file_input)
+    print()
