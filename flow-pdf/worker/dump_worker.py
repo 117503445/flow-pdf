@@ -26,6 +26,11 @@ class PageOutParams(NamedTuple):
 
 
 class DumpWorker(Worker):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.disable_cache = True
+
     def run(
         self, doc_in: DocInParams, page_in: list[PageInParams]
     ) -> tuple[DocOutParams, list[PageOutParams]]:

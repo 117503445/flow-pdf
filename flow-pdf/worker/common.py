@@ -4,9 +4,11 @@ import time
 import fitz
 from typing import NamedTuple
 import concurrent.futures
+from htutil import file
 
 
 class DocInputParams(NamedTuple):
+    file_input: Path
     page_count: int
 
 
@@ -23,10 +25,73 @@ class PageOutputParams(NamedTuple):
 
 
 class Worker:
+    def post_run(
+        self, doc_in: DocInputParams, page_in: list[PageInputParams]
+    ) -> tuple[DocOutputParams, list[PageOutputParams]]:
+        success, result = self.load_cache(doc_in, page_in)
+        if success:
+            return result
+
+        doc_out, page_out = self.run(doc_in, page_in)
+
+        self.save_cache(doc_in, page_in, doc_out, page_out)
+        return doc_out, page_out
+
     def run(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
     ) -> tuple[DocOutputParams, list[PageOutputParams]]:
         return (DocOutputParams(), [])
+
+    def load_cache(
+        self, doc_in: DocInputParams, page_in: list[PageInputParams]
+    ) -> tuple[bool, tuple[DocOutputParams, list[PageOutputParams]]]:
+        if self.__dict__.get("disable_cache"):
+            return False, (DocOutputParams(), [])
+        # print(inspect.getsource(self.__class__))
+
+        file_pkl = (
+            Path("/tmp")
+            / "flow-pdf"
+            / doc_in.file_input.name
+            / f"{self.__class__.__name__}.pkl"
+        )
+        if not file_pkl.exists():
+            return False, (DocOutputParams(), [])
+        
+        d = file.read_pkl(file_pkl)
+        if d["src"] != inspect.getsource(self.__class__) or d["doc_in"] != doc_in or d["page_in"] != page_in:
+            return False, (DocOutputParams(), [])
+        
+        return True, (d["doc_out"], d["page_out"])
+
+    def save_cache(
+        self,
+        doc_in: DocInputParams,
+        page_in: list[PageInputParams],
+        doc_out: DocOutputParams,
+        page_out: list[PageOutputParams],
+    ):
+        if self.__dict__.get("disable_cache"):
+            return
+
+        file_pkl = (
+            Path("/tmp")
+            / "flow-pdf"
+            / doc_in.file_input.name
+            / f"{self.__class__.__name__}.pkl"
+        )
+        file_pkl.parent.mkdir(parents=True, exist_ok=True)
+
+        file.write_pkl(
+            file_pkl,
+            {
+                "src": inspect.getsource(self.__class__),
+                "doc_in": doc_in,
+                "page_in": page_in,
+                "doc_out": doc_out,
+                "page_out": page_out,
+            },
+        )
 
 
 class PageWorker(Worker):
@@ -110,7 +175,7 @@ class Executer:
                 params = [self.store.page_get(n, i) for n in param_names]
                 page_in.append(k_class(*params))
 
-            doc_out, page_out = w().run(doc_in, page_in)
+            doc_out, page_out = w().post_run(doc_in, page_in)
             for k, v in doc_out._asdict().items():
                 self.store.doc_set(k, v)
             for i, p in enumerate(page_out):
