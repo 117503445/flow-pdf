@@ -108,11 +108,24 @@ class RenderImageProcessor(Processor):
             if 'most_common_font' in self.params:
                 for block in self.params['big-block'][page_index]:
                     for line in block['lines']:
+                        spans = []
                         for span in line['spans']:
                             if span['font'] != self.params['most_common_font'] or span['size'] != self.params['most_common_size']:
-                                r = fitz.Rect(span["bbox"])
-                                page.draw_rect(r, color = fitz.utils.getColor('green')) # type: ignore
-                    
+                                spans.append(span)
+                            else:
+                                if spans:
+                                    y_0 = min([s['bbox'][1] for s in spans])
+                                    y_1 = max([s['bbox'][3] for s in spans])
+                                    r = (spans[0]['bbox'][0], y_0, spans[-1]['bbox'][2], y_1)
+                                    page.draw_rect(r, color = fitz.utils.getColor('green')) # type: ignore
+                                    spans = []
+                        if spans:
+                            y_0 = min([s['bbox'][1] for s in spans])
+                            y_1 = max([s['bbox'][3] for s in spans])
+                            r = (spans[0]['bbox'][0], y_0, spans[-1]['bbox'][2], y_1)
+                            page.draw_rect(r, color = fitz.utils.getColor('green')) # type: ignore
+                            spans = []
+            
 
             page.get_pixmap(dpi = 150).save(self.get_page_output_path(page_index, 'marked.png')) # type: ignore
 
@@ -243,17 +256,61 @@ class JSONProcessor(Processor):
 
                 column_block_elements = []
                 for b in blocks:
-                    t = ''
-                    for line in b['lines']:
-                        for span in line['spans']:
-                            for char in span['chars']:
-                                t += char['c']
-                    column_block_elements.append({
-                        'type': 'text',
-                        'child': [],
+
+                    block_element = {
+                        'type': 'block',
                         'y0': b['bbox'][1],
-                        'text': t,
-                    })
+                        'childs': [],
+                    }
+
+                    def get_span_type(span):
+                        if span['font'] != self.params['most_common_font'] or span['size'] != self.params['most_common_size']:
+                            span_type = 'shot'
+                        else:
+                            span_type = 'text'
+                        return span_type
+
+                    
+
+                    for line in b['lines']:
+                        spans = line['spans']
+
+                        result = []
+                        current_value = None
+                        current_group = []
+
+                        for span in spans:
+                            if get_span_type(span) != current_value:
+                                if current_value is not None:
+                                    result.append(current_group)
+                                current_value = get_span_type(span)
+                                current_group = []
+                            current_group.append(span)
+
+                        result.append(current_group)
+
+                        for group in result:
+                            if get_span_type(group[0]) == 'text':
+                                t = ''
+                                for span in group:
+                                    for char in span['chars']:
+                                        t += char['c']
+                                block_element['childs'].append({
+                                                'type': 'text',
+                                                'text': t,
+                                            })
+                            elif get_span_type(group[0]) == 'shot':
+                                file_shot = self.dir_output / 'output' / 'assets'  / f'page_{page_index}_shot_{shot_counter}.png'
+                                y_0 = min([s['bbox'][1] for s in group])
+                                y_1 = max([s['bbox'][3] for s in group])
+                                r = (group[0]['bbox'][0], y_0, group[-1]['bbox'][2], y_1)
+                                page.get_pixmap(clip = r, dpi = 288).save(file_shot) # type: ignore
+                                shot_counter += 1
+                                block_element['childs'].append({
+                                    'type': 'shot',
+                                    'path': f'./assets/{file_shot.name}' 
+                                })
+                    column_block_elements.append(block_element)
                 for s in shots:
                     file_shot = self.dir_output / 'output' / 'assets'  / f'page_{page_index}_shot_{shot_counter}.png'
                     page.get_pixmap(clip = s, dpi = 288).save(file_shot) # type: ignore
@@ -261,7 +318,6 @@ class JSONProcessor(Processor):
 
                     column_block_elements.append({
                         'type': 'shot',
-                        'child': [],
                         'y0': s[1],
                         'path': f'./assets/{file_shot.name}' 
                     })
@@ -663,13 +719,23 @@ class HTMLProcessor(Processor):
 
         soup = BeautifulSoup(html, 'html.parser')
         for element in elements:
-            if element['type'] == 'text':
-                t = soup.new_tag('p')
-                t.append(element['text'])
-                soup.html.body.append(t)
+            if element['type'] == 'block':
+                
+                t = soup.new_tag('div')
+
+                for c in element['childs']:
+                    if c['type'] == 'text':
+                        t.append(c['text'])
+                    elif c['type'] == 'shot':
+                        t.append(soup.new_tag('img', src = c['path'], attrs={"class": "inline-img"}))
+                    else:
+                        print('warning: unknown child type', c['type'])
+                soup.html.body.append(t) # type: ignore
             elif element['type'] == 'shot':
                 t = soup.new_tag('img', src = element['path'])
-                soup.html.body.append(t)
+                soup.html.body.append(t) # type: ignore
+            else:
+                print('warning: unknown element type', element['type'])
         file.write_text(self.dir_output / 'output'/ 'index.html', soup.prettify())
 
 

@@ -12,7 +12,7 @@ from htutil import file
 version = file.read_text(Path(__file__).parent / 'git.txt')
 
 print(f'version: {version}')
-
+fitz.TOOLS.set_small_glyph_heights(True)
 
 def get_files_from_cfg():
    cfg = yaml.load(Path('./config.yaml').read_text(), Loader=yaml.FullLoader)
