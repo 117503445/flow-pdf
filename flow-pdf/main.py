@@ -6,6 +6,13 @@ from fitz import Document, Page
 import shutil
 import processor
 import time
+from htutil import file
+
+
+version = file.read_text(Path(__file__).parent / 'git.txt')
+
+print(f'version: {version}')
+
 
 def get_files_from_cfg():
    cfg = yaml.load(Path('./config.yaml').read_text(), Loader=yaml.FullLoader)

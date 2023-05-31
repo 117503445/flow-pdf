@@ -4,9 +4,9 @@
 
 每个 processor 对 PDF 做出解析行为。
 
-不断传递 doc, params
+processor 输入可以是文档级变量，也可以是页面级变量。输出可以是文档级变量，也可以是页面级变量。
 
-可以设置 processors，对某一个 PDF 进行解析。
+执行器会根据输入变量，自动寻找祖先 processor，并编排执行顺序。
 
 ## 流程
 
