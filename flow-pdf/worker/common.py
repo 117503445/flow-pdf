@@ -5,22 +5,28 @@ import fitz
 from typing import NamedTuple
 import concurrent.futures
 from htutil import file
+from dataclasses import dataclass
+from dataclasses import fields, asdict
 
-
-class DocInputParams(NamedTuple):
+@dataclass
+class DocInputParams:
     file_input: Path
+    dir_output: Path
     page_count: int
 
 
-class PageInputParams(NamedTuple):
+@dataclass
+class PageInputParams:
     pass
 
 
-class DocOutputParams(NamedTuple):
+@dataclass
+class DocOutputParams:
     pass
 
 
-class PageOutputParams(NamedTuple):
+@dataclass
+class PageOutputParams:
     pass
 
 
@@ -57,11 +63,15 @@ class Worker:
         )
         if not file_pkl.exists():
             return False, (DocOutputParams(), [])
-        
+
         d = file.read_pkl(file_pkl)
-        if d["src"] != inspect.getsource(self.__class__) or d["doc_in"] != doc_in or d["page_in"] != page_in:
+        if (
+            d["src"] != inspect.getsource(self.__class__)
+            or d["doc_in"] != doc_in
+            or d["page_in"] != page_in
+        ):
             return False, (DocOutputParams(), [])
-        
+
         return True, (d["doc_out"], d["page_out"])
 
     def save_cache(
@@ -159,27 +169,27 @@ class Executer:
 
             k = "doc_in"
             k_class = w_method.__annotations__[k]  # type: ignore
-            param_names = k_class._fields
+            param_names = [f.name for f in fields(k_class)]
             params = [self.store.doc_get(n) for n in param_names]
             doc_in = k_class(*params)
-
+            
             k = "page_in"
             if issubclass(w, PageWorker):
                 k_class = w_method.__annotations__[k]  # type: ignore
             elif issubclass(w, Worker):
                 k_class = w_method.__annotations__[k].__args__[0]  # type: ignore
 
-            param_names = k_class._fields
+            param_names = [f.name for f in fields(k_class)]
             page_in = []
             for i in range(self.store.doc_get("page_count")):
                 params = [self.store.page_get(n, i) for n in param_names]
                 page_in.append(k_class(*params))
 
             doc_out, page_out = w().post_run(doc_in, page_in)
-            for k, v in doc_out._asdict().items():
+            for k, v in asdict(doc_out).items():
                 self.store.doc_set(k, v)
             for i, p in enumerate(page_out):
-                for k, v in p._asdict().items():
+                for k, v in asdict(p).items():
                     self.store.page_set(k, i, v)
             print(f"{w.__name__} finished, time = {(time.perf_counter() - start):.2f}s")
 

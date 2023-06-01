@@ -1,12 +1,11 @@
 from .common import PageWorker
-from .common import DocInputParams, PageInputParams, DocOutputParams, PageOutputParams
-
 from pathlib import Path
 from typing import NamedTuple
 import fitz
 from fitz import Document, Page, TextPage
 import concurrent.futures
 from dataclasses import dataclass
+from .common import DocInputParams, PageInputParams, DocOutputParams, PageOutputParams
 
 
 @dataclass
@@ -16,7 +15,7 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    pass
+    raw_dict: dict
 
 
 @dataclass
@@ -26,14 +25,13 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
-    raw_dict: dict
+    image_blocks: list[dict]
 
 
-class ReadDocWorker(PageWorker):
+class ImageWorker(PageWorker):
     def run_page(
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> PageOutParams:
-        with fitz.open(doc_in.file_input) as doc:  # type: ignore
-            page: Page = doc.load_page(page_index)
-            raw_dict = page.get_text("rawdict")  # type: ignore
-            return PageOutParams(raw_dict=raw_dict)
+        image_blocks = [b for b in page_in.raw_dict["blocks"] if b["type"] == 1]
+
+        return PageOutParams(image_blocks)

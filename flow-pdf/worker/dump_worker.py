@@ -4,24 +4,28 @@ from typing import NamedTuple
 import fitz
 from fitz import Document, Page, TextPage
 import concurrent.futures
+from dataclasses import dataclass
+from .common import DocInputParams, PageInputParams, DocOutputParams, PageOutputParams
 
 from htutil import file
 
-
-class DocInParams(NamedTuple):
-    dir_output: Path
-    page_count: int
-
-
-class PageInParams(NamedTuple):
-    raw_dict: dict
-
-
-class DocOutParams(NamedTuple):
+@dataclass
+class DocInParams(DocInputParams):
     pass
 
 
-class PageOutParams(NamedTuple):
+@dataclass
+class PageInParams(PageInputParams):
+    raw_dict: dict
+
+
+@dataclass
+class DocOutParams(DocOutputParams):
+    pass
+
+
+@dataclass
+class PageOutParams(PageOutputParams):
     pass
 
 
