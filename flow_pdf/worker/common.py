@@ -7,6 +7,7 @@ import concurrent.futures
 from dataclasses import dataclass, fields, asdict
 
 from htutil import file
+import logging
 
 
 @dataclass
@@ -37,17 +38,20 @@ class LocalPageOutputParams:
 
 
 class Worker:
+    logger: logging.Logger
+
+
     def post_run(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
     ) -> tuple[DocOutputParams, list[PageOutputParams]]:
         try:
             success, result = self.load_cache(doc_in, page_in)
         except Exception as e:
-            print(f"warning: {self.__class__.__name__} load_cache error: {e}")
+            self.logger.warning(f"warning: {self.__class__.__name__} load_cache error: {e}")
             success, result = False, (DocOutputParams(), [])
 
         if success:
-            print("[cached]")
+            self.logger.debug("[cached]")
             return result
 
         doc_out, page_out = self.run(doc_in, page_in)
@@ -65,7 +69,6 @@ class Worker:
     ) -> tuple[bool, tuple[DocOutputParams, list[PageOutputParams]]]:
         if self.__dict__.get("disable_cache"):
             return False, (DocOutputParams(), [])
-        # print(inspect.getsource(self.__class__))
 
         file_pkl = (
             Path("/tmp")
@@ -165,6 +168,22 @@ class PageWorker(Worker):
         return DocOutputParams()
 
 
+def create_logger(file_input: Path, dir_output: Path):
+    logger = logging.getLogger(file_input.stem)
+    logger.setLevel(logging.DEBUG)
+
+    file_handler = logging.FileHandler(dir_output / "log.txt")
+
+    formatter = logging.Formatter(
+        "%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
+        datefmt="%Y-%m-%d:%H:%M:%S",
+    )
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    return logger
+
+
 class Executer:
     def __init__(self, file_input: Path, dir_output: Path):
         with fitz.open(file_input) as doc:  # type: ignore
@@ -174,20 +193,22 @@ class Executer:
         self.store.doc_set("file_input", file_input)
         self.store.doc_set("dir_output", dir_output)
 
+        self.logger = create_logger(file_input, dir_output)
+
     def register(self, workers: list[type]):
         self.workers = workers
 
     def execute(self):
-        for w in self.workers:
-            print(f"{w.__name__} start")
+        for W in self.workers:
+            self.logger.info(f"{W.__name__} start")
             start = time.perf_counter()
 
-            if issubclass(w, PageWorker):
-                w_method = w.run_page
-            elif issubclass(w, Worker):
-                w_method = w.run
+            if issubclass(W, PageWorker):
+                w_method = W.run_page
+            elif issubclass(W, Worker):
+                w_method = W.run
             else:
-                print(f"warning: {w.__name__} is not a worker")
+                self.logger.warning(f"{W.__name__} is not a worker")
                 continue
 
             k = "doc_in"
@@ -197,9 +218,9 @@ class Executer:
             doc_in = k_class(*params)
 
             k = "page_in"
-            if issubclass(w, PageWorker):
+            if issubclass(W, PageWorker):
                 k_class = w_method.__annotations__[k]  # type: ignore
-            elif issubclass(w, Worker):
+            elif issubclass(W, Worker):
                 k_class = w_method.__annotations__[k].__args__[0]  # type: ignore
 
             param_names = [f.name for f in fields(k_class)]
@@ -208,13 +229,19 @@ class Executer:
                 params = [self.store.page_get(n, i) for n in param_names]
                 page_in.append(k_class(*params))
 
-            doc_out, page_out = w().post_run(doc_in, page_in)
+            w = W()
+            w.logger = self.logger
+
+            doc_out, page_out = w.post_run(doc_in, page_in)
             for k, v in asdict(doc_out).items():
                 self.store.doc_set(k, v)
             for i, p in enumerate(page_out):
                 for k, v in asdict(p).items():
                     self.store.page_set(k, i, v)
-            print(f"{w.__name__} finished, time = {(time.perf_counter() - start):.2f}s")
+
+            self.logger.info(
+                f"{W.__name__} finished, time = {(time.perf_counter() - start):.2f}s"
+            )
 
 
 class ParamsStore:

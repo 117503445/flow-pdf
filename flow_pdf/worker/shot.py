@@ -56,7 +56,7 @@ class ShotWorker(PageWorker):
                 if r[3] - r[1] > 0:
                     rects.append(r)
                 else:
-                    print("warn", r)
+                    self.logger.warning(f"r.y1 <= r.y0, r = {r}")
                 last_y = block["bbox"][3]
             rects.append((column.min, last_y, column.max, doc_in.core_y.max))
 

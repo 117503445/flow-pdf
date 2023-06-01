@@ -65,13 +65,13 @@ class HTMLGenWorker(PageWorker):
                             )
                         )
                     else:
-                        print("warning: unknown child type", c["type"])
+                        self.logger.warning(f"unknown child type {c['type']}")
                 soup.html.body.append(t)  # type: ignore
             elif element["type"] == "shot":
                 t = soup.new_tag("img", src=element["path"])
                 soup.html.body.append(t)  # type: ignore
             else:
-                print("warning: unknown element type", element["type"])
+                self.logger.warning(f"unknown element type {element['type']}")
         file.write_text(doc_in.dir_output / "output" / "index.html", soup.prettify())
 
         return PageOutParams(), LocalPageOutParams()

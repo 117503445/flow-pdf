@@ -25,7 +25,7 @@ def get_files_from_dir():
 
 
 for file_input, dir_output in get_files_from_cfg():
-    print("Processing file_input:", file_input, "dir_output:", dir_output)
+    # print("Processing file_input:", file_input, "dir_output:", dir_output)
 
     if dir_output.exists():
         shutil.rmtree(dir_output)
@@ -35,5 +35,5 @@ for file_input, dir_output in get_files_from_cfg():
     e.register(workers)
     e.execute()
 
-    print("Done", file_input)
-    print()
+    # print("Done", file_input)
+    # print()
