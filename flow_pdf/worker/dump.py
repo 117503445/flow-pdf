@@ -61,9 +61,7 @@ class DumpWorker(PageWorker):
             page: Page = doc.load_page(page_index)
             file.write_text(doc_in.dir_output / "raw_dict" / f"{page_index}.json", page.get_text("rawjson"))  # type: ignore
 
-            dir_raw = doc_in.dir_output / "raw"
-            dir_raw.mkdir(parents=True, exist_ok=True)
-            page.get_pixmap(dpi=150).save(dir_raw / f"{page_index}.png")  # type: ignore
+            page.get_pixmap(dpi=150).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
 
             def add_annot(page, rects, annot: str, color):
                 if not rects:
@@ -94,12 +92,13 @@ class DumpWorker(PageWorker):
 
             add_annot(page, page_in.shot_rects, "shot", "green")
 
-            dir_marked = doc_in.dir_output / "marked"
-            dir_marked.mkdir(parents=True, exist_ok=True)
-
-            page.get_pixmap(dpi=150).save(dir_marked / f"{page_index}.png")  # type: ignore
+            page.get_pixmap(dpi=150).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
 
         return PageOutParams(), LocalPageOutParams()
+
+    def post_run_page(self, doc_in: DocInParams, page_in: list[PageInParams]):  # type: ignore[override]
+        for p in ["marked", "raw_dict", "raw"]:
+            (doc_in.dir_output / p).mkdir(parents=True, exist_ok=True)
 
     def after_run_page(  # type: ignore[override]
         self,
