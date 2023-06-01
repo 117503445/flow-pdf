@@ -2,6 +2,7 @@
 
 - [x] page worker
 - [x] worker 文件缓存支持
+- [ ] page worker local page result
 - [ ] 重构 `processor` 为 `worker`
 - [ ] block 分自然段
 - [ ] 多栏 shot 合并

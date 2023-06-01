@@ -27,6 +27,7 @@ class DocOutParams(DocOutputParams):
 @dataclass
 class PageOutParams(PageOutputParams):
     raw_dict: dict
+    drawings: list
 
 
 class ReadDocWorker(PageWorker):
@@ -36,4 +37,5 @@ class ReadDocWorker(PageWorker):
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)
             raw_dict = page.get_text("rawdict")  # type: ignore
-            return PageOutParams(raw_dict=raw_dict)
+            drawings = page.get_drawings()
+            return PageOutParams(raw_dict, drawings)

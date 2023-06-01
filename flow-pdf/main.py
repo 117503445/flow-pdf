@@ -51,15 +51,15 @@ for file_input, dir_output in get_files_from_cfg():
     # for file_input, dir_output in get_files_from_dir():
     print("Processing file_input:", file_input, "dir_output:", dir_output)
 
+    if dir_output.exists():
+        shutil.rmtree(dir_output)
+    dir_output.mkdir()
+
     from worker import Executer, workers
 
     e = Executer(file_input, dir_output)
     e.register(workers)
     e.execute()
-
-    # if dir_output.exists():
-    #    shutil.rmtree(dir_output)
-    # dir_output.mkdir()
 
     # params = {}
     # for p in processors:
