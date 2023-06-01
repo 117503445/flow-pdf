@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from htutil import file
 from fitz import Page
 import fitz
+import fitz.utils
 
 
 @dataclass
@@ -27,7 +28,9 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    pass
+    big_blocks: list
+    image_blocks: list[dict]
+    shot_rects: list
 
 
 @dataclass
@@ -57,6 +60,44 @@ class DumpWorker(PageWorker):
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)
             file.write_text(doc_in.dir_output / "raw_dict" / f"{page_index}.json", page.get_text("rawjson"))  # type: ignore
+
+            dir_raw = doc_in.dir_output / "raw"
+            dir_raw.mkdir(parents=True, exist_ok=True)
+            page.get_pixmap(dpi=150).save(dir_raw / f"{page_index}.png")  # type: ignore
+
+            def add_annot(page, rects, annot: str, color):
+                if not rects:
+                    return
+
+                for rect in rects:
+                    page.add_freetext_annot(
+                        (rect[0], rect[1], rect[0] + len(annot) * 5, rect[1] + 10),
+                        annot,
+                        fill_color=fitz.utils.getColor("white"),
+                        border_color=fitz.utils.getColor("black"),
+                    )
+
+                    page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
+
+            rects = []
+            for block in page_in.big_blocks:
+                rects.append(block["bbox"])
+            add_annot(page, rects, "big-block", "blue")
+
+            # if 'drawings' in self.params:
+            #     add_annot(page, self.params['drawings'][page_index], 'drawings', 'red')
+
+            rects = []
+            for block in page_in.image_blocks:
+                rects.append(block["bbox"])
+            add_annot(page, rects, "images", "red")
+
+            add_annot(page, page_in.shot_rects, "shot", "green")
+
+            dir_marked = doc_in.dir_output / "marked"
+            dir_marked.mkdir(parents=True, exist_ok=True)
+
+            page.get_pixmap(dpi=150).save(dir_marked / f"{page_index}.png")  # type: ignore
 
         return PageOutParams(), LocalPageOutParams()
 
