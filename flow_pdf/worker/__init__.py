@@ -6,6 +6,7 @@ from .font_counter import FontCounterWorker
 from .width_counter import WidthCounterWorker
 from .big_block import BigBlockWorker
 from .shot import ShotWorker
+from .json_gen import JSONGenWorker
 
 workers = [
     ReadDocWorker,
@@ -14,5 +15,6 @@ workers = [
     WidthCounterWorker,
     BigBlockWorker,
     ShotWorker,
+    JSONGenWorker,
     DumpWorker,
 ]

@@ -131,6 +131,8 @@ class PageWorker(Worker):
     def run_page_parallel(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
     ) -> tuple[list[PageOutputParams], list[LocalPageOutputParams]]:
+        self.post_run_page(doc_in, page_in)
+
         page_out = []
         local_page_out = []
 
@@ -145,8 +147,8 @@ class PageWorker(Worker):
                 local_page_out.append(l_p_out)
             return page_out, local_page_out
 
-    # def post_run_page(self):
-    #     pass
+    def post_run_page(self, doc_in: DocInputParams, page_in: list[PageInputParams]):
+        pass
 
     def run_page(
         self, page_index: int, doc_in: DocInputParams, page_in: PageInputParams
