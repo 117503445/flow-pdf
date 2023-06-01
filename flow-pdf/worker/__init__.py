@@ -1,6 +1,7 @@
 from .common import Worker, Executer
-from .read_doc_worker import ReadDocWorker
-from .dump_worker import DumpWorker
-from .image_worker import ImageWorker
+from .read_doc import ReadDocWorker
+from .dump import DumpWorker
+from .image import ImageWorker
+from .font_counter import FontCounterWorker
 
-workers = [ReadDocWorker, DumpWorker, ImageWorker]
+workers = [ReadDocWorker, FontCounterWorker, ImageWorker, DumpWorker]

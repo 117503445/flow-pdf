@@ -8,6 +8,7 @@ from htutil import file
 from dataclasses import dataclass
 from dataclasses import fields, asdict
 
+
 @dataclass
 class DocInputParams:
     file_input: Path
@@ -34,8 +35,14 @@ class Worker:
     def post_run(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
     ) -> tuple[DocOutputParams, list[PageOutputParams]]:
-        success, result = self.load_cache(doc_in, page_in)
+        try:
+            success, result = self.load_cache(doc_in, page_in)
+        except Exception as e:
+            print(f"warning: {self.__class__.__name__} load_cache error: {e}")
+            success, result = False, (DocOutputParams(), [])
+
         if success:
+            print("[cached]")
             return result
 
         doc_out, page_out = self.run(doc_in, page_in)
@@ -172,7 +179,7 @@ class Executer:
             param_names = [f.name for f in fields(k_class)]
             params = [self.store.doc_get(n) for n in param_names]
             doc_in = k_class(*params)
-            
+
             k = "page_in"
             if issubclass(w, PageWorker):
                 k_class = w_method.__annotations__[k]  # type: ignore

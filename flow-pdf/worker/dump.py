@@ -9,9 +9,11 @@ from .common import DocInputParams, PageInputParams, DocOutputParams, PageOutput
 
 from htutil import file
 
+
 @dataclass
 class DocInParams(DocInputParams):
-    pass
+    most_common_font: str
+    most_common_size: int
 
 
 @dataclass
@@ -45,5 +47,14 @@ class DumpWorker(Worker):
         dir_raw_dict = doc_in.dir_output / "raw_dict"
         for page_index, p_i in enumerate(page_in):
             file.write_json(dir_raw_dict / f"{page_index}.json", p_i.raw_dict)
+
+        file_meta = doc_in.dir_output / "meta.json"
+        file.write_json(
+            file_meta,
+            {
+                "most_common_font": doc_in.most_common_font,
+                "most_common_size": doc_in.most_common_size,
+            },
+        )
 
         return (DocOutParams(), [])
