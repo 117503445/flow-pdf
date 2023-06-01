@@ -1,6 +1,7 @@
 from pathlib import Path
 import inspect
 import time
+from typing import NamedTuple
 import fitz
 import concurrent.futures
 from dataclasses import dataclass, fields, asdict
@@ -217,7 +218,7 @@ class Executer:
 class ParamsStore:
     def __init__(self, page_count: int):
         self.doc_params = {"page_count": page_count}
-        self.page_params: list = [{}] * page_count
+        self.page_params: list = [{} for _ in range(page_count)]
 
     def doc_get(self, name: str):
         return self.doc_params[name]
@@ -229,4 +230,24 @@ class ParamsStore:
         return self.page_params[page_index][name]
 
     def page_set(self, name: str, page_index: int, value):
+        # print(f"set page{page_index}.[{name}]")
+        if name in self.page_params[page_index]:
+            raise Exception(f"page{page_index}.[{name}] already set")
         self.page_params[page_index][name] = value
+
+
+class Block:
+    # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)
+    def __init__(self, block: list) -> None:
+        self.x0 = block[0]
+        self.y0 = block[1]
+        self.x1 = block[2]
+        self.y1 = block[3]
+        self.lines: str = block[4]
+        self.block_no = block[5]
+        self.block_type = block[6]
+
+
+class Range(NamedTuple):
+    min: float
+    max: float

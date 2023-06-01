@@ -1,4 +1,4 @@
-from .common import PageWorker
+from .common import PageWorker, Block
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -6,6 +6,7 @@ from .common import (
     PageOutputParams,
     LocalPageOutputParams,
 )
+
 
 import fitz
 from fitz import Page
@@ -31,6 +32,7 @@ class DocOutParams(DocOutputParams):
 class PageOutParams(PageOutputParams):
     raw_dict: dict
     drawings: list
+    blocks: list[Block]
 
 
 @dataclass
@@ -46,4 +48,6 @@ class ReadDocWorker(PageWorker):
             page: Page = doc.load_page(page_index)
             raw_dict = page.get_text("rawdict")  # type: ignore
             drawings = page.get_drawings()
-            return PageOutParams(raw_dict, drawings), LocalPageOutParams()
+            blocks = [Block(b) for b in page.get_text("blocks")]  # type: ignore
+
+            return PageOutParams(raw_dict, drawings, blocks), LocalPageOutParams()
