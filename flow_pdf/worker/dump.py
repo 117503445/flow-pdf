@@ -22,6 +22,8 @@ class DocInParams(DocInputParams):
     big_text_width_range: Range
     big_text_columns: list[Range]
 
+    core_y: Range
+
 
 @dataclass
 class PageInParams(PageInputParams):
@@ -77,6 +79,7 @@ class DumpWorker(PageWorker):
                 "most_common_size": doc_in.most_common_size,
                 "big_text_width_range": doc_in.big_text_width_range,
                 "big_text_columns": doc_in.big_text_columns,
+                "core_y": doc_in.core_y,
             },
         )
 

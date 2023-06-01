@@ -35,7 +35,7 @@ class PageOutParams(PageOutputParams):
 
 @dataclass
 class LocalPageOutParams(LocalPageOutputParams):
-    big_blocks: list[Block]
+    large_blocks: list[Block]
 
 
 class WidthCounterWorker(PageWorker):
@@ -59,7 +59,7 @@ class WidthCounterWorker(PageWorker):
         page_out: list[PageOutParams],
         local_page_out: list[LocalPageOutParams],
     ) -> DocOutParams:
-        blocks = [b for p in local_page_out for b in p.big_blocks]
+        blocks = [b for p in local_page_out for b in p.large_blocks]
 
         widths = [b.x1 - b.x0 for b in blocks]
 
