@@ -5,6 +5,7 @@ from .image import ImageWorker
 from .font_counter import FontCounterWorker
 from .width_counter import WidthCounterWorker
 from .big_block import BigBlockWorker
+from .shot import ShotWorker
 
 workers = [
     ReadDocWorker,
@@ -12,5 +13,6 @@ workers = [
     ImageWorker,
     WidthCounterWorker,
     BigBlockWorker,
+    ShotWorker,
     DumpWorker,
 ]
