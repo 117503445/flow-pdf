@@ -27,53 +27,56 @@ class DocOutParams(DocOutputParams):
 @dataclass
 class PageOutParams(PageOutputParams):
     font_counter: dict[str, int]
-    size_counter: dict[str, int]
+    size_counter: dict[int, int]
 
 
 class FontCounterWorker(PageWorker):
-    def run_page(
-        self, page_index: int, doc_in: DocInParams, page_in: PageInParams
+    def run_page(# type: ignore[override]
+        self, page_index: int, doc_in: DocInParams, page_in: PageInParams 
     ) -> PageOutParams:
-        font_counter = {}
-        size_counter = {}
+        font_counter: dict[str, int]  = {}
+        size_counter: dict[int, int] = {}
 
-        for block in page_in.raw_dict['blocks']:
-            if block['type'] != 0:
+        for block in page_in.raw_dict["blocks"]:
+            if block["type"] != 0:
                 continue
-            for line in block['lines']:
-                for span in line['spans']:
-                    font = span['font']
+            for line in block["lines"]:
+                for span in line["spans"]:
+                    font: str = span["font"]
                     if font not in font_counter:
                         font_counter[font] = 0
-                    font_counter[font] += len(span['chars'])
+                    font_counter[font] += len(span["chars"])
 
-                    size = span['size']
+                    size: int = span["size"]
                     if size not in size_counter:
                         size_counter[size] = 0
-                    size_counter[size] += len(span['chars'])
+                    size_counter[size] += len(span["chars"])
 
         return PageOutParams(font_counter, size_counter)
 
-    def after_run_page(
+    def after_run_page(# type: ignore[override]
         self,
-        doc_in: DocInParams,
-        page_in: list[PageInParams],
-        page_out: list[PageOutParams],
+        doc_in: DocInParams,  
+        page_in: list[PageInParams],  
+        page_out: list[PageOutParams],  
     ) -> DocOutParams:
-        
-        font_counter = {}
-        size_counter = {}
-        for  p_i in page_out:
+        font_counter: dict[str, int] = {}
+        size_counter: dict[int, int] = {}
+        for p_i in page_out:
             for f, c in p_i.font_counter.items():
                 if f not in font_counter:
                     font_counter[f] = 0
                 font_counter[f] += c
-            for f, c in p_i.size_counter.items():
-                if f not in size_counter:
-                    size_counter[f] = 0
-                size_counter[f] += c
+            for s, c in p_i.size_counter.items():
+                if s not in size_counter:
+                    size_counter[s] = 0
+                size_counter[s] += c
 
-        most_common_font = sorted(font_counter.items(), key=lambda x: x[1], reverse=True)[0][0]
-        most_common_size = sorted(size_counter.items(), key=lambda x: x[1], reverse=True)[0][0]
+        most_common_font = sorted(
+            font_counter.items(), key=lambda x: x[1], reverse=True
+        )[0][0]
+        most_common_size = sorted(
+            size_counter.items(), key=lambda x: x[1], reverse=True
+        )[0][0]
 
         return DocOutParams(most_common_font, most_common_size)

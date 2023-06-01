@@ -1,13 +1,13 @@
 import yaml
 from pathlib import Path
-import experiment
+import experiment # type: ignore
 import fitz
 from fitz import Document, Page
 import shutil
-import processor
+import processor # type: ignore
 import time
 from htutil import file
-
+from worker import Executer, workers # type: ignore
 
 version = file.read_text(Path(__file__).parent / "git.txt")
 
@@ -55,7 +55,7 @@ for file_input, dir_output in get_files_from_cfg():
         shutil.rmtree(dir_output)
     dir_output.mkdir()
 
-    from worker import Executer, workers
+    
 
     e = Executer(file_input, dir_output)
     e.register(workers)

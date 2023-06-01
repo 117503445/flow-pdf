@@ -15,6 +15,7 @@ scikit-learn = "^1.2.2"
 requests = "^2.31.0"
 beautifulsoup4 = "^4.12.2"
 black = "^23.3.0"
+types-pyyaml = "^6.0.12.10"
 
 [build-system]
 requires = ["poetry-core"]

@@ -29,8 +29,8 @@ class PageOutParams(PageOutputParams):
 
 
 class ImageWorker(PageWorker):
-    def run_page(
-        self, page_index: int, doc_in: DocInParams, page_in: PageInParams
+    def run_page(# type: ignore[override]
+        self, page_index: int, doc_in: DocInParams, page_in: PageInParams  
     ) -> PageOutParams:
         image_blocks = [b for b in page_in.raw_dict["blocks"] if b["type"] == 1]
 

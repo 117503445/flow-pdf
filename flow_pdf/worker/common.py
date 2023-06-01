@@ -204,7 +204,7 @@ class Executer:
 class ParamsStore:
     def __init__(self, page_count: int):
         self.doc_params = {"page_count": page_count}
-        self.page_params = [{}] * page_count
+        self.page_params: list = [{}] * page_count
 
     def doc_get(self, name: str):
         return self.doc_params[name]
