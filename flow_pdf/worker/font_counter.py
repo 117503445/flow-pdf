@@ -5,7 +5,7 @@ import fitz
 from fitz import Document, Page, TextPage
 import concurrent.futures
 from dataclasses import dataclass
-from .common import DocInputParams, PageInputParams, DocOutputParams, PageOutputParams
+from .common import DocInputParams, PageInputParams, DocOutputParams, PageOutputParams, LocalPageOutputParams
 
 
 @dataclass
@@ -26,6 +26,10 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
+    pass
+
+@dataclass
+class LocalPageOutParams(LocalPageOutputParams):
     font_counter: dict[str, int]
     size_counter: dict[int, int]
 
@@ -33,7 +37,7 @@ class PageOutParams(PageOutputParams):
 class FontCounterWorker(PageWorker):
     def run_page(# type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams 
-    ) -> PageOutParams:
+    ) -> tuple[PageOutParams, LocalPageOutParams]:
         font_counter: dict[str, int]  = {}
         size_counter: dict[int, int] = {}
 
@@ -52,17 +56,18 @@ class FontCounterWorker(PageWorker):
                         size_counter[size] = 0
                     size_counter[size] += len(span["chars"])
 
-        return PageOutParams(font_counter, size_counter)
+        return PageOutParams(), LocalPageOutParams(font_counter, size_counter)
 
     def after_run_page(# type: ignore[override]
         self,
         doc_in: DocInParams,  
         page_in: list[PageInParams],  
         page_out: list[PageOutParams],  
+        local_page_out: list[LocalPageOutParams],
     ) -> DocOutParams:
         font_counter: dict[str, int] = {}
         size_counter: dict[int, int] = {}
-        for p_i in page_out:
+        for p_i in local_page_out:
             for f, c in p_i.font_counter.items():
                 if f not in font_counter:
                     font_counter[f] = 0

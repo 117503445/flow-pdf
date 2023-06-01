@@ -31,6 +31,11 @@ class PageOutputParams:
     pass
 
 
+@dataclass
+class LocalPageOutputParams:
+    pass
+
+
 class Worker:
     def post_run(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
@@ -115,29 +120,37 @@ class PageWorker(Worker):
     def run(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
     ) -> tuple[DocOutputParams, list[PageOutputParams]]:
-        page_result = self.run_page_parallel(doc_in, page_in)
+        page_result, local_page_result = self.run_page_parallel(doc_in, page_in)
 
-        doc_result = self.after_run_page(doc_in, page_in, page_result)
+        doc_result = self.after_run_page(
+            doc_in, page_in, page_result, local_page_result
+        )
 
         return (doc_result, page_result)
 
     def run_page_parallel(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
-    ) -> list[PageOutputParams]:
+    ) -> tuple[list[PageOutputParams], list[LocalPageOutputParams]]:
+        page_out = []
+        local_page_out = []
+
         with concurrent.futures.ProcessPoolExecutor() as executor:
             futures = [
                 executor.submit(self.run_page, page_index, doc_in, page_in[page_index])
                 for page_index in range(doc_in.page_count)
             ]
-            results = [future.result() for future in futures]
-            return results
+            for future in futures:
+                p_out, l_p_out = future.result()
+                page_out.append(p_out)
+                local_page_out.append(l_p_out)
+            return page_out, local_page_out
 
     # def post_run_page(self):
     #     pass
 
     def run_page(
         self, page_index: int, doc_in: DocInputParams, page_in: PageInputParams
-    ) -> PageOutputParams:
+    ) -> tuple[PageOutputParams, LocalPageOutputParams]:
         raise NotImplementedError()
 
     def after_run_page(
@@ -145,6 +158,7 @@ class PageWorker(Worker):
         doc_in: DocInputParams,
         page_in: list[PageInputParams],
         page_out: list[PageOutputParams],
+        local_page_out: list[LocalPageOutputParams],
     ) -> DocOutputParams:
         return DocOutputParams()
 
