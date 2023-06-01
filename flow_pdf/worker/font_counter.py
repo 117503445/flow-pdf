@@ -1,11 +1,14 @@
 from .common import PageWorker
-from pathlib import Path
-from typing import NamedTuple
-import fitz
-from fitz import Document, Page, TextPage
-import concurrent.futures
+from .common import (
+    DocInputParams,
+    PageInputParams,
+    DocOutputParams,
+    PageOutputParams,
+    LocalPageOutputParams,
+)
+
+
 from dataclasses import dataclass
-from .common import DocInputParams, PageInputParams, DocOutputParams, PageOutputParams, LocalPageOutputParams
 
 
 @dataclass
@@ -28,6 +31,7 @@ class DocOutParams(DocOutputParams):
 class PageOutParams(PageOutputParams):
     pass
 
+
 @dataclass
 class LocalPageOutParams(LocalPageOutputParams):
     font_counter: dict[str, int]
@@ -35,10 +39,10 @@ class LocalPageOutParams(LocalPageOutputParams):
 
 
 class FontCounterWorker(PageWorker):
-    def run_page(# type: ignore[override]
-        self, page_index: int, doc_in: DocInParams, page_in: PageInParams 
+    def run_page(  # type: ignore[override]
+        self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
-        font_counter: dict[str, int]  = {}
+        font_counter: dict[str, int] = {}
         size_counter: dict[int, int] = {}
 
         for block in page_in.raw_dict["blocks"]:
@@ -58,11 +62,11 @@ class FontCounterWorker(PageWorker):
 
         return PageOutParams(), LocalPageOutParams(font_counter, size_counter)
 
-    def after_run_page(# type: ignore[override]
+    def after_run_page(  # type: ignore[override]
         self,
-        doc_in: DocInParams,  
-        page_in: list[PageInParams],  
-        page_out: list[PageOutParams],  
+        doc_in: DocInParams,
+        page_in: list[PageInParams],
+        page_out: list[PageOutParams],
         local_page_out: list[LocalPageOutParams],
     ) -> DocOutParams:
         font_counter: dict[str, int] = {}

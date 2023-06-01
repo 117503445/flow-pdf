@@ -2,11 +2,10 @@ from pathlib import Path
 import inspect
 import time
 import fitz
-from typing import NamedTuple
 import concurrent.futures
+from dataclasses import dataclass, fields, asdict
+
 from htutil import file
-from dataclasses import dataclass
-from dataclasses import fields, asdict
 
 
 @dataclass

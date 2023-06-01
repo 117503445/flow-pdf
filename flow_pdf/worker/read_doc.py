@@ -7,11 +7,8 @@ from .common import (
     LocalPageOutputParams,
 )
 
-from pathlib import Path
-from typing import NamedTuple
 import fitz
-from fitz import Document, Page, TextPage
-import concurrent.futures
+from fitz import Page
 from dataclasses import dataclass
 
 

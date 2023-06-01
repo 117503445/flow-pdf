@@ -1,11 +1,7 @@
 from .common import Worker
-from pathlib import Path
-from typing import NamedTuple
-import fitz
-from fitz import Document, Page, TextPage
-import concurrent.futures
-from dataclasses import dataclass
 from .common import DocInputParams, PageInputParams, DocOutputParams, PageOutputParams
+
+from dataclasses import dataclass
 
 from htutil import file
 
@@ -31,17 +27,14 @@ class PageOutParams(PageOutputParams):
     pass
 
 
-
-
-
 class DumpWorker(Worker):
     def __init__(self) -> None:
         super().__init__()
 
         self.disable_cache = True
 
-    def run( # type: ignore[override]
-        self, doc_in: DocInParams, page_in: list[PageInParams]  
+    def run(  # type: ignore[override]
+        self, doc_in: DocInParams, page_in: list[PageInParams]
     ) -> tuple[DocOutParams, list[PageOutParams]]:
         file.write_json(
             doc_in.dir_output / "meta.json", {"page_count": doc_in.page_count}
