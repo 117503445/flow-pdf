@@ -7,6 +7,7 @@ from .width_counter import WidthCounterWorker
 from .big_block import BigBlockWorker
 from .shot import ShotWorker
 from .json_gen import JSONGenWorker
+from .html_gen import HTMLGenWorker
 
 workers = [
     ReadDocWorker,
@@ -16,5 +17,6 @@ workers = [
     BigBlockWorker,
     ShotWorker,
     JSONGenWorker,
+    HTMLGenWorker,
     DumpWorker,
 ]
