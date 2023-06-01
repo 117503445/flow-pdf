@@ -20,4 +20,4 @@ ENV PATH=/root/app/.venv/bin:$PATH
 COPY --from=build /root/.venv /root/app/.venv/
 COPY . .
 RUN ./script/write_git_info.sh
-ENTRYPOINT [ "python" , "flow-pdf/main.py"]
+ENTRYPOINT [ "python" , "flow_pdf/main.py"]

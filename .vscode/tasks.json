@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"command": "poetry run python flow-pdf/main.py",
+			"command": "poetry run python flow_pdf/main.py",
 			"problemMatcher": [],
 			"label": "main.py",
 			// "detail": "tsc && node dist/index.js",

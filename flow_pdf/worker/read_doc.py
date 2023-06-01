@@ -31,8 +31,8 @@ class PageOutParams(PageOutputParams):
 
 
 class ReadDocWorker(PageWorker):
-    def run_page(
-        self, page_index: int, doc_in: DocInParams, page_in: PageInParams
+    def run_page(# type: ignore[override]
+        self, page_index: int, doc_in: DocInParams, page_in: PageInParams  
     ) -> PageOutParams:
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)

@@ -37,8 +37,8 @@ class DumpWorker(Worker):
 
         self.disable_cache = True
 
-    def run(
-        self, doc_in: DocInParams, page_in: list[PageInParams]
+    def run( # type: ignore[override]
+        self, doc_in: DocInParams, page_in: list[PageInParams]  
     ) -> tuple[DocOutParams, list[PageOutParams]]:
         file.write_json(
             doc_in.dir_output / "meta.json", {"page_count": doc_in.page_count}

@@ -8,5 +8,5 @@
         }
     },
     "python.formatting.provider": "black",
-    "mypy.enabled": false
+    "mypy.enabled": true
 }

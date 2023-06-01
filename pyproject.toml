@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "flow-pdf"
+name = "flow_pdf"
 version = "0.1.0"
 description = "flow-pdf converts PDFs into fluid and dynamic HTML documents, transforming the static layout of PDFs into a responsive and user-friendly format."
 authors = ["117503445 <t117503445@gmail.com>"]
@@ -15,6 +15,7 @@ scikit-learn = "^1.2.2"
 requests = "^2.31.0"
 beautifulsoup4 = "^4.12.2"
 black = "^23.3.0"
+types-pyyaml = "^6.0.12.10"
 
 [build-system]
 requires = ["poetry-core"]
