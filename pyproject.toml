@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "flow-pdf"
 version = "0.1.0"
-description = ""
+description = "flow-pdf converts PDFs into fluid and dynamic HTML documents, transforming the static layout of PDFs into a responsive and user-friendly format."
 authors = ["117503445 <t117503445@gmail.com>"]
 readme = "README.md"
 
