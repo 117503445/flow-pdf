@@ -70,7 +70,7 @@ class JSONGenWorker(PageWorker):
                 shots = [
                     b
                     for b in page_in.shot_rects
-                    if b[0] >= column.min and b[2] <= column.max
+                    if b[0] >= column.min and b[0] <= column.max
                 ]
 
                 column_block_elements = []

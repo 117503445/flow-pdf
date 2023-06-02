@@ -57,6 +57,6 @@ pacman -S opencv
 cd layout-parser-be
 uvicorn main:app --reload --host 0.0.0.0
 
-ln -s /tmp/flow-pdf/out ./data/out
+mkdir -p /tmp/flow-pdf/out && ln -s /tmp/flow-pdf/out ./data/out
 
 ```

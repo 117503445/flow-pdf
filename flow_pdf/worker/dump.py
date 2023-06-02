@@ -28,6 +28,7 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
+    raw_dict: dict
     big_blocks: list
     image_blocks: list[dict]
     shot_rects: list
@@ -78,9 +79,14 @@ class DumpWorker(PageWorker):
                     page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
 
             rects = []
-            for block in page_in.big_blocks:
+            for block in page_in.raw_dict['blocks']:
                 rects.append(block["bbox"])
-            add_annot(page, rects, "big-block", "blue")
+            add_annot(page, rects, "block", "blue")
+
+            # rects = []
+            # for block in page_in.big_blocks:
+            #     rects.append(block["bbox"])
+            # add_annot(page, rects, "big-block", "blue")
 
             # if 'drawings' in self.params:
             #     add_annot(page, self.params['drawings'][page_index], 'drawings', 'red')
