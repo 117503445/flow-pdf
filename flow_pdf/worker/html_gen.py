@@ -58,6 +58,8 @@ class HTMLGenWorker(PageWorker):
                 for c in element["childs"]:
                     if c["type"] == "text":
                         t.append(c["text"])
+                    elif c['type'] == 'new-line':
+                        t.append(soup.new_tag('br'))
                     elif c["type"] == "shot":
                         t.append(
                             soup.new_tag(

@@ -6,9 +6,10 @@
 - [x] 重构 `processor` 为 `worker`
 - [x] Logger
 - [x] 多栏 shot 合并
-- [ ] block 分自然段
+- [x] block 分自然段
 - [ ] Shot 延伸不足问题优化
 - [ ] big-block 误识别优化
+- [ ] list 识别支持
 - [ ] 无内容 Shot 删减
 - [ ] share PoolExecutor
 - [ ] Table of Contents

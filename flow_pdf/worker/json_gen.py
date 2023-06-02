@@ -91,7 +91,21 @@ class JSONGenWorker(PageWorker):
                             span_type = "text"
                         return span_type
 
-                    for line in b["lines"]:
+                    for i in range(len(b["lines"])):
+                        line = b["lines"][i]
+
+                        MIN_DELTA = 1
+                        if i >= 1:
+                            delta = line["bbox"][0] - b["bbox"][0]
+                            if delta > MIN_DELTA:
+                                last_line = b["lines"][i - 1]
+                                if last_line["bbox"][0] - b["bbox"][0] < MIN_DELTA:
+                                    block_element["childs"].append(
+                                        {
+                                            "type": "new-line",
+                                        }
+                                    )
+
                         spans = line["spans"]
 
                         result = []

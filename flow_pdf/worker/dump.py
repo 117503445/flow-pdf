@@ -79,9 +79,20 @@ class DumpWorker(PageWorker):
                     page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
 
             rects = []
-            for block in page_in.raw_dict['blocks']:
+            for block in page_in.raw_dict["blocks"]:
                 rects.append(block["bbox"])
             add_annot(page, rects, "block", "blue")
+
+            # rects = []
+            # for b in page_in.big_blocks:
+            #     for i in range(1, len(b["lines"])):
+            #         line = b["lines"][i]
+            #         delta = line["bbox"][0] - b["bbox"][0]
+            #         if delta > 1:
+            #             last_line = b["lines"][i - 1]
+            #             if last_line["bbox"][0] - b["bbox"][0] < 1:
+            #                 rects.append(line["bbox"])
+            # add_annot(page, rects, "new-line", "pink")
 
             # rects = []
             # for block in page_in.big_blocks:
