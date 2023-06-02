@@ -6,13 +6,12 @@ import shutil
 import time
 from htutil import file
 from worker import Executer, workers  # type: ignore
-import logging
 import concurrent.futures
+import common  # type: ignore
 
 version = file.read_text(Path(__file__).parent / "git.txt")
 
 print(f"version: {version}")
-fitz.TOOLS.set_small_glyph_heights(True)
 
 
 def get_files_from_cfg():
@@ -26,27 +25,11 @@ def get_files_from_dir():
         yield (file, Path("./data") / file.stem)
 
 
-def create_main_logger():
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-
-    stream_handler = logging.StreamHandler()
-
-    formatter = logging.Formatter(
-        "%(asctime)s,%(msecs)03d [%(levelname)s] %(message)s",
-        datefmt="%Y-%m-%d:%H:%M:%S",
-    )
-    stream_handler.setFormatter(formatter)
-
-    logger.addHandler(stream_handler)
-    return logger
+logger = common.create_main_logger()
 
 
-logger = create_main_logger()
-
-
-def create_task(file_input, dir_output):
-    logger.info(f"start {file_input}")
+def create_task(file_input: Path, dir_output: Path):
+    logger.info(f"start {file_input.name}")
     t = time.perf_counter()
     if dir_output.exists():
         shutil.rmtree(dir_output)
@@ -55,7 +38,7 @@ def create_task(file_input, dir_output):
     e = Executer(file_input, dir_output)
     e.register(workers)
     e.execute()
-    logger.info(f"end {file_input}, time = {time.perf_counter() - t:.2f}s")
+    logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")
 
 
 with concurrent.futures.ProcessPoolExecutor() as executor:

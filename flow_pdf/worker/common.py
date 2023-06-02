@@ -9,6 +9,8 @@ from dataclasses import dataclass, fields, asdict
 from htutil import file
 import logging
 
+fitz.TOOLS.set_small_glyph_heights(True)
+
 
 @dataclass
 class DocInputParams:
@@ -40,14 +42,15 @@ class LocalPageOutputParams:
 class Worker:
     logger: logging.Logger
 
-
     def post_run(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
     ) -> tuple[DocOutputParams, list[PageOutputParams]]:
         try:
             success, result = self.load_cache(doc_in, page_in)
         except Exception as e:
-            self.logger.warning(f"warning: {self.__class__.__name__} load_cache error: {e}")
+            self.logger.warning(
+                f"warning: {self.__class__.__name__} load_cache error: {e}"
+            )
             success, result = False, (DocOutputParams(), [])
 
         if success:

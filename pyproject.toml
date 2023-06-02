@@ -17,6 +17,8 @@ beautifulsoup4 = "^4.12.2"
 black = "^23.3.0"
 types-pyyaml = "^6.0.12.10"
 types-beautifulsoup4 = "^4.12.0.5"
+fastapi = "^0.95.2"
+uvicorn = {extras = ["standard"], version = "^0.22.0"}
 
 [build-system]
 requires = ["poetry-core"]
