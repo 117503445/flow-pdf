@@ -8,6 +8,7 @@ import time
 from worker import Executer, workers  # type: ignore
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 dir_data = Path("./web-data")
 dir_input = dir_data / "input"
@@ -20,7 +21,13 @@ for dir in [dir_data, dir_input]:
         dir.mkdir(parents=True)
 
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 logger = common.create_main_logger()
 

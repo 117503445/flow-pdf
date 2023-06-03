@@ -6,28 +6,33 @@ import './App.css'
 function App() {
   const [count, setCount] = useState(0)
 
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    console.log('submit');
+    event.preventDefault();
+
+    const target = event.target as HTMLFormElement;
+
+    const formData = new FormData(target);
+    const response = await fetch('http://localhost:8000/api/task', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await response.json();
+    console.log(data);
+  }
+
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <h1>flow-pdf</h1>
+
+      <p>flow-pdf converts PDFs into fluid and dynamic HTML documents, transforming the static layout of PDFs into a responsive and user-friendly format.</p>
+
+
+      <form onSubmit={handleSubmit}>
+        <input type="file" name="file" accept=".pdf" />
+        <button type="submit">提交</button>
+      </form>
     </>
   )
 }
