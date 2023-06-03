@@ -36,11 +36,21 @@ def create_task(file_input: Path, dir_output: Path):
     logger.info(f"start {file_input.name}")
     t = time.perf_counter()
 
-    dir_output.mkdir(parents=True)
+    file.write_json(dir_output / 'task.json',
+    {
+        'status': 'executing',
+    })
 
+    # TODO: log.txt
     e = Executer(file_input, dir_output)
     e.register(workers)
     e.execute()
+
+    file.write_json(dir_output / 'task.json',
+    {
+        'status': 'done',
+    })
+
     logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")
 
 
@@ -57,12 +67,18 @@ def hello():
 
 
 @app.post("/api/task")
-async def parse_pdf(file: UploadFile):
-    content = await file.read()
+async def parse_pdf(f: UploadFile):
+    content = await f.read()
     # task id is the sha256 hash of file content
     task_id = hashlib.sha256(content).hexdigest()
     with open(dir_input / f"{task_id}.pdf", "wb") as buffer:
         buffer.write(content)
+
+    dir_output.mkdir(parents=True, exist_ok=True)
+    file.write_json(dir_output / 'task.json',
+    {
+        'status': 'pending',
+    })
 
     poolExecutor.submit(create_task, dir_input / f"{task_id}.pdf", dir_output / task_id)
 
@@ -76,20 +92,3 @@ async def redirect_index():
 
 app.mount("/static", StaticFiles(directory=dir_output), name="static")
 app.mount("/", StaticFiles(directory=dir_fe), name="fe")
-
-# @app.get("/api/task/{task_id}")
-# async def query_task(task_id: str):
-#     dir_input_task = dir_input / f'{task_id}.pdf'
-#     dir_output_task = dir_output / task_id
-#     if not dir_input_task.exists():
-#         return make_common_data(1, "Task not found", None)
-
-#     if not dir_output_task.exists():
-#         return make_common_data(1, "Task is pending", None)
-
-#     file_layout = dir_output_task / 'layout.json'
-
-#     if not file_layout.exists():
-#         return make_common_data(2, "Task is executing", None)
-
-#     return make_common_data(0, "Success", file.read_json(file_layout))

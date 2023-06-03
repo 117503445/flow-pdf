@@ -13,13 +13,25 @@ function App() {
 
     const target = event.target as HTMLFormElement;
 
+    // TODO prevent empty
     const formData = new FormData(target);
+
+    // TODO Read Config
     const response = await fetch('http://localhost:8000/api/task', {
       method: 'POST',
       body: formData
     });
     const data = await response.json();
     console.log(data);
+
+    const taskID = data['data']['taskID'];
+    const w = window.open('about:blank');
+    if (w != null) {
+      w.location.href = "/task/" + taskID;
+    } else {
+      alert('Please allow popups for this website');
+    }
+
   }
 
   return (
@@ -30,7 +42,7 @@ function App() {
 
 
       <form onSubmit={handleSubmit}>
-        <input type="file" name="file" accept=".pdf" />
+        <input type="file" name="f" accept=".pdf" />
         <button type="submit">提交</button>
       </form>
     </>
