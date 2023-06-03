@@ -6,16 +6,21 @@ import concurrent.futures
 import common  # type: ignore
 import time
 from worker import Executer, workers  # type: ignore
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 dir_data = Path("./web-data")
 dir_input = dir_data / "input"
 dir_output = dir_data / "output"
+
+dir_fe = Path(__file__).parent.parent / "fe" / "dist"
 
 for dir in [dir_data, dir_input]:
     if not dir.exists():
         dir.mkdir(parents=True)
 
 app = FastAPI()
+
 
 logger = common.create_main_logger()
 
@@ -39,7 +44,7 @@ def make_common_data(code: int, msg: str, data):
     return {"code": code, "msg": msg, "data": data}
 
 
-@app.get("/")
+@app.get("/api/hello")
 def hello():
     return make_common_data(0, "Hello", None)
 
@@ -56,6 +61,14 @@ async def parse_pdf(file: UploadFile):
 
     return make_common_data(0, "Success", {"taskID": task_id})
 
+
+@app.get("/", response_class=RedirectResponse, status_code=302)
+async def redirect_index():
+    return "index.html"
+
+
+app.mount("/static", StaticFiles(directory=dir_output), name="static")
+app.mount("/", StaticFiles(directory=dir_fe), name="fe")
 
 # @app.get("/api/task/{task_id}")
 # async def query_task(task_id: str):

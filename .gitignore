@@ -4,3 +4,4 @@ config.yaml
 __pycache__
 git.txt
 .VSCodeCounter
+web-data
