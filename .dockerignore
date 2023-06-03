@@ -1,0 +1,4 @@
+data
+.venv
+fe/dist
+fe/node_modules
