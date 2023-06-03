@@ -36,20 +36,26 @@ def create_task(file_input: Path, dir_output: Path):
     logger.info(f"start {file_input.name}")
     t = time.perf_counter()
 
-    file.write_json(dir_output / 'task.json',
-    {
-        'status': 'executing',
-    })
+    file_task = dir_output / "task.json"
+
+    file.write_json(
+        file_task,
+        {
+            "status": "executing",
+        },
+    )
 
     # TODO: log.txt
     e = Executer(file_input, dir_output)
     e.register(workers)
     e.execute()
 
-    file.write_json(dir_output / 'task.json',
-    {
-        'status': 'done',
-    })
+    file.write_json(
+        file_task,
+        {
+            "status": "done",
+        },
+    )
 
     logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")
 
@@ -71,14 +77,23 @@ async def parse_pdf(f: UploadFile):
     content = await f.read()
     # task id is the sha256 hash of file content
     task_id = hashlib.sha256(content).hexdigest()
+
+    dir_task = dir_output / task_id
+
+    file_task = dir_task / "task.json"
+    if file_task.exists():
+        return make_common_data(0, "Success", {"taskID": task_id})
+
     with open(dir_input / f"{task_id}.pdf", "wb") as buffer:
         buffer.write(content)
 
     dir_output.mkdir(parents=True, exist_ok=True)
-    file.write_json(dir_output / 'task.json',
-    {
-        'status': 'pending',
-    })
+    file.write_json(
+        file_task,
+        {
+            "status": "pending",
+        },
+    )
 
     poolExecutor.submit(create_task, dir_input / f"{task_id}.pdf", dir_output / task_id)
 

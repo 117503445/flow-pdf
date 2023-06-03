@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 function Task() {
 
@@ -9,21 +9,23 @@ function Task() {
 
 
     async function fetchTask() {
-        const response = await fetch(`http://localhost:8000/static/${id}/task.json`)
+        const response = await fetch(import.meta.env.VITE_BE_HOST + `/static/${id}/task.json`)
         if (response.status != 200) {
             return
         }
         const data = await response.json();
-        setStatus(data['status'])
+        const s = data['status'];
+        setStatus(s);
+        if (s == "done") {
+            const url = import.meta.env.VITE_BE_HOST + `/static/${id}/output/index.html`;
+            console.log(url);
+            window.location.replace(url);
+        }
     }
 
     useEffect(() => {
         setTimer(setInterval(async () => {
             await fetchTask();
-            if (status == "done") {
-                window.location.replace(`http://localhost:8000/static/${id}/output/index.html`)
-                clearInterval(timer);
-            }
         }, 1000));
 
         return () => clearInterval(timer);

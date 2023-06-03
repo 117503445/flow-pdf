@@ -6,13 +6,16 @@ import './index.css'
 
 
 import {
-  createBrowserRouter,
   RouterProvider,
+  createHashRouter,
 } from "react-router-dom";
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
+    element: <App />,
+  }, {
+    path: "/index.html",
     element: <App />,
   },
   {

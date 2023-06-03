@@ -1,12 +1,6 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     console.log('submit');
     event.preventDefault();
@@ -17,7 +11,7 @@ function App() {
     const formData = new FormData(target);
 
     // TODO Read Config
-    const response = await fetch('http://localhost:8000/api/task', {
+    const response = await fetch(import.meta.env.VITE_BE_HOST + '/api/task', {
       method: 'POST',
       body: formData
     });
@@ -27,7 +21,7 @@ function App() {
     const taskID = data['data']['taskID'];
     const w = window.open('about:blank');
     if (w != null) {
-      w.location.href = "/task/" + taskID;
+      w.location.href = "/#/task/" + taskID;
     } else {
       alert('Please allow popups for this website');
     }
