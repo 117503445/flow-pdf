@@ -40,6 +40,23 @@ class LocalPageOutParams(LocalPageOutputParams):
     pass
 
 
+def rectangle_relation(rect1, rect2):
+    x1, y2, x2, y1 = rect1
+    x3, y4, x4, y3 = rect2
+
+    if x1 >= x4 or x2 <= x3 or y1 <= y4 or y2 >= y3:
+        return "not intersect"  # 不相交
+
+    elif x1 >= x3 and x2 <= x4 and y1 <= y3 and y2 >= y4:
+        return "contains"  # 包含
+
+    elif x1 <= x3 and x2 >= x4 and y1 >= y3 and y2 <= y4:
+        return "contained by"  # 被包含
+
+    else:
+        return "intersect"  # 相交
+
+
 class ShotWorker(PageWorker):
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
@@ -71,6 +88,7 @@ class ShotWorker(PageWorker):
         def is_near(rect1, rect2):
             return abs(rect1[1] - rect2[1]) < 10 and abs(rect2[3] - rect1[3]) < 10
 
+        # merge shot in different columns
         for i, rects in enumerate(column_rects):
             if i == len(column_rects) - 1:
                 # The last column does not need to be merged
@@ -92,35 +110,38 @@ class ShotWorker(PageWorker):
                     if not is_find_near:
                         break
 
-        def rectangle_relation(rect1, rect2):
-            x1, y2, x2, y1 = rect1
-            x3, y4, x4, y3 = rect2
 
-            if x1 >= x4 or x2 <= x3 or y1 <= y4 or y2 >= y3:
-                return "not intersect"  # 不相交
+        elements_rect = []
+        for block in page_in.raw_dict["blocks"]:
+            elements_rect.append(block["bbox"])
+        for draw in page_in.drawings:
+            elements_rect.append(draw["rect"])
 
-            elif x1 >= x3 and x2 <= x4 and y1 <= y3 and y2 >= y4:
-                return "contains"  # 包含
+        # delete empty rects
+        for rects in column_rects:
+            if len(rects) <= 1:
+                continue
 
-            elif x1 <= x3 and x2 >= x4 and y1 >= y3 and y2 <= y4:
-                return "contained by"  # 被包含
+            for i in reversed(range(1, len(rects))):
+                rect = rects[i]
+                is_found = False
+                for r in elements_rect:
+                    if rectangle_relation(rect, r) != "not intersect":
+                        is_found = True
+                        break
+                if not is_found:
+                    del rects[i]
 
-            else:
-                return "intersect"  # 相交
-
+        # extend first rect in each column
         for rects in column_rects:
             if len(rects) == 0:
                 continue
             rect = rects[0]
 
-            elements_rect = [] # elements intersect with rect
-            for block in page_in.raw_dict["blocks"]:
-                if rectangle_relation(rect, block["bbox"]) == "intersect":
-                    elements_rect.append(block["bbox"])
-            
-            for draw in page_in.drawings:
-                if rectangle_relation(rect, draw["rect"]) == "intersect":
-                    elements_rect.append(draw["rect"])
+            intersect_rects = []  # elements intersect with rect
+            for r in elements_rect:
+                if rectangle_relation(rect, r) == "intersect":
+                    intersect_rects.append(r)
 
             if not elements_rect:
                 continue

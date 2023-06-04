@@ -10,7 +10,7 @@
 - [x] Docker Web
 - [x] 生成内容嵌入版本信息
 - [x] Shot 延伸不足问题优化 (raft - 5, 6)
-- [ ] 无内容 Shot 删减
+- [x] 无内容 Shot 删减
 - [ ] big-block 误识别优化
 - [ ] list 识别支持
 - [ ] share PoolExecutor
