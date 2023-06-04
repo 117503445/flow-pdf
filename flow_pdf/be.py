@@ -5,7 +5,7 @@ from htutil import file
 import concurrent.futures
 import common  # type: ignore
 import time
-from worker import Executer, workers  # type: ignore
+from worker import Executer, ExecuterConfig, workers  # type: ignore
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,6 +36,7 @@ app.add_middleware(
 logger = common.create_main_logger()
 logger.info(f"version: {version}")
 
+
 def create_task(file_input: Path, dir_output: Path):
     logger.info(f"start {file_input.name}")
     t = time.perf_counter()
@@ -49,8 +50,8 @@ def create_task(file_input: Path, dir_output: Path):
         },
     )
 
-    # TODO: log.txt
-    e = Executer(file_input, dir_output, version)
+    cfg = ExecuterConfig(version, False)  # type: ignore
+    e = Executer(file_input, dir_output, cfg)
     e.register(workers)
     e.execute()
 
@@ -107,6 +108,7 @@ async def parse_pdf(f: UploadFile):
 @app.get("/", response_class=RedirectResponse, status_code=302)
 async def redirect_index():
     return "index.html"
+
 
 # TODO ignore file log
 app.mount("/static", StaticFiles(directory=dir_output), name="static")

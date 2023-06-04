@@ -1,4 +1,5 @@
-from .common import Worker, Executer
+from .common import Worker, Executer, ExecuterConfig
+
 from .read_doc import ReadDocWorker
 from .dump import DumpWorker
 from .image import ImageWorker

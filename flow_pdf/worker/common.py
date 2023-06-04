@@ -42,6 +42,7 @@ class LocalPageOutputParams:
 class Worker:
     logger: logging.Logger
     version: str
+    cache_enabled: bool
 
     def post_run(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
@@ -71,7 +72,7 @@ class Worker:
     def load_cache(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
     ) -> tuple[bool, tuple[DocOutputParams, list[PageOutputParams]]]:
-        if self.__dict__.get("disable_cache"):
+        if not self.cache_enabled and self.__dict__.get("disable_cache"):
             return False, (DocOutputParams(), [])
 
         file_pkl = (
@@ -100,7 +101,7 @@ class Worker:
         doc_out: DocOutputParams,
         page_out: list[PageOutputParams],
     ):
-        if self.__dict__.get("disable_cache"):
+        if not self.cache_enabled and self.__dict__.get("disable_cache"):
             return
 
         file_pkl = (
@@ -188,8 +189,14 @@ def create_logger(file_input: Path, dir_output: Path):
     return logger
 
 
+@dataclass
+class ExecuterConfig:
+    version: str
+    cache_enabled: bool
+
+
 class Executer:
-    def __init__(self, file_input: Path, dir_output: Path, version: str):
+    def __init__(self, file_input: Path, dir_output: Path, config: ExecuterConfig):
         with fitz.open(file_input) as doc:  # type: ignore
             page_count = doc.page_count
 
@@ -198,7 +205,7 @@ class Executer:
         self.store.doc_set("dir_output", dir_output)
 
         self.logger = create_logger(file_input, dir_output)
-        self.version = version
+        self.config = config
 
     def register(self, workers: list[type]):
         self.workers = workers
@@ -236,7 +243,8 @@ class Executer:
 
             w = W()
             w.logger = self.logger
-            w.version = self.version
+            w.version = self.config.version
+            w.cache_enabled = self.config.cache_enabled
 
             doc_out, page_out = w.post_run(doc_in, page_in)
             for k, v in asdict(doc_out).items():

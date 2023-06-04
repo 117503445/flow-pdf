@@ -85,6 +85,13 @@ class DumpWorker(PageWorker):
             # add_annot(page, rects, "block", "blue")
 
             # rects = []
+            # for block in page_in.raw_dict["blocks"]:
+            #     if block['type'] == 0:
+            #         for line in block["lines"]:
+            #             rects.append(line["bbox"])
+            # add_annot(page, rects, "l", "red")
+
+            # rects = []
             # for b in page_in.big_blocks:
             #     for i in range(1, len(b["lines"])):
             #         line = b["lines"][i]
@@ -115,7 +122,7 @@ class DumpWorker(PageWorker):
             #     rects.append(block["bbox"])
             # add_annot(page, rects, "image", "red")
 
-            add_annot(page, page_in.shot_rects, "shot", "green")
+            # add_annot(page, page_in.shot_rects, "shot", "green")
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
 
