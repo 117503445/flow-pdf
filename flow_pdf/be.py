@@ -16,9 +16,8 @@ dir_output = dir_data / "output"
 
 dir_fe = Path(__file__).parent.parent / "fe" / "dist"
 
-for dir in [dir_data, dir_input]:
-    if not dir.exists():
-        dir.mkdir(parents=True)
+for dir in [dir_data, dir_input, dir_output]:
+    dir.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI()
 app.add_middleware(
@@ -28,6 +27,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# TODO Clean failed task
 
 logger = common.create_main_logger()
 
@@ -104,6 +105,6 @@ async def parse_pdf(f: UploadFile):
 async def redirect_index():
     return "index.html"
 
-
+# TODO ignore file log
 app.mount("/static", StaticFiles(directory=dir_output), name="static")
 app.mount("/", StaticFiles(directory=dir_fe), name="fe")
