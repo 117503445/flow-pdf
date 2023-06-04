@@ -12,10 +12,10 @@
 - [x] Shot 延伸不足问题优化 (raft - 5, 6)
 - [x] 无内容 Shot 删减
 - [ ] big-block 误识别优化
+- [ ] Inline Shot 公式截取多余内容优化
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Table of Contents
-- [ ] Inline Shot 公式截取多余内容优化
 - [ ] Cloud 函数计算
 - [ ] Docker CLI
 - [ ] devcontainer
