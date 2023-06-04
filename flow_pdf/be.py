@@ -36,6 +36,18 @@ app.add_middleware(
 logger = common.create_main_logger()
 logger.info(f"version: {version}")
 
+for dir_task in dir_output.glob("*"):
+    file_task = dir_task / "task.json"
+    if file_task.exists():
+        js = file.read_json(file_task)
+        if js["status"] == "executing":
+            js["status"] = "failed"
+            logger.info(f"clean executing task {dir_task.name}")
+            file.write_json(
+                file_task,
+                js,
+            )
+
 
 def create_task(file_input: Path, dir_output: Path):
     logger.info(f"start {file_input.name}")
