@@ -9,9 +9,7 @@ from worker import Executer, workers  # type: ignore
 import concurrent.futures
 import common  # type: ignore
 
-version = file.read_text(Path(__file__).parent / "git.txt")
-
-print(f"version: {version}")
+from common import version
 
 
 def get_files_from_cfg():
@@ -26,6 +24,7 @@ def get_files_from_dir():
 
 
 logger = common.create_main_logger()
+logger.info(f"version: {version}")
 
 
 def create_task(file_input: Path, dir_output: Path):
@@ -35,7 +34,7 @@ def create_task(file_input: Path, dir_output: Path):
         shutil.rmtree(dir_output)
     dir_output.mkdir(parents=True)
 
-    e = Executer(file_input, dir_output)
+    e = Executer(file_input, dir_output, version)
     e.register(workers)
     e.execute()
     logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")

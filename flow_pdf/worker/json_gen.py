@@ -193,7 +193,7 @@ class JSONGenWorker(PageWorker):
         page_out: list[PageOutParams],
         local_page_out: list[LocalPageOutParams],
     ) -> DocOutParams:
-        elements = []
+        elements = [{"type": "meta", "meta": {"flow-pdf-version": self.version}}]
         for p in local_page_out:
             elements.extend(p.elements)
 

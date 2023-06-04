@@ -1,4 +1,6 @@
 import logging
+from htutil import file
+from pathlib import Path
 
 
 def create_main_logger():
@@ -15,3 +17,6 @@ def create_main_logger():
 
     logger.addHandler(stream_handler)
     return logger
+
+
+version = file.read_text(Path(__file__).parent / "git.txt")

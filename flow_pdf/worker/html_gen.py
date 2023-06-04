@@ -51,6 +51,8 @@ class HTMLGenWorker(PageWorker):
         html = file.read_text(Path(__file__).parent / "template.html")
 
         soup = BeautifulSoup(html, "html.parser")
+        # add version to head
+
         for element in elements:
             if element["type"] == "block":
                 t = soup.new_tag("div")
@@ -58,8 +60,8 @@ class HTMLGenWorker(PageWorker):
                 for c in element["childs"]:
                     if c["type"] == "text":
                         t.append(c["text"])
-                    elif c['type'] == 'new-line':
-                        t.append(soup.new_tag('br'))
+                    elif c["type"] == "new-line":
+                        t.append(soup.new_tag("br"))
                     elif c["type"] == "shot":
                         t.append(
                             soup.new_tag(
@@ -72,6 +74,9 @@ class HTMLGenWorker(PageWorker):
             elif element["type"] == "shot":
                 t = soup.new_tag("img", src=element["path"])
                 soup.html.body.append(t)  # type: ignore
+            elif element["type"] == "meta":
+                for k, v in element["meta"].items():
+                    soup.html.head.append(soup.new_tag("meta", attrs={"name": k, "content": v}))  # type: ignore
             else:
                 self.logger.warning(f"unknown element type {element['type']}")
         file.write_text(doc_in.dir_output / "output" / "index.html", soup.prettify())

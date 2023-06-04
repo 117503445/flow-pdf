@@ -10,6 +10,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from common import version
+
+
 dir_data = Path("./web-data")
 dir_input = dir_data / "input"
 dir_output = dir_data / "output"
@@ -31,7 +34,7 @@ app.add_middleware(
 # TODO Clean failed task
 
 logger = common.create_main_logger()
-
+logger.info(f"version: {version}")
 
 def create_task(file_input: Path, dir_output: Path):
     logger.info(f"start {file_input.name}")
@@ -47,7 +50,7 @@ def create_task(file_input: Path, dir_output: Path):
     )
 
     # TODO: log.txt
-    e = Executer(file_input, dir_output)
+    e = Executer(file_input, dir_output, version)
     e.register(workers)
     e.execute()
 

@@ -8,7 +8,7 @@
 - [x] 多栏 shot 合并
 - [x] block 分自然段
 - [x] Docker Web
-- [ ] 生成内容嵌入版本信息
+- [x] 生成内容嵌入版本信息
 - [ ] Shot 延伸不足问题优化
 - [ ] big-block 误识别优化
 - [ ] list 识别支持

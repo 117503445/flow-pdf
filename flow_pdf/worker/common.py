@@ -41,6 +41,7 @@ class LocalPageOutputParams:
 
 class Worker:
     logger: logging.Logger
+    version: str
 
     def post_run(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
@@ -188,7 +189,7 @@ def create_logger(file_input: Path, dir_output: Path):
 
 
 class Executer:
-    def __init__(self, file_input: Path, dir_output: Path):
+    def __init__(self, file_input: Path, dir_output: Path, version: str):
         with fitz.open(file_input) as doc:  # type: ignore
             page_count = doc.page_count
 
@@ -197,6 +198,7 @@ class Executer:
         self.store.doc_set("dir_output", dir_output)
 
         self.logger = create_logger(file_input, dir_output)
+        self.version = version
 
     def register(self, workers: list[type]):
         self.workers = workers
@@ -234,6 +236,7 @@ class Executer:
 
             w = W()
             w.logger = self.logger
+            w.version = self.version
 
             doc_out, page_out = w.post_run(doc_in, page_in)
             for k, v in asdict(doc_out).items():
