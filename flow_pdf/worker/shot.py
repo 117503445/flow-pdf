@@ -62,8 +62,6 @@ class ShotWorker(PageWorker):
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
         column_rects: list[list[tuple[float, float, float, float]]] = []
-        # for _ in range(len(doc_in.big_text_columns)):
-        # rects.append([])
 
         for column in doc_in.big_text_columns:
             rects: list[tuple[float, float, float, float]] = []
@@ -73,6 +71,7 @@ class ShotWorker(PageWorker):
                 for b in page_in.big_blocks
                 if b["bbox"][0] >= column.min and b["bbox"][2] <= column.max
             ]
+            elements_rect.sort(key=lambda x: x["bbox"][1])
             last_y = doc_in.core_y.min
             for block in elements_rect:
                 r = (column.min, last_y, column.max, block["bbox"][1])
@@ -97,6 +96,7 @@ class ShotWorker(PageWorker):
             for j in range(len(rects)):
                 rect = rects[j]
 
+                # TODO ZmICE1 - 2.png
                 for other_c_index in range(i + 1, len(column_rects)):
                     is_find_near = False
                     next_c = column_rects[other_c_index]
@@ -110,23 +110,32 @@ class ShotWorker(PageWorker):
                     if not is_find_near:
                         break
 
-
         elements_rect = []
         for block in page_in.raw_dict["blocks"]:
             elements_rect.append(block["bbox"])
         for draw in page_in.drawings:
             elements_rect.append(draw["rect"])
 
+        BORDER_WIDTH = 4
+
         # delete empty rects
         for rects in column_rects:
-            if len(rects) <= 1:
-                continue
-
-            for i in reversed(range(1, len(rects))):
+            for i in reversed(range(len(rects))):
                 rect = rects[i]
+                # delete height too small
+                if rect[3] - rect[1] <= BORDER_WIDTH * 2:
+                    del rects[i]
+                    continue
+
+                inner_rect = (
+                    rect[0] + BORDER_WIDTH,
+                    rect[1] + BORDER_WIDTH,
+                    rect[2] - BORDER_WIDTH,
+                    rect[3] - BORDER_WIDTH,
+                )
                 is_found = False
                 for r in elements_rect:
-                    if rectangle_relation(rect, r) != "not intersect":
+                    if rectangle_relation(inner_rect, r) != "not intersect":
                         is_found = True
                         break
                 if not is_found:

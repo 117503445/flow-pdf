@@ -105,15 +105,15 @@ class DumpWorker(PageWorker):
             #     rects.append(block['rect'])
             # add_annot(page, rects, 'drawings', 'red')
 
-            rects = []
-            for block in page_in.image_blocks:
-                rects.append(block["bbox"])
-            add_annot(page, rects, "image-block", "red")
+            # rects = []
+            # for block in page_in.image_blocks:
+            #     rects.append(block["bbox"])
+            # add_annot(page, rects, "image-block", "red")
 
-            rects = []
-            for block in page_in.images:
-                rects.append(block["bbox"])
-            add_annot(page, rects, "image", "red")
+            # rects = []
+            # for block in page_in.images:
+            #     rects.append(block["bbox"])
+            # add_annot(page, rects, "image", "red")
 
             add_annot(page, page_in.shot_rects, "shot", "green")
 

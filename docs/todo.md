@@ -13,9 +13,9 @@
 - [x] 无内容 Shot 删减
 - [ ] big-block 误识别优化
 - [ ] list 识别支持
-- [ ] share PoolExecutor
+- [ ] figure 识别支持
 - [ ] Table of Contents
 - [ ] Inline Shot 公式截取多余内容优化
-- [ ] Docker CLI
 - [ ] Cloud 函数计算
+- [ ] Docker CLI
 - [ ] devcontainer

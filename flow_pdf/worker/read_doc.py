@@ -48,7 +48,11 @@ class ReadDocWorker(PageWorker):
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)
             raw_dict = page.get_text("rawdict")  # type: ignore
-            drawings = page.get_drawings()
+            try:
+                drawings = page.get_drawings()
+            except Exception as e:
+                self.logger.warning(f"get_drawings failed: {e}")
+                drawings = []
             blocks = [Block(b) for b in page.get_text("blocks")]  # type: ignore
             images = page.get_image_info()# type: ignore
 
