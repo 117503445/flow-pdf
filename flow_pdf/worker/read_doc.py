@@ -33,6 +33,7 @@ class PageOutParams(PageOutputParams):
     raw_dict: dict
     drawings: list
     blocks: list[Block]
+    images: list
 
 
 @dataclass
@@ -49,5 +50,6 @@ class ReadDocWorker(PageWorker):
             raw_dict = page.get_text("rawdict")  # type: ignore
             drawings = page.get_drawings()
             blocks = [Block(b) for b in page.get_text("blocks")]  # type: ignore
+            images = page.get_image_info()# type: ignore
 
-            return PageOutParams(raw_dict, drawings, blocks), LocalPageOutParams()
+            return PageOutParams(raw_dict, drawings, blocks, images), LocalPageOutParams()

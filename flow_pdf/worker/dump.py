@@ -32,7 +32,8 @@ class PageInParams(PageInputParams):
     big_blocks: list
     image_blocks: list[dict]
     shot_rects: list
-
+    images: list
+    drawings: list
 
 @dataclass
 class DocOutParams(DocOutputParams):
@@ -99,13 +100,20 @@ class DumpWorker(PageWorker):
             #     rects.append(block["bbox"])
             # add_annot(page, rects, "big-block", "blue")
 
-            # if 'drawings' in self.params:
-            #     add_annot(page, self.params['drawings'][page_index], 'drawings', 'red')
+            # rects = []
+            # for block in page_in.drawings:
+            #     rects.append(block['rect'])
+            # add_annot(page, rects, 'drawings', 'red')
 
             rects = []
             for block in page_in.image_blocks:
                 rects.append(block["bbox"])
-            add_annot(page, rects, "images", "red")
+            add_annot(page, rects, "image-block", "red")
+
+            rects = []
+            for block in page_in.images:
+                rects.append(block["bbox"])
+            add_annot(page, rects, "image", "red")
 
             add_annot(page, page_in.shot_rects, "shot", "green")
 

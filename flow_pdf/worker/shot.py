@@ -22,6 +22,7 @@ class DocInParams(DocInputParams):
 class PageInParams(PageInputParams):
     big_blocks: list
     raw_dict: dict
+    drawings: list
 
 
 @dataclass
@@ -50,13 +51,13 @@ class ShotWorker(PageWorker):
         for column in doc_in.big_text_columns:
             rects: list[tuple[float, float, float, float]] = []
 
-            blocks = [
+            elements_rect = [
                 b
                 for b in page_in.big_blocks
                 if b["bbox"][0] >= column.min and b["bbox"][2] <= column.max
             ]
             last_y = doc_in.core_y.min
-            for block in blocks:
+            for block in elements_rect:
                 r = (column.min, last_y, column.max, block["bbox"][1])
                 if r[3] - r[1] > 0:
                     rects.append(r)
@@ -111,15 +112,20 @@ class ShotWorker(PageWorker):
             if len(rects) == 0:
                 continue
             rect = rects[0]
-            blocks = []
+
+            elements_rect = [] # elements intersect with rect
             for block in page_in.raw_dict["blocks"]:
                 if rectangle_relation(rect, block["bbox"]) == "intersect":
-                    blocks.append(block)
+                    elements_rect.append(block["bbox"])
+            
+            for draw in page_in.drawings:
+                if rectangle_relation(rect, draw["rect"]) == "intersect":
+                    elements_rect.append(draw["rect"])
 
-            if not blocks:
+            if not elements_rect:
                 continue
 
-            min_y0 = min([block["bbox"][1] for block in blocks])
+            min_y0 = min([r[1] for r in elements_rect])
             min_y0 = min(min_y0, rect[1])
             rects[0] = (rect[0], min_y0, rect[2], rect[3])
 
