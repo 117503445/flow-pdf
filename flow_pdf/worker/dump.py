@@ -139,12 +139,14 @@ class DumpWorker(PageWorker):
 
             add_annot(page, page_in.shot_rects, "shot", "green")
 
+            file.write_json(doc_in.dir_output / "shot_rects" / f"{page_index}.json", page_in.shot_rects)
+
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
 
         return PageOutParams(), LocalPageOutParams()
 
     def post_run_page(self, doc_in: DocInParams, page_in: list[PageInParams]):  # type: ignore[override]
-        for p in ["marked", "raw_dict", "raw"]:
+        for p in ["marked", "raw_dict", "raw", "shot_rects"]:
             (doc_in.dir_output / p).mkdir(parents=True, exist_ok=True)
 
     def after_run_page(  # type: ignore[override]

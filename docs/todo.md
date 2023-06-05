@@ -13,6 +13,7 @@
 - [x] 无内容 Shot 删减
 - [x] License
 - [x] big-block 误识别优化
+- [x] shot 上延覆盖 big-block
 - [ ] Inline Shot 公式截取多余内容优化
 - [ ] shot 可复制文字 alt-data
 - [ ] list 识别支持

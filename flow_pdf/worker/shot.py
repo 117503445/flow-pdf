@@ -116,9 +116,27 @@ class ShotWorker(PageWorker):
         for draw in page_in.drawings:
             elements_rect.append(draw["rect"])
 
-        BORDER_WIDTH = 4
+        # extend first rect in each column
+        # TODO: better way to extend, to solve the problem of sui-10.png
+        for rects in column_rects:
+            if len(rects) == 0:
+                continue
+            rect = rects[0]
+
+            intersect_rects = []  # elements intersect with rect
+            for r in elements_rect:
+                if rectangle_relation(rect, r) == "intersect":
+                    intersect_rects.append(r)
+
+            if not intersect_rects:
+                continue
+
+            min_y0 = min([r[1] for r in intersect_rects])
+            min_y0 = min(min_y0, rect[1])
+            rects[0] = (rect[0], min_y0, rect[2], rect[3])
 
         # delete empty rects
+        BORDER_WIDTH = 4
         for rects in column_rects:
             for i in reversed(range(len(rects))):
                 rect = rects[i]
@@ -141,24 +159,7 @@ class ShotWorker(PageWorker):
                 if not is_found:
                     del rects[i]
 
-        # extend first rect in each column
-        for rects in column_rects:
-            if len(rects) == 0:
-                continue
-            rect = rects[0]
-
-            intersect_rects = []  # elements intersect with rect
-            for r in elements_rect:
-                if rectangle_relation(rect, r) == "intersect":
-                    intersect_rects.append(r)
-
-            if not elements_rect:
-                continue
-
-            min_y0 = min([r[1] for r in elements_rect])
-            min_y0 = min(min_y0, rect[1])
-            rects[0] = (rect[0], min_y0, rect[2], rect[3])
-
+        # prepare output
         rects = []
         for c in column_rects:
             rects.extend(c)
