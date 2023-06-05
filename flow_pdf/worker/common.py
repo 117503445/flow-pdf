@@ -299,6 +299,8 @@ class Range(NamedTuple):
 
 
 def is_common_span(span, most_common_font, most_common_size) -> bool:
-    return (
-        span["font"] == most_common_font and abs(span["size"] - most_common_size) < 0.5
-    )
+    if most_common_font and span["font"] != most_common_font:
+        return False
+    if most_common_size and abs(span["size"] - most_common_size) >= 0.5:
+        return False
+    return True

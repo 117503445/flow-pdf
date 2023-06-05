@@ -1,4 +1,4 @@
-from .common import PageWorker, Block, Range
+from .common import PageWorker, Block, Range, is_common_span
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -82,13 +82,10 @@ class JSONGenWorker(PageWorker):
                     }
 
                     def get_span_type(span):
-                        if (
-                            span["font"] != doc_in.most_common_font
-                            or span["size"] != doc_in.most_common_size
-                        ):
-                            span_type = "shot"
-                        else:
+                        if is_common_span(span, doc_in.most_common_font, doc_in.most_common_size):
                             span_type = "text"
+                        else:
+                            span_type = "shot"
                         return span_type
 
                     for i in range(len(b["lines"])):

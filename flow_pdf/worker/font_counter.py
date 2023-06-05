@@ -88,6 +88,7 @@ class FontCounterWorker(PageWorker):
         most_common_font_radio = font_counter[most_common_font] / sum(font_counter.values())
         if most_common_font_radio < 0.5:
             self.logger.warning(f"most common font radio is {most_common_font_radio}")
+            most_common_font = ""
 
         most_common_size = sorted(
             size_counter.items(), key=lambda x: x[1], reverse=True
@@ -97,6 +98,6 @@ class FontCounterWorker(PageWorker):
         most_common_size_radio = size_counter[most_common_size] / sum(size_counter.values())
         if most_common_size_radio < 0.5:
             self.logger.warning(f"most common font radio is {most_common_size_radio}")
-
+            most_common_size = 0
 
         return DocOutParams(most_common_font, most_common_size)
