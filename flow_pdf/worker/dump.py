@@ -35,6 +35,7 @@ class PageInParams(PageInputParams):
     images: list
     drawings: list
 
+
 @dataclass
 class DocOutParams(DocOutputParams):
     pass
@@ -69,10 +70,12 @@ class DumpWorker(PageWorker):
                 if not rects:
                     return
 
-                for rect in rects:
+                
+                for i, rect in enumerate(rects):
+                    a = f'{annot}-{i}'
                     page.add_freetext_annot(
-                        (rect[0], rect[1], rect[0] + len(annot) * 5, rect[1] + 10),
-                        annot,
+                        (rect[0], rect[1], rect[0] + len(a) * 6, rect[1] + 10),
+                        a,
                         fill_color=fitz.utils.getColor("white"),
                         border_color=fitz.utils.getColor("black"),
                     )
@@ -84,12 +87,12 @@ class DumpWorker(PageWorker):
             #     rects.append(block["bbox"])
             # add_annot(page, rects, "block", "blue")
 
-            # rects = []
             # for block in page_in.raw_dict["blocks"]:
-            #     if block['type'] == 0:
+            #     rects = []
+            #     if block["type"] == 0:
             #         for line in block["lines"]:
             #             rects.append(line["bbox"])
-            # add_annot(page, rects, "l", "red")
+            #     add_annot(page, rects, "l", "red")
 
             # rects = []
             # for b in page_in.big_blocks:

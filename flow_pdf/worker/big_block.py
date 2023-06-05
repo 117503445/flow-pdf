@@ -16,6 +16,9 @@ class DocInParams(DocInputParams):
     big_text_width_range: Range
     big_text_columns: list[Range]
 
+    most_common_font: str
+    most_common_size: int
+
 
 @dataclass
 class PageInParams(PageInputParams):
@@ -57,9 +60,35 @@ class BigBlockWorker(PageWorker):
                         return True
                 return False
 
-            judgers = [is_in_width_range, is_in_right_x_position]
-            for judger in judgers:
-                if not judger(block):
+            def is_line_y_increase(block):
+                for i in range(len(block["lines"]) - 1):
+                    if block["lines"][i]["bbox"][3] > block["lines"][i + 1]["bbox"][3]:
+                        return False
+                return True
+
+            def is_common_text_too_little(block):
+                sum_count = 0
+                common_count = 0
+
+                for line in block["lines"]:
+                    for span in line["spans"]:
+                        sum_count += len(span["chars"])
+                        if (
+                            span["font"] == doc_in.most_common_font
+                            and span["size"] == doc_in.most_common_size
+                        ):
+                            common_count += len(span["chars"])
+
+                return common_count / sum_count > 0.5
+
+            judgers = [
+                (is_in_width_range, True),
+                (is_in_right_x_position, True),
+                (is_line_y_increase, False),
+                (is_common_text_too_little, True),
+            ]
+            for judger, enabled in judgers:
+                if enabled and not judger(block):
                     return False
             return True
 

@@ -72,7 +72,7 @@ class Worker:
     def load_cache(
         self, doc_in: DocInputParams, page_in: list[PageInputParams]
     ) -> tuple[bool, tuple[DocOutputParams, list[PageOutputParams]]]:
-        if not self.cache_enabled and self.__dict__.get("disable_cache"):
+        if not self.cache_enabled or self.__dict__.get("disable_cache"):
             return False, (DocOutputParams(), [])
 
         file_pkl = (
@@ -101,7 +101,7 @@ class Worker:
         doc_out: DocOutputParams,
         page_out: list[PageOutputParams],
     ):
-        if not self.cache_enabled and self.__dict__.get("disable_cache"):
+        if not self.cache_enabled or self.__dict__.get("disable_cache"):
             return
 
         file_pkl = (

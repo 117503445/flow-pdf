@@ -11,8 +11,10 @@
 - [x] 生成内容嵌入版本信息
 - [x] Shot 延伸不足问题优化 (raft - 5, 6)
 - [x] 无内容 Shot 删减
-- [ ] big-block 误识别优化
+- [x] License
+- [x] big-block 误识别优化
 - [ ] Inline Shot 公式截取多余内容优化
+- [ ] shot 可复制文字 alt-data
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Table of Contents
