@@ -14,6 +14,7 @@
 - [x] License
 - [x] big-block 误识别优化
 - [x] shot 上延覆盖 big-block
+- [ ] font size 范围优化
 - [ ] Inline Shot 公式截取多余内容优化
 - [ ] shot 可复制文字 alt-data
 - [ ] list 识别支持

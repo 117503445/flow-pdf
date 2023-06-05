@@ -1,4 +1,4 @@
-from .common import PageWorker, Block, Range
+from .common import PageWorker, Block, Range, is_common_span
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -73,10 +73,7 @@ class BigBlockWorker(PageWorker):
                 for line in block["lines"]:
                     for span in line["spans"]:
                         sum_count += len(span["chars"])
-                        if (
-                            span["font"] == doc_in.most_common_font
-                            and abs(span["size"] - doc_in.most_common_size) < 0.5
-                        ):
+                        if is_common_span(span, doc_in.most_common_font, doc_in.most_common_size):
                             common_count += len(span["chars"])
 
                 return common_count / sum_count > 0.5

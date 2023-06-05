@@ -1,4 +1,4 @@
-from .common import PageWorker, Range, Block
+from .common import PageWorker, Range, Block, is_common_span
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -94,17 +94,14 @@ class DumpWorker(PageWorker):
             #             rects.append(line["bbox"])
             #     add_annot(page, rects, "l", "red")
 
-            # for block in page_in.raw_dict["blocks"]:
-            #     rects = []
-            #     if block["type"] == 0:
-            #         for line in block["lines"]:
-            #             for span in line["spans"]:
-            #                 if (
-            #                     span["font"] == doc_in.most_common_font
-            #                     and abs(span["size"] - doc_in.most_common_size) < 0.5
-            #                 ):
-            #                     rects.append(span["bbox"])
-            #     add_annot(page, rects, "", "purple")
+            for block in page_in.raw_dict["blocks"]:
+                rects = []
+                if block["type"] == 0:
+                    for line in block["lines"]:
+                        for span in line["spans"]:
+                            if is_common_span(span, doc_in.most_common_font, doc_in.most_common_size):
+                                rects.append(span["bbox"])
+                add_annot(page, rects, "", "purple")
 
             # rects = []
             # for b in page_in.big_blocks:
