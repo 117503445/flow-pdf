@@ -5,7 +5,7 @@ from fitz import Document, Page
 import shutil
 import time
 from htutil import file
-from worker import Executer, ExecuterConfig, workers  # type: ignore
+from worker import Executer, ExecuterConfig, workers_dev  # type: ignore
 import concurrent.futures
 import common  # type: ignore
 
@@ -36,7 +36,7 @@ def create_task(file_input: Path, dir_output: Path):
 
     cfg = ExecuterConfig(version, True)  # type: ignore
     e = Executer(file_input, dir_output, cfg)
-    e.register(workers)
+    e.register(workers_dev)
     e.execute()
     logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")
 

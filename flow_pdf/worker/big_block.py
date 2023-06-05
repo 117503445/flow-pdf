@@ -75,7 +75,7 @@ class BigBlockWorker(PageWorker):
                         sum_count += len(span["chars"])
                         if (
                             span["font"] == doc_in.most_common_font
-                            and span["size"] == doc_in.most_common_size
+                            and abs(span["size"] - doc_in.most_common_size) < 0.5
                         ):
                             common_count += len(span["chars"])
 

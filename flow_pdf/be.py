@@ -5,7 +5,7 @@ from htutil import file
 import concurrent.futures
 import common  # type: ignore
 import time
-from worker import Executer, ExecuterConfig, workers  # type: ignore
+from worker import Executer, ExecuterConfig, workers_prod  # type: ignore
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -64,7 +64,7 @@ def create_task(file_input: Path, dir_output: Path):
 
     cfg = ExecuterConfig(version, False)  # type: ignore
     e = Executer(file_input, dir_output, cfg)
-    e.register(workers)
+    e.register(workers_prod)
     e.execute()
 
     file.write_json(

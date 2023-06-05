@@ -78,6 +78,7 @@ class Worker:
         file_pkl = (
             Path("/tmp")
             / "flow-pdf"
+            / "cache"
             / doc_in.file_input.name
             / f"{self.__class__.__name__}.pkl"
         )
@@ -107,6 +108,7 @@ class Worker:
         file_pkl = (
             Path("/tmp")
             / "flow-pdf"
+            / "cache"
             / doc_in.file_input.name
             / f"{self.__class__.__name__}.pkl"
         )

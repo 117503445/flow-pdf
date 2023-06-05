@@ -10,7 +10,7 @@ from .shot import ShotWorker
 from .json_gen import JSONGenWorker
 from .html_gen import HTMLGenWorker
 
-workers = [
+workers_prod = [
     ReadDocWorker,
     FontCounterWorker,
     ImageWorker,
@@ -19,5 +19,7 @@ workers = [
     ShotWorker,
     JSONGenWorker,
     HTMLGenWorker,
-    DumpWorker,
 ]
+
+workers_dev = workers_prod.copy()
+workers_dev.append(DumpWorker)

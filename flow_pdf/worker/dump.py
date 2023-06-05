@@ -70,15 +70,15 @@ class DumpWorker(PageWorker):
                 if not rects:
                     return
 
-                
                 for i, rect in enumerate(rects):
-                    a = f'{annot}-{i}'
-                    page.add_freetext_annot(
-                        (rect[0], rect[1], rect[0] + len(a) * 6, rect[1] + 10),
-                        a,
-                        fill_color=fitz.utils.getColor("white"),
-                        border_color=fitz.utils.getColor("black"),
-                    )
+                    if annot:
+                        a = f"{annot}-{i}"
+                        page.add_freetext_annot(
+                            (rect[0], rect[1], rect[0] + len(a) * 6, rect[1] + 10),
+                            a,
+                            fill_color=fitz.utils.getColor("white"),
+                            border_color=fitz.utils.getColor("black"),
+                        )
 
                     page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
 
@@ -93,6 +93,18 @@ class DumpWorker(PageWorker):
             #         for line in block["lines"]:
             #             rects.append(line["bbox"])
             #     add_annot(page, rects, "l", "red")
+
+            # for block in page_in.raw_dict["blocks"]:
+            #     rects = []
+            #     if block["type"] == 0:
+            #         for line in block["lines"]:
+            #             for span in line["spans"]:
+            #                 if (
+            #                     span["font"] == doc_in.most_common_font
+            #                     and abs(span["size"] - doc_in.most_common_size) < 0.5
+            #                 ):
+            #                     rects.append(span["bbox"])
+            #     add_annot(page, rects, "", "purple")
 
             # rects = []
             # for b in page_in.big_blocks:
@@ -125,7 +137,7 @@ class DumpWorker(PageWorker):
             #     rects.append(block["bbox"])
             # add_annot(page, rects, "image", "red")
 
-            # add_annot(page, page_in.shot_rects, "shot", "green")
+            add_annot(page, page_in.shot_rects, "shot", "green")
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
 
