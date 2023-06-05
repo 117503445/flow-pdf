@@ -4,9 +4,39 @@ flow-pdf converts PDFs into fluid and dynamic HTML documents, transforming the s
 
 ## usage
 
+[optional] pull docker image (use ali mirror to speed up chinese users)
+
 ```sh
 docker pull registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf && docker tag registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf 117503445/flow-pdf
 ```
+
+download `docker-compose.yml`
+
+```yaml
+version: '3.9'
+services:
+  flow-pdf:
+    image: '117503445/flow-pdf'
+    container_name: flow-pdf
+    restart: unless-stopped
+    volumes:
+        - './web-data:/root/app/flow_pdf/web-data'
+    ports:
+      - '8080:8080'
+    deploy:
+      resources:
+        limits:
+          cpus: '16'
+          memory: '8G'
+```
+
+run
+
+```sh
+docker-compose up -d
+```
+
+visit `http://localhost:8080`
 
 ## dev
 
