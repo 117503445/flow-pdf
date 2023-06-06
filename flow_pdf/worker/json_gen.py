@@ -9,6 +9,8 @@ from .common import (
 from fitz import Document, Page, TextPage
 from htutil import file
 import fitz
+import fitz.utils
+from pathlib import Path
 
 from dataclasses import dataclass
 
@@ -56,6 +58,32 @@ class JSONGenWorker(PageWorker):
     ) -> tuple[PageOutParams, LocalPageOutParams]:
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)
+
+            def save_shot_pixmap(
+                shot: list[tuple[float, float, float, float]], file_dest: Path
+            ):
+                if len(shot) == 1:
+                    page.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
+                    return
+
+                for i in range(len(shot) - 1):
+                    if shot[i][2] >= shot[i + 1][0]:
+                        self.logger.warning(
+                            f"Shot rect not increasing in x: {shot[i]} {shot[i+1]}"
+                        )
+                        page.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
+                        return
+
+                page_shot: Page = doc.load_page(page_index)
+                min_y = min([s[1] for s in shot])
+                max_y = max([s[3] for s in shot])
+                for r in shot:
+                    color = fitz.utils.getColor("white")
+                    if r[1] > min_y:
+                        page_shot.draw_rect((r[0], min_y, r[2], r[1]), color=color, fill=color)  # type: ignore
+                    if r[3] < max_y:
+                        page_shot.draw_rect((r[0], r[3], r[2], max_y), color=color, fill=color)  # type: ignore
+                page_shot.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
 
             shot_counter = 0
 
@@ -157,7 +185,7 @@ class JSONGenWorker(PageWorker):
                         / "assets"
                         / f"page_{page_index}_shot_{shot_counter}.png"
                     )
-                    page.get_pixmap(clip=rect, dpi=288).save(file_shot)  # type: ignore
+                    save_shot_pixmap(shot, file_shot)
                     shot_counter += 1
 
                     column_block_elements.append(

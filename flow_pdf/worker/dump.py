@@ -143,12 +143,17 @@ class DumpWorker(PageWorker):
             #     rects.append(block["bbox"])
             # add_annot(page, rects, "image", "red")
 
-            # shot
+            # shot in column view
             for c in page_in.shot_rects:
                 rects = []
                 for shot in c:
                     rects.append(get_min_bounding_rect(shot))
                 add_annot(page, rects, "shot", "green")
+
+            # shot in rect view
+            # for c in page_in.shot_rects:
+            #     for shot in c:
+            #         add_annot(page, shot, "shot-r", "green")
 
             file.write_json(
                 doc_in.dir_output / "shot_rects" / f"{page_index}.json",
