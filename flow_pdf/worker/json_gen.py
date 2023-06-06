@@ -1,4 +1,4 @@
-from .common import PageWorker, Block, Range, is_common_span
+from .common import PageWorker, Block, Range, is_common_span, get_min_bounding_rect
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -9,6 +9,8 @@ from .common import (
 from fitz import Document, Page, TextPage
 from htutil import file
 import fitz
+import fitz.utils
+from pathlib import Path
 
 from dataclasses import dataclass
 
@@ -26,8 +28,8 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    big_blocks: list
-    shot_rects: list
+    big_blocks: list[list]  # column -> block
+    shot_rects: list[list]  # column -> block
 
 
 @dataclass
@@ -57,21 +59,39 @@ class JSONGenWorker(PageWorker):
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)
 
+            def save_shot_pixmap(
+                shot: list[tuple[float, float, float, float]], file_dest: Path
+            ):
+                if len(shot) == 1:
+                    page.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
+                    return
+
+                for i in range(len(shot) - 1):
+                    if shot[i][2] >= shot[i + 1][0]:
+                        self.logger.warning(
+                            f"Shot rect not increasing in x: {shot[i]} {shot[i+1]}"
+                        )
+                        page.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
+                        return
+
+                page_shot: Page = doc.load_page(page_index)
+                min_y = min([s[1] for s in shot])
+                max_y = max([s[3] for s in shot])
+                for r in shot:
+                    color = fitz.utils.getColor("white")
+                    if r[1] > min_y:
+                        page_shot.draw_rect((r[0], min_y, r[2], r[1]), color=color, fill=color)  # type: ignore
+                    if r[3] < max_y:
+                        page_shot.draw_rect((r[0], r[3], r[2], max_y), color=color, fill=color)  # type: ignore
+                page_shot.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
+
             shot_counter = 0
 
             block_elements = []
 
-            for column in doc_in.big_text_columns:
-                blocks = [
-                    b
-                    for b in page_in.big_blocks
-                    if b["bbox"][0] >= column.min and b["bbox"][2] <= column.max
-                ]
-                shots = [
-                    b
-                    for b in page_in.shot_rects
-                    if b[0] >= column.min and b[0] <= column.max
-                ]
+            for c_i, column in enumerate(doc_in.big_text_columns):
+                blocks = page_in.big_blocks[c_i]
+                shots = page_in.shot_rects[c_i]
 
                 column_block_elements = []
                 for b in blocks:
@@ -157,20 +177,21 @@ class JSONGenWorker(PageWorker):
                                     }
                                 )
                     column_block_elements.append(block_element)
-                for s in shots:
+                for shot in shots:
+                    rect = get_min_bounding_rect(shot)
                     file_shot = (
                         doc_in.dir_output
                         / "output"
                         / "assets"
                         / f"page_{page_index}_shot_{shot_counter}.png"
                     )
-                    page.get_pixmap(clip=s, dpi=288).save(file_shot)  # type: ignore
+                    save_shot_pixmap(shot, file_shot)
                     shot_counter += 1
 
                     column_block_elements.append(
                         {
                             "type": "shot",
-                            "y0": s[1],
+                            "y0": rect[1],
                             "path": f"./assets/{file_shot.name}",
                         }
                     )

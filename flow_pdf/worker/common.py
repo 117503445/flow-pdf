@@ -8,6 +8,7 @@ from dataclasses import dataclass, fields, asdict
 
 from htutil import file
 import logging
+from enum import Enum
 
 fitz.TOOLS.set_small_glyph_heights(True)
 
@@ -304,3 +305,57 @@ def is_common_span(span, most_common_font, most_common_size) -> bool:
     if most_common_size and abs(span["size"] - most_common_size) >= 0.5:
         return False
     return True
+
+
+def get_min_bounding_rect(rects):
+    x0 = min(rects, key=lambda r: r[0])[0]
+    y0 = min(rects, key=lambda r: r[1])[1]
+    x1 = max(rects, key=lambda r: r[2])[2]
+    y1 = max(rects, key=lambda r: r[3])[3]
+    return (x0, y0, x1, y1)
+
+
+class RectRelation(Enum):
+    NOT_INTERSECT = 0  # 不相交
+    CONTAINS = 1  # 1 包含 2
+    CONTAINED_BY = 2  # 1 被 2 包含
+    INTERSECT = 3  # 相交
+
+
+# def rectangle_relation(
+#     rect1: tuple[float, float, float, float], rect2: tuple[float, float, float, float]
+# ) -> RectRelation:
+#     x1, y2, x2, y1 = rect1
+#     x3, y4, x4, y3 = rect2
+
+#     if x1 >= x4 or x2 <= x3 or y1 <= y4 or y2 >= y3:
+#         return RectRelation.NOT_INTERSECT
+
+#     elif x1 >= x3 and x2 <= x4 and y1 <= y3 and y2 >= y4:
+#         return RectRelation.CONTAINS
+
+#     elif x1 <= x3 and x2 >= x4 and y1 >= y3 and y2 <= y4:
+#         return RectRelation.CONTAINED_BY
+
+#     else:
+#         return RectRelation.INTERSECT
+
+def rectangle_relation(
+    rect1: tuple[float, float, float, float], rect2: tuple[float, float, float, float]
+) -> RectRelation:
+    # 解析矩形参数
+    x1_1, y1_1, x2_1, y2_1 = rect1
+    x1_2, y1_2, x2_2, y2_2 = rect2
+
+    # 检查是否相交
+    if x2_1 <= x1_2 or x1_1 >= x2_2 or y2_1 <= y1_2 or y1_1 >= y2_2:
+        return RectRelation.NOT_INTERSECT
+
+    # 检查是否包含
+    if x1_1 <= x1_2 and y1_1 <= y1_2 and x2_1 >= x2_2 and y2_1 >= y2_2:
+        return RectRelation.CONTAINS
+    if x1_2 <= x1_1 and y1_2 <= y1_1 and x2_2 >= x2_1 and y2_2 >= y2_1:
+        return RectRelation.CONTAINED_BY
+
+    # 如果不相交，也不包含，则两个矩形必定相交
+    return RectRelation.INTERSECT
