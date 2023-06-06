@@ -204,6 +204,8 @@ class JSONGenWorker(PageWorker):
                     del e["y0"]
                 block_elements.extend(column_block_elements)
 
+
+
         return PageOutParams(), LocalPageOutParams(block_elements)
 
     def post_run_page(self, doc_in: DocInParams, page_in: list[PageInParams]):  # type: ignore[override]
@@ -219,6 +221,38 @@ class JSONGenWorker(PageWorker):
         elements = []
         for p in local_page_out:
             elements.extend(p.elements)
+
+        # combine paragraphs
+        for i in reversed(range(1, len(elements))):
+            cur = elements[i]
+            prev = elements[i - 1]
+
+            if cur["type"] == "paragraph" and prev[
+                "type"
+            ] == "paragraph":
+                cur_first_c = ''
+                for sp in cur['children']:
+                    if sp["type"] == "text":
+                        cur_first_c = sp["text"][0]
+                        break
+                if not cur_first_c:
+                    continue
+
+                prev_last_c = ''
+                for sp in reversed(prev['children']):
+                    if sp["type"] == "text":
+                        prev_last_c = sp["text"][-1]
+                        break
+                if not prev_last_c:
+                    continue
+
+                def is_valid(c: str):
+                    return c.islower() or c in ' '
+
+                if is_valid(cur_first_c) and is_valid(prev_last_c):
+                    elements[i - 1]["children"].extend(elements[i]["children"])
+                    del elements[i]
+
 
         file.write_json(
             doc_in.dir_output / "output" / "doc.json",
