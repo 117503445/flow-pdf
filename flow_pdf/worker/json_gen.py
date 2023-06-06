@@ -26,8 +26,8 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    big_blocks: list
-    shot_rects: list
+    big_blocks: list[list]  # column -> block
+    shot_rects: list[list]  # column -> block
 
 
 @dataclass
@@ -61,15 +61,9 @@ class JSONGenWorker(PageWorker):
 
             block_elements = []
 
-            for column in doc_in.big_text_columns:
-                blocks = [
-                    b
-                    for b in page_in.big_blocks
-                    if column.min * 0.9 <= b["bbox"][0] <= column.max * 1.1
-                ]
-                shots = [
-                    s for s in page_in.shot_rects if column.min <= s[0][0] <= column.max
-                ]
+            for c_i, column in enumerate(doc_in.big_text_columns):
+                blocks = page_in.big_blocks[c_i]
+                shots = page_in.shot_rects[c_i]
 
                 column_block_elements = []
                 for b in blocks:

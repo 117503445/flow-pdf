@@ -32,7 +32,7 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
-    big_blocks: list
+    big_blocks: list[list] # column -> block
 
 
 @dataclass
@@ -44,7 +44,18 @@ class BigBlockWorker(PageWorker):
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
+        big_blocks: list[list] = [[] for _ in range(len(doc_in.big_text_columns))]
+
         blocks = [b for b in page_in.raw_dict["blocks"] if b["type"] == 0]
+
+        for b in blocks:
+            for i, column in enumerate(doc_in.big_text_columns):
+                delta = (column.max - column.min) * 0.1
+                delta = 0
+                if column.min - delta <= b["bbox"][0] <= column.max + delta:
+                    big_blocks[i].append(b)
+                    break
+
 
         def is_big_block(block):
             def is_in_width_range(block):
@@ -53,12 +64,6 @@ class BigBlockWorker(PageWorker):
                     <= block["bbox"][2] - block["bbox"][0]
                     <= doc_in.big_text_width_range.max * 1.1
                 )
-
-            def is_in_right_x_position(block):
-                for column in doc_in.big_text_columns:
-                    if column.min * 0.9 <= block["bbox"][0] <= column.max * 1.1: # TODO sepficify the column
-                        return True
-                return False
 
             def is_line_y_increase(block):
                 for i in range(len(block["lines"]) - 1):
@@ -80,7 +85,6 @@ class BigBlockWorker(PageWorker):
 
             judgers = [
                 (is_in_width_range, True),
-                (is_in_right_x_position, True),
                 (is_line_y_increase, False),
                 (is_common_text_too_little, True),
             ]
@@ -89,7 +93,9 @@ class BigBlockWorker(PageWorker):
                     return False
             return True
 
-        big_blocks = list(filter(is_big_block, blocks))
+        for i, blocks in enumerate(big_blocks):
+            big_blocks[i] = list(filter(is_big_block, blocks))
+            big_blocks[i] = sorted(big_blocks[i], key=lambda b: b["bbox"][1])
 
         return PageOutParams(big_blocks), LocalPageOutParams()
 
@@ -100,7 +106,7 @@ class BigBlockWorker(PageWorker):
         page_out: list[PageOutParams],
         local_page_out: list[LocalPageOutParams],
     ) -> DocOutParams:
-        block_list = [b for page in page_out for b in page.big_blocks]
+        block_list = [b for page in page_out for bs in page.big_blocks for b in bs]
 
         core_y = Range(
             min([b["bbox"][1] for b in block_list]),

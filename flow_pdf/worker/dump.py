@@ -29,9 +29,9 @@ class DocInParams(DocInputParams):
 @dataclass
 class PageInParams(PageInputParams):
     raw_dict: dict
-    big_blocks: list
+    big_blocks: list[list]  # column -> block
+    shot_rects: list[list]  # column -> block
     image_blocks: list[dict]
-    shot_rects: list
     images: list
     drawings: list
 
@@ -119,10 +119,11 @@ class DumpWorker(PageWorker):
             # add_annot(page, rects, "new-line", "pink")
 
             # big block
-            rects = []
-            for block in page_in.big_blocks:
-                rects.append(block["bbox"])
-            add_annot(page, rects, "big-block", "blue")
+            for c in page_in.big_blocks:
+                rects = []
+                for block in c:
+                    rects.append(block["bbox"])
+                add_annot(page, rects, "big-block", "blue")
 
             # drawings
             # rects = []
@@ -143,12 +144,16 @@ class DumpWorker(PageWorker):
             # add_annot(page, rects, "image", "red")
 
             # shot
-            rects = []
-            for shot in page_in.shot_rects:
-                rects.append(get_min_bounding_rect(shot))
-            add_annot(page, rects, "shot", "green")
+            for c in page_in.shot_rects:
+                rects = []
+                for shot in c:
+                    rects.append(get_min_bounding_rect(shot))
+                add_annot(page, rects, "shot", "green")
 
-            file.write_json(doc_in.dir_output / "shot_rects" / f"{page_index}.json", page_in.shot_rects)
+            file.write_json(
+                doc_in.dir_output / "shot_rects" / f"{page_index}.json",
+                page_in.shot_rects,
+            )
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
 

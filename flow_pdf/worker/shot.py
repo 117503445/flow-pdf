@@ -20,7 +20,7 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    big_blocks: list
+    big_blocks: list[list]  # column -> block
     raw_dict: dict
     drawings: list
 
@@ -32,7 +32,7 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
-    shot_rects: list
+    shot_rects: list[list]  # column -> block
 
 
 @dataclass
@@ -66,17 +66,11 @@ class ShotWorker(PageWorker):
         column_shots: list[list[list[tuple[float, float, float, float]]]] = []
 
         # shot between big blocks
-        for column in doc_in.big_text_columns:
+        for i, column in enumerate(doc_in.big_text_columns):
             shots: list[list[tuple[float, float, float, float]]] = []
 
-            elements_rect = [
-                b
-                for b in page_in.big_blocks
-                if column.min * 0.9 <= b["bbox"][0] <= column.max * 1.1
-            ]
-            elements_rect.sort(key=lambda x: x["bbox"][1])
             last_y = doc_in.core_y.min
-            for block in elements_rect:
+            for block in page_in.big_blocks[i]:
                 r = (column.min, last_y, column.max, block["bbox"][1])
                 if r[3] - r[1] > 0:
                     shots.append([r])
@@ -165,15 +159,15 @@ class ShotWorker(PageWorker):
                 break
 
             for j in range(len(shots)):
-                first_shot = shots[j]
+                cur_shot = shots[j]
 
                 # TODO ZmICE1 - 2.png
                 for other_c_index in range(i + 1, len(column_shots)):
-                    is_find_near = False
                     next_c = column_shots[other_c_index]
+                    is_find_near = False
                     for k in range(len(next_c)):
                         next_shot = next_c[k]
-                        if is_near(first_shot, next_shot):
+                        if is_near(cur_shot, next_shot):
                             is_find_near = True
                             shots[j].extend(next_shot)
                             del next_c[k]
@@ -181,9 +175,4 @@ class ShotWorker(PageWorker):
                     if not is_find_near:
                         break
 
-        # prepare output
-        shots = []
-        for c in column_shots:
-            shots.extend(c)
-
-        return PageOutParams(shots), LocalPageOutParams()
+        return PageOutParams(column_shots), LocalPageOutParams()
