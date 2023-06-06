@@ -1,4 +1,4 @@
-from .common import PageWorker, Block, Range, get_min_bounding_rect
+from .common import PageWorker, Block, Range, get_min_bounding_rect, rectangle_relation, RectRelation
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -40,23 +40,7 @@ class LocalPageOutParams(LocalPageOutputParams):
     pass
 
 
-def rectangle_relation(
-    rect1: tuple[float, float, float, float], rect2: tuple[float, float, float, float]
-):
-    x1, y2, x2, y1 = rect1
-    x3, y4, x4, y3 = rect2
 
-    if x1 >= x4 or x2 <= x3 or y1 <= y4 or y2 >= y3:
-        return "not intersect"  # 不相交
-
-    elif x1 >= x3 and x2 <= x4 and y1 <= y3 and y2 >= y4:
-        return "contains"  # 包含
-
-    elif x1 <= x3 and x2 >= x4 and y1 >= y3 and y2 <= y4:
-        return "contained by"  # 被包含
-
-    else:
-        return "intersect"  # 相交
 
 
 class ShotWorker(PageWorker):
@@ -98,7 +82,7 @@ class ShotWorker(PageWorker):
 
             intersect_rects = []  # elements intersect with rect
             for r in elements_rect:
-                if rectangle_relation(first_shot[0], r) == "intersect":
+                if rectangle_relation(first_shot[0], r) == RectRelation.INTERSECT:
                     intersect_rects.append(r)
 
             if not intersect_rects:
@@ -134,7 +118,7 @@ class ShotWorker(PageWorker):
                 )
                 is_found = False
                 for r in elements_rect:
-                    if rectangle_relation(inner_rect, r) != "not intersect":
+                    if rectangle_relation(inner_rect, r) != RectRelation.NOT_INTERSECT:
                         is_found = True
                         break
                 if not is_found:
@@ -147,8 +131,8 @@ class ShotWorker(PageWorker):
             rect2 = get_min_bounding_rect(shot2)
             for r in elements_rect:
                 if (
-                    rectangle_relation(rect1, r) == "intersect"
-                    and rectangle_relation(rect2, r) == "intersect"
+                    rectangle_relation(rect1, r) == RectRelation.INTERSECT
+                    and rectangle_relation(rect2, r) == RectRelation.INTERSECT
                 ):
                     return True
             return False

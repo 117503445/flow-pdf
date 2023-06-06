@@ -1,4 +1,4 @@
-from .common import PageWorker, Block, Range, is_common_span
+from .common import PageWorker, Block, Range, is_common_span, rectangle_relation, RectRelation
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -23,7 +23,7 @@ class DocInParams(DocInputParams):
 @dataclass
 class PageInParams(PageInputParams):
     raw_dict: dict
-
+    drawings: list
 
 @dataclass
 class DocOutParams(DocOutputParams):
@@ -83,10 +83,20 @@ class BigBlockWorker(PageWorker):
 
                 return common_count / sum_count > 0.5
 
+
+            def is_not_be_contained(block):
+                # deep_root 0
+                for drawing in page_in.drawings:
+                    if rectangle_relation(block["bbox"], drawing['rect']) == RectRelation.CONTAINED_BY:
+                        return False
+                return True
+
+
             judgers = [
                 (is_in_width_range, True),
                 (is_line_y_increase, False),
                 (is_common_text_too_little, True),
+                (is_not_be_contained, True),
             ]
             for judger, enabled in judgers:
                 if enabled and not judger(block):
