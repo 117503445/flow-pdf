@@ -13,6 +13,7 @@ import fitz.utils
 from pathlib import Path
 
 from dataclasses import dataclass
+from PIL import Image, ImageChops
 
 
 @dataclass
@@ -58,6 +59,13 @@ class JSONGenWorker(PageWorker):
     ) -> tuple[PageOutParams, LocalPageOutParams]:
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)
+
+            def crop_image(f: Path):
+                with Image.open(f) as img:
+                    bg = Image.new(img.mode, img.size, img.getpixel((0, 0)))
+                    img = img.crop(ImageChops.difference(img, bg).getbbox())
+                    img.save(f)
+                
 
             def save_shot_pixmap(
                 shot: list[tuple[float, float, float, float]], file_dest: Path
@@ -189,6 +197,8 @@ class JSONGenWorker(PageWorker):
                         / f"page_{page_index}_shot_{shot_counter}.png"
                     )
                     save_shot_pixmap(shot, file_shot)
+                    # crop_image(file_shot)
+
                     shot_counter += 1
 
                     column_block_elements.append(
@@ -203,8 +213,6 @@ class JSONGenWorker(PageWorker):
                 for e in column_block_elements:
                     del e["y0"]
                 block_elements.extend(column_block_elements)
-
-
 
         return PageOutParams(), LocalPageOutParams(block_elements)
 
@@ -227,19 +235,17 @@ class JSONGenWorker(PageWorker):
             cur = elements[i]
             prev = elements[i - 1]
 
-            if cur["type"] == "paragraph" and prev[
-                "type"
-            ] == "paragraph":
-                cur_first_c = ''
-                for sp in cur['children']:
+            if cur["type"] == "paragraph" and prev["type"] == "paragraph":
+                cur_first_c = ""
+                for sp in cur["children"]:
                     if sp["type"] == "text":
                         cur_first_c = sp["text"][0]
                         break
                 if not cur_first_c:
                     continue
 
-                prev_last_c = ''
-                for sp in reversed(prev['children']):
+                prev_last_c = ""
+                for sp in reversed(prev["children"]):
                     if sp["type"] == "text":
                         prev_last_c = sp["text"][-1]
                         break
@@ -247,16 +253,17 @@ class JSONGenWorker(PageWorker):
                     continue
 
                 def is_valid(c: str):
-                    return c.islower() or c in ' '
+                    return c.islower() or c in " "
 
                 if is_valid(cur_first_c) and is_valid(prev_last_c):
                     elements[i - 1]["children"].extend(elements[i]["children"])
                     del elements[i]
 
-
         file.write_json(
             doc_in.dir_output / "output" / "doc.json",
             {"meta": {"flow-pdf-version": self.version}, "elements": elements},
         )
+
+
 
         return DocOutParams()

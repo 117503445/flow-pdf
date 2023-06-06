@@ -22,9 +22,10 @@
 - [-] 正文段落连字符适配
 - [x] 新的版本重新启动任务
 - [x] 清理失败任务
-- [ ] be Log Trace ID
-- [ ] 异常页面大小处理 metabolome
 - [ ] Shot 去除白边
+- [ ] 异常页面大小处理 metabolome
+- [ ] Big Block 禁止单行多 lines
+- [ ] be Log Trace ID
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] font size 范围优化
 - [ ] shot 可复制文字 alt-data
