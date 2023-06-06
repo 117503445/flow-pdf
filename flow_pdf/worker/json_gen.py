@@ -82,7 +82,9 @@ class JSONGenWorker(PageWorker):
                     }
 
                     def get_span_type(span):
-                        if is_common_span(span, doc_in.most_common_font, doc_in.most_common_size):
+                        if is_common_span(
+                            span, doc_in.most_common_font, doc_in.most_common_size
+                        ):
                             span_type = "text"
                         else:
                             span_type = "shot"
@@ -190,10 +192,13 @@ class JSONGenWorker(PageWorker):
         page_out: list[PageOutParams],
         local_page_out: list[LocalPageOutParams],
     ) -> DocOutParams:
-        elements = [{"type": "meta", "meta": {"flow-pdf-version": self.version}}]
+        elements = []
         for p in local_page_out:
             elements.extend(p.elements)
 
-        file.write_json(doc_in.dir_output / "output" / "elements.json", elements)
+        file.write_json(
+            doc_in.dir_output / "output" / "doc.json",
+            {"meta": {"flow-pdf-version": self.version}, "elements": elements},
+        )
 
         return DocOutParams()
