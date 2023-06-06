@@ -21,11 +21,11 @@
 - [x] 正文段落首行缩进
 - [-] 正文段落连字符适配
 - [x] 新的版本重新启动任务
+- [x] 清理失败任务
 - [ ] be Log Trace ID
 - [ ] 异常页面大小处理 metabolome
 - [ ] Shot 去除白边
 - [ ] Ligature 连字识别 (Hotstuff)
-- [ ] 清理失败任务
 - [ ] font size 范围优化
 - [ ] shot 可复制文字 alt-data
 - [ ] list 识别支持

@@ -1,4 +1,4 @@
-from .common import PageWorker, Block
+from .common import Worker, Block
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -32,20 +32,15 @@ class PageOutParams(PageOutputParams):
     pass
 
 
-@dataclass
-class LocalPageOutParams(LocalPageOutputParams):
-    pass
-
-
-class HTMLGenWorker(PageWorker):
+class HTMLGenWorker(Worker):
     def __init__(self) -> None:
         super().__init__()
 
         self.disable_cache = True
 
-    def run_page(  # type: ignore[override]
-        self, page_index: int, doc_in: DocInParams, page_in: PageInParams
-    ) -> tuple[PageOutParams, LocalPageOutParams]:
+    def run(
+        self, doc_in: DocInputParams, page_in: list[PageInputParams]
+    ) -> tuple[DocOutputParams, list[PageOutputParams]]:
         doc = file.read_json(doc_in.dir_output / "output" / "doc.json")
 
         html = file.read_text(Path(__file__).parent / "template.html")
@@ -80,4 +75,4 @@ class HTMLGenWorker(PageWorker):
                 self.logger.warning(f"unknown element type {element['type']}")
         file.write_text(doc_in.dir_output / "output" / "index.html", soup.prettify())
 
-        return PageOutParams(), LocalPageOutParams()
+        return DocOutParams(), []
