@@ -9,7 +9,7 @@ from worker import Executer, ExecuterConfig, workers_prod  # type: ignore
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-
+import shutil
 from common import version
 
 
@@ -31,7 +31,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# TODO Clean failed task
 
 logger = common.create_main_logger()
 logger.info(f"version: {version}")
@@ -99,12 +98,20 @@ async def parse_pdf(f: UploadFile):
 
     file_task = dir_task / "task.json"
     if file_task.exists():
-        return make_common_data(0, "Success", {"taskID": task_id})
+        js = file.read_json(file_task)
+        if js["status"] != "done":
+            return make_common_data(0, "Success", {"taskID": task_id})
+        else:
+            if file.read_json(dir_task / 'output' / 'doc.json')['meta']['flow-pdf-version'] == version:
+                return make_common_data(0, "Success", {"taskID": task_id})
+            else:
+                logger.info(f"clean old task {task_id}")
+                shutil.rmtree(dir_task)
 
     with open(dir_input / f"{task_id}.pdf", "wb") as buffer:
         buffer.write(content)
 
-    dir_output.mkdir(parents=True, exist_ok=True)
+    dir_task.mkdir(parents=True, exist_ok=True)
     file.write_json(
         file_task,
         {
