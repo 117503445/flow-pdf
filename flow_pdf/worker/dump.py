@@ -1,4 +1,4 @@
-from .common import PageWorker, Range, Block, is_common_span
+from .common import PageWorker, Range, Block, is_common_span, get_min_bounding_rect
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -82,11 +82,13 @@ class DumpWorker(PageWorker):
 
                     page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
 
+            # block
             # rects = []
             # for block in page_in.raw_dict["blocks"]:
             #     rects.append(block["bbox"])
             # add_annot(page, rects, "block", "blue")
 
+            # block line
             # for block in page_in.raw_dict["blocks"]:
             #     rects = []
             #     if block["type"] == 0:
@@ -94,15 +96,17 @@ class DumpWorker(PageWorker):
             #             rects.append(line["bbox"])
             #     add_annot(page, rects, "l", "red")
 
-            for block in page_in.raw_dict["blocks"]:
-                rects = []
-                if block["type"] == 0:
-                    for line in block["lines"]:
-                        for span in line["spans"]:
-                            if is_common_span(span, doc_in.most_common_font, doc_in.most_common_size):
-                                rects.append(span["bbox"])
-                add_annot(page, rects, "", "purple")
+            # block common span
+            # for block in page_in.raw_dict["blocks"]:
+            #     rects = []
+            #     if block["type"] == 0:
+            #         for line in block["lines"]:
+            #             for span in line["spans"]:
+            #                 if is_common_span(span, doc_in.most_common_font, doc_in.most_common_size):
+            #                     rects.append(span["bbox"])
+            #     add_annot(page, rects, "", "purple")
 
+            # new line
             # rects = []
             # for b in page_in.big_blocks:
             #     for i in range(1, len(b["lines"])):
@@ -114,27 +118,35 @@ class DumpWorker(PageWorker):
             #                 rects.append(line["bbox"])
             # add_annot(page, rects, "new-line", "pink")
 
+            # big block
             rects = []
             for block in page_in.big_blocks:
                 rects.append(block["bbox"])
             add_annot(page, rects, "big-block", "blue")
 
+            # drawings
             # rects = []
             # for block in page_in.drawings:
             #     rects.append(block['rect'])
             # add_annot(page, rects, 'drawings', 'red')
 
+            # image-block
             # rects = []
             # for block in page_in.image_blocks:
             #     rects.append(block["bbox"])
             # add_annot(page, rects, "image-block", "red")
 
+            # image
             # rects = []
             # for block in page_in.images:
             #     rects.append(block["bbox"])
             # add_annot(page, rects, "image", "red")
 
-            add_annot(page, page_in.shot_rects, "shot", "green")
+            # shot
+            rects = []
+            for shot in page_in.shot_rects:
+                rects.append(get_min_bounding_rect(shot))
+            add_annot(page, rects, "shot", "green")
 
             file.write_json(doc_in.dir_output / "shot_rects" / f"{page_index}.json", page_in.shot_rects)
 

@@ -1,4 +1,4 @@
-from .common import PageWorker, Block, Range
+from .common import PageWorker, Block, Range, get_min_bounding_rect
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -40,7 +40,9 @@ class LocalPageOutParams(LocalPageOutputParams):
     pass
 
 
-def rectangle_relation(rect1, rect2):
+def rectangle_relation(
+    rect1: tuple[float, float, float, float], rect2: tuple[float, float, float, float]
+):
     x1, y2, x2, y1 = rect1
     x3, y4, x4, y3 = rect2
 
@@ -61,54 +63,29 @@ class ShotWorker(PageWorker):
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
-        column_rects: list[list[tuple[float, float, float, float]]] = []
+        column_shots: list[list[list[tuple[float, float, float, float]]]] = []
 
+        # shot between big blocks
         for column in doc_in.big_text_columns:
-            rects: list[tuple[float, float, float, float]] = []
+            shots: list[list[tuple[float, float, float, float]]] = []
 
             elements_rect = [
                 b
                 for b in page_in.big_blocks
-                if b["bbox"][0] >= column.min and b["bbox"][2] <= column.max
+                if column.min * 0.9 <= b["bbox"][0] <= column.max * 1.1
             ]
             elements_rect.sort(key=lambda x: x["bbox"][1])
             last_y = doc_in.core_y.min
             for block in elements_rect:
                 r = (column.min, last_y, column.max, block["bbox"][1])
                 if r[3] - r[1] > 0:
-                    rects.append(r)
+                    shots.append([r])
                 else:
                     self.logger.warning(f"r.y1 <= r.y0, r = {r}")
                 last_y = block["bbox"][3]
-            rects.append((column.min, last_y, column.max, doc_in.core_y.max))
+            shots.append([(column.min, last_y, column.max, doc_in.core_y.max)])
 
-            column_rects.append(rects)
-
-        def is_near(rect1, rect2):
-            return abs(rect1[1] - rect2[1]) < 10 and abs(rect2[3] - rect1[3]) < 10
-
-        # merge shot in different columns
-        for i, rects in enumerate(column_rects):
-            if i == len(column_rects) - 1:
-                # The last column does not need to be merged
-                break
-
-            for j in range(len(rects)):
-                rect = rects[j]
-
-                # TODO ZmICE1 - 2.png
-                for other_c_index in range(i + 1, len(column_rects)):
-                    is_find_near = False
-                    next_c = column_rects[other_c_index]
-                    for k in range(len(next_c)):
-                        next_rect = next_c[k]
-                        if is_near(rect, next_rect):
-                            is_find_near = True
-                            rects[j] = (rect[0], rect[1], next_rect[2], rect[3])
-                            del next_c[k]
-                            break
-                    if not is_find_near:
-                        break
+            column_shots.append(shots)
 
         elements_rect = []
         for block in page_in.raw_dict["blocks"]:
@@ -117,39 +94,49 @@ class ShotWorker(PageWorker):
             elements_rect.append(draw["rect"])
 
         # extend first rect in each column
-        # TODO: better way to extend, to solve the problem of sui-10.png
-        for rects in column_rects:
-            if len(rects) == 0:
+
+        for shots in column_shots:
+            if len(shots) == 0:
                 continue
-            rect = rects[0]
+            first_shot = shots[0]
+            if len(first_shot) != 1:
+                raise Exception("len(first_shot) != 1")
 
             intersect_rects = []  # elements intersect with rect
             for r in elements_rect:
-                if rectangle_relation(rect, r) == "intersect":
+                if rectangle_relation(first_shot[0], r) == "intersect":
                     intersect_rects.append(r)
 
             if not intersect_rects:
                 continue
 
             min_y0 = min([r[1] for r in intersect_rects])
-            min_y0 = min(min_y0, rect[1])
-            rects[0] = (rect[0], min_y0, rect[2], rect[3])
+            min_y0 = min(min_y0, first_shot[0][1])
+            first_shot[0] = (
+                first_shot[0][0],
+                min_y0,
+                first_shot[0][2],
+                first_shot[0][3],
+            )
 
         # delete empty rects
         BORDER_WIDTH = 4
-        for rects in column_rects:
-            for i in reversed(range(len(rects))):
-                rect = rects[i]
+        for shots in column_shots:
+            for i in reversed(range(len(shots))):
+                shot = shots[i]
+                if len(shot) != 1:
+                    raise Exception("len(shot) != 1")
+
                 # delete height too small
-                if rect[3] - rect[1] <= BORDER_WIDTH * 2:
-                    del rects[i]
+                if shot[0][3] - shot[0][1] <= BORDER_WIDTH * 2:
+                    del shots[i]
                     continue
 
                 inner_rect = (
-                    rect[0] + BORDER_WIDTH,
-                    rect[1] + BORDER_WIDTH,
-                    rect[2] - BORDER_WIDTH,
-                    rect[3] - BORDER_WIDTH,
+                    shot[0][0] + BORDER_WIDTH,
+                    shot[0][1] + BORDER_WIDTH,
+                    shot[0][2] - BORDER_WIDTH,
+                    shot[0][3] - BORDER_WIDTH,
                 )
                 is_found = False
                 for r in elements_rect:
@@ -157,11 +144,46 @@ class ShotWorker(PageWorker):
                         is_found = True
                         break
                 if not is_found:
-                    del rects[i]
+                    del shots[i]
+
+        # merge shot in different columns
+
+        def is_near(shot1, shot2):
+            rect1 = get_min_bounding_rect(shot1)
+            rect2 = get_min_bounding_rect(shot2)
+            for r in elements_rect:
+                if (
+                    rectangle_relation(rect1, r) == "intersect"
+                    and rectangle_relation(rect2, r) == "intersect"
+                ):
+                    return True
+            return False
+
+        for i, shots in enumerate(column_shots):
+            if i == len(column_shots) - 1:
+                # The last column does not need to be merged
+                break
+
+            for j in range(len(shots)):
+                first_shot = shots[j]
+
+                # TODO ZmICE1 - 2.png
+                for other_c_index in range(i + 1, len(column_shots)):
+                    is_find_near = False
+                    next_c = column_shots[other_c_index]
+                    for k in range(len(next_c)):
+                        next_shot = next_c[k]
+                        if is_near(first_shot, next_shot):
+                            is_find_near = True
+                            shots[j].extend(next_shot)
+                            del next_c[k]
+                            break
+                    if not is_find_near:
+                        break
 
         # prepare output
-        rects = []
-        for c in column_rects:
-            rects.extend(c)
+        shots = []
+        for c in column_shots:
+            shots.extend(c)
 
-        return PageOutParams(rects), LocalPageOutParams()
+        return PageOutParams(shots), LocalPageOutParams()

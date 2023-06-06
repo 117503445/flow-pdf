@@ -304,3 +304,10 @@ def is_common_span(span, most_common_font, most_common_size) -> bool:
     if most_common_size and abs(span["size"] - most_common_size) >= 0.5:
         return False
     return True
+
+def get_min_bounding_rect(rects):
+    x0 = min(rects, key=lambda r: r[0])[0]
+    y0 = min(rects, key=lambda r: r[1])[1]
+    x1 = max(rects, key=lambda r: r[2])[2]
+    y1 = max(rects, key=lambda r: r[3])[3]
+    return (x0, y0, x1, y1)

@@ -1,4 +1,4 @@
-from .common import PageWorker, Block, Range, is_common_span
+from .common import PageWorker, Block, Range, is_common_span, get_min_bounding_rect
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -65,12 +65,10 @@ class JSONGenWorker(PageWorker):
                 blocks = [
                     b
                     for b in page_in.big_blocks
-                    if b["bbox"][0] >= column.min and b["bbox"][2] <= column.max
+                    if column.min * 0.9 <= b["bbox"][0] <= column.max * 1.1
                 ]
                 shots = [
-                    b
-                    for b in page_in.shot_rects
-                    if b[0] >= column.min and b[0] <= column.max
+                    s for s in page_in.shot_rects if column.min <= s[0][0] <= column.max
                 ]
 
                 column_block_elements = []
@@ -157,20 +155,21 @@ class JSONGenWorker(PageWorker):
                                     }
                                 )
                     column_block_elements.append(block_element)
-                for s in shots:
+                for shot in shots:
+                    rect = get_min_bounding_rect(shot)
                     file_shot = (
                         doc_in.dir_output
                         / "output"
                         / "assets"
                         / f"page_{page_index}_shot_{shot_counter}.png"
                     )
-                    page.get_pixmap(clip=s, dpi=288).save(file_shot)  # type: ignore
+                    page.get_pixmap(clip=rect, dpi=288).save(file_shot)  # type: ignore
                     shot_counter += 1
 
                     column_block_elements.append(
                         {
                             "type": "shot",
-                            "y0": s[1],
+                            "y0": rect[1],
                             "path": f"./assets/{file_shot.name}",
                         }
                     )

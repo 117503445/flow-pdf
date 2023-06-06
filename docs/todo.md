@@ -15,8 +15,12 @@
 - [x] big-block 误识别优化
 - [x] shot 上延覆盖 big-block
 - [ ] shot 合并优化
+- [ ] big-block judger: 不被 drawings 包含
+- [ ] 基于列的 block / shot 数据结构
 - [ ] Inline Shot 公式截取多余内容优化
 - [ ] Ligature 连字识别
+- [ ] 清理失败任务
+- [ ] 新的版本重新启动任务
 - [ ] 正文段落首行缩进
 - [ ] 正文段落连字符适配
 - [ ] font size 范围优化

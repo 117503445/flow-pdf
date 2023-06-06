@@ -56,7 +56,7 @@ class BigBlockWorker(PageWorker):
 
             def is_in_right_x_position(block):
                 for column in doc_in.big_text_columns:
-                    if column.min * 0.9 <= block["bbox"][0] <= column.max * 1.1:
+                    if column.min * 0.9 <= block["bbox"][0] <= column.max * 1.1: # TODO sepficify the column
                         return True
                 return False
 
