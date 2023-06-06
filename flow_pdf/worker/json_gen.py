@@ -89,17 +89,12 @@ class JSONGenWorker(PageWorker):
 
             block_elements = []
 
-            for c_i, column in enumerate(doc_in.big_text_columns):
+            for c_i in range(len(doc_in.big_text_columns)):
                 blocks = page_in.big_blocks[c_i]
                 shots = page_in.shot_rects[c_i]
 
                 column_block_elements = []
                 for b in blocks:
-                    block_element = {
-                        "type": "block",
-                        "y0": b["bbox"][1],
-                        "childs": [],
-                    }
 
                     def get_span_type(span):
                         if is_common_span(
@@ -110,6 +105,7 @@ class JSONGenWorker(PageWorker):
                             span_type = "shot"
                         return span_type
 
+                    p_lines_list: list[list] = [[]]
                     for i in range(len(b["lines"])):
                         line = b["lines"][i]
 
@@ -119,60 +115,71 @@ class JSONGenWorker(PageWorker):
                             if delta > MIN_DELTA:
                                 last_line = b["lines"][i - 1]
                                 if last_line["bbox"][0] - b["bbox"][0] < MIN_DELTA:
-                                    block_element["childs"].append(
+                                    p_lines_list.append([])
+                        p_lines_list[-1].append(line)
+
+                    for p_lines in p_lines_list:
+                        p = {
+                            "type": "paragraph",
+                            "children": [],
+                            "y0": p_lines[0]["bbox"][1],
+                        }
+                        for line in p_lines:
+                            spans = line["spans"]
+
+                            result = []
+                            current_value = None
+                            current_group: list = []
+
+                            for span in spans:
+                                if get_span_type(span) != current_value:
+                                    if current_value is not None:
+                                        result.append(current_group)
+                                    current_value = get_span_type(span)
+                                    current_group = []
+                                current_group.append(span)
+
+                            result.append(current_group)
+
+                            for group in result:
+                                if get_span_type(group[0]) == "text":
+                                    t = ""
+                                    for span in group:
+                                        for char in span["chars"]:
+                                            t += char["c"]
+                                    if (
+                                        len(p["children"]) > 0
+                                        and p["children"][-1]["type"] == "text"
+                                    ):
+                                        # TODO
+                                        p["children"][-1]["text"] += f" {t}"
+                                    else:
+                                        p["children"].append(
+                                            {
+                                                "type": "text",
+                                                "text": t,
+                                            }
+                                        )
+                                elif get_span_type(group[0]) == "shot":
+                                    file_shot = (
+                                        doc_in.dir_output
+                                        / "output"
+                                        / "assets"
+                                        / f"page_{page_index}_shot_{shot_counter}.png"
+                                    )
+                                    rects = []
+                                    for r in group:
+                                        rects.append(r["bbox"])
+                                    save_shot_pixmap(rects, file_shot)
+
+                                    shot_counter += 1
+                                    p["children"].append(
                                         {
-                                            "type": "new-line",
+                                            "type": "shot",
+                                            "path": f"./assets/{file_shot.name}",
                                         }
                                     )
-
-                        spans = line["spans"]
-
-                        result = []
-                        current_value = None
-                        current_group: list = []
-
-                        for span in spans:
-                            if get_span_type(span) != current_value:
-                                if current_value is not None:
-                                    result.append(current_group)
-                                current_value = get_span_type(span)
-                                current_group = []
-                            current_group.append(span)
-
-                        result.append(current_group)
-
-                        for group in result:
-                            if get_span_type(group[0]) == "text":
-                                t = ""
-                                for span in group:
-                                    for char in span["chars"]:
-                                        t += char["c"]
-                                block_element["childs"].append(
-                                    {
-                                        "type": "text",
-                                        "text": t,
-                                    }
-                                )
-                            elif get_span_type(group[0]) == "shot":
-                                file_shot = (
-                                    doc_in.dir_output
-                                    / "output"
-                                    / "assets"
-                                    / f"page_{page_index}_shot_{shot_counter}.png"
-                                )
-                                rects = []
-                                for r in group:
-                                    rects.append(r["bbox"])
-                                save_shot_pixmap(rects, file_shot)
-
-                                shot_counter += 1
-                                block_element["childs"].append(
-                                    {
-                                        "type": "shot",
-                                        "path": f"./assets/{file_shot.name}",
-                                    }
-                                )
-                    column_block_elements.append(block_element)
+                        column_block_elements.append(p)
                 for shot in shots:
                     rect = get_min_bounding_rect(shot)
                     file_shot = (

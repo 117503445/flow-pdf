@@ -57,14 +57,12 @@ class HTMLGenWorker(PageWorker):
             soup.html.head.append(soup.new_tag("meta", attrs={"name": k, "content": v}))  # type: ignore
 
         for element in doc["elements"]:
-            if element["type"] == "block":
-                t = soup.new_tag("div")
+            if element["type"] == "paragraph":
+                t = soup.new_tag("p")
 
-                for c in element["childs"]:
+                for c in element["children"]:
                     if c["type"] == "text":
                         t.append(c["text"])
-                    elif c["type"] == "new-line":
-                        t.append(soup.new_tag("br"))
                     elif c["type"] == "shot":
                         t.append(
                             soup.new_tag(
