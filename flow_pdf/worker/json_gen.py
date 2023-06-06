@@ -160,15 +160,11 @@ class JSONGenWorker(PageWorker):
                                     / "assets"
                                     / f"page_{page_index}_shot_{shot_counter}.png"
                                 )
-                                y_0 = min([s["bbox"][1] for s in group])
-                                y_1 = max([s["bbox"][3] for s in group])
-                                r = (
-                                    group[0]["bbox"][0],
-                                    y_0,
-                                    group[-1]["bbox"][2],
-                                    y_1,
-                                )
-                                page.get_pixmap(clip=r, dpi=288).save(file_shot)  # type: ignore
+                                rects = []
+                                for r in group:
+                                    rects.append(r["bbox"])
+                                save_shot_pixmap(rects, file_shot)
+
                                 shot_counter += 1
                                 block_element["childs"].append(
                                     {

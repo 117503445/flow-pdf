@@ -105,7 +105,7 @@ class BigBlockWorker(PageWorker):
 
         for i, blocks in enumerate(big_blocks):
             big_blocks[i] = list(filter(is_big_block, blocks))
-            big_blocks[i] = sorted(big_blocks[i], key=lambda b: b["bbox"][1])
+            big_blocks[i] = sorted(big_blocks[i], key=lambda block: block["bbox"][1])
 
         return PageOutParams(big_blocks), LocalPageOutParams()
 
