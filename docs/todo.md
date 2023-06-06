@@ -19,7 +19,8 @@
 - [x] big-block judger: 不被 drawings 包含
 - [x] Inline Shot 公式截取多余内容优化
 - [ ] 异常页面大小处理 metabolome
-- [ ] Ligature 连字识别
+- [ ] Shot 去除白边
+- [ ] Ligature 连字识别 (Hotstuff)
 - [ ] 清理失败任务
 - [ ] 新的版本重新启动任务
 - [ ] 正文段落首行缩进

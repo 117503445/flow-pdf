@@ -75,7 +75,7 @@ class HTMLGenWorker(PageWorker):
                         self.logger.warning(f"unknown child type {c['type']}")
                 soup.html.body.append(t)  # type: ignore
             elif element["type"] == "shot":
-                t = soup.new_tag("img", src=element["path"])
+                t = soup.new_tag("img", src=element["path"], attrs={"class": "shot"})
                 soup.html.body.append(t)  # type: ignore
 
             else:
