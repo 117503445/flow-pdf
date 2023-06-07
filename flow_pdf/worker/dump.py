@@ -24,6 +24,7 @@ class DocInParams(DocInputParams):
     big_text_columns: list[Range]
 
     core_y: Range
+    abnormal_size_pages: list[int]
 
 
 @dataclass
@@ -94,7 +95,8 @@ class DumpWorker(PageWorker):
             #     if block["type"] == 0:
             #         for line in block["lines"]:
             #             rects.append(line["bbox"])
-            #     add_annot(page, rects, "l", "red")
+            #     add_annot(page, rects, "", "red")
+            # add_annot(page, rects, "l", "red")
 
             # block common span
             # for block in page_in.raw_dict["blocks"]:
@@ -144,11 +146,15 @@ class DumpWorker(PageWorker):
             # add_annot(page, rects, "image", "red")
 
             # shot in column view
-            for c in page_in.shot_rects:
-                rects = []
-                for shot in c:
-                    rects.append(get_min_bounding_rect(shot))
-                add_annot(page, rects, "shot", "green")
+            if page_index in doc_in.abnormal_size_pages:
+                rects =  page_in.shot_rects[0][0]
+                add_annot(page, rects, "shot-abnormal-page", "green")
+            else:
+                for c in page_in.shot_rects:
+                    rects = []
+                    for shot in c:
+                        rects.append(get_min_bounding_rect(shot))
+                    add_annot(page, rects, "shot", "green")
 
             # shot in rect view
             # for c in page_in.shot_rects:
@@ -188,6 +194,7 @@ class DumpWorker(PageWorker):
                 "big_text_width_range": doc_in.big_text_width_range,
                 "big_text_columns": doc_in.big_text_columns,
                 "core_y": doc_in.core_y,
+                'abnormal_size_pages': doc_in.abnormal_size_pages
             },
         )
 

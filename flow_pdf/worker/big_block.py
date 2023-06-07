@@ -19,6 +19,8 @@ class DocInParams(DocInputParams):
     most_common_font: str
     most_common_size: int
 
+    abnormal_size_pages: list[int]
+
 
 @dataclass
 class PageInParams(PageInputParams):
@@ -46,6 +48,9 @@ class BigBlockWorker(PageWorker):
     ) -> tuple[PageOutParams, LocalPageOutParams]:
         big_blocks: list[list] = [[] for _ in range(len(doc_in.big_text_columns))]
 
+        if page_index in doc_in.abnormal_size_pages:
+            return PageOutParams(big_blocks), LocalPageOutParams()
+
         blocks = [b for b in page_in.raw_dict["blocks"] if b["type"] == 0]
 
         for b in blocks:
@@ -54,6 +59,13 @@ class BigBlockWorker(PageWorker):
                 delta = 0
                 if column.min - delta <= b["bbox"][0] <= column.max + delta:
                     big_blocks[i].append(b)
+                    # near_lines_count = 0
+                    # for line in b["lines"]:
+                    #     if line["bbox"][0] < column.min + 20:
+                    #         near_lines_count += 1
+                
+                    # if (near_lines_count / len(b["lines"])) > 0.8 or (near_lines_count == 1 and len(b["lines"]) != 1):
+                    #     big_blocks[i].append(b)
                     break
 
 
@@ -64,6 +76,8 @@ class BigBlockWorker(PageWorker):
                     <= block["bbox"][2] - block["bbox"][0]
                     <= doc_in.big_text_width_range.max * 1.1
                 )
+
+
 
             def is_line_y_increase(block):
                 for i in range(len(block["lines"]) - 1):
@@ -90,7 +104,7 @@ class BigBlockWorker(PageWorker):
                     if rectangle_relation(block["bbox"], drawing['rect']) == RectRelation.CONTAINED_BY:
                         return False
                 return True
-
+            
 
             judgers = [
                 (is_in_width_range, True),

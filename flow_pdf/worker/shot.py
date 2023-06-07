@@ -17,12 +17,17 @@ class DocInParams(DocInputParams):
 
     core_y: Range
 
+    abnormal_size_pages: list[int]
+
 
 @dataclass
 class PageInParams(PageInputParams):
     big_blocks: list[list]  # column -> block
     raw_dict: dict
     drawings: list
+
+    width: int
+    height: int
 
 
 @dataclass
@@ -47,7 +52,13 @@ class ShotWorker(PageWorker):
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
-        column_shots: list[list[list[tuple[float, float, float, float]]]] = []
+        column_shots: list[list[list[tuple[float, float, float, float]]]] = [ [] for _ in range(len(doc_in.big_text_columns))]
+        
+
+        if page_index in doc_in.abnormal_size_pages:
+            column_shots[0].append([(0, 0, page_in.width, page_in.height)])
+            return PageOutParams(column_shots), LocalPageOutParams()
+
 
         # shot between big blocks
         for i, column in enumerate(doc_in.big_text_columns):
@@ -63,7 +74,7 @@ class ShotWorker(PageWorker):
                 last_y = block["bbox"][3]
             shots.append([(column.min, last_y, column.max, doc_in.core_y.max)])
 
-            column_shots.append(shots)
+            column_shots[i] = shots
 
         elements_rect = []
         for block in page_in.raw_dict["blocks"]:
