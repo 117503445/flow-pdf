@@ -147,7 +147,7 @@ class DumpWorker(PageWorker):
 
             # shot in column view
             if page_index in doc_in.abnormal_size_pages:
-                rects =  page_in.shot_rects[0][0]
+                rects = page_in.shot_rects[0][0]
                 add_annot(page, rects, "shot-abnormal-page", "green")
             else:
                 for c in page_in.shot_rects:
@@ -194,8 +194,15 @@ class DumpWorker(PageWorker):
                 "big_text_width_range": doc_in.big_text_width_range,
                 "big_text_columns": doc_in.big_text_columns,
                 "core_y": doc_in.core_y,
-                'abnormal_size_pages': doc_in.abnormal_size_pages
+                "abnormal_size_pages": doc_in.abnormal_size_pages,
             },
         )
+
+        big_blocks_id: list[list] = [[] for _ in range(len(page_in))]
+        for i, page in enumerate(page_in):
+            for bs in page.big_blocks:
+                for b in bs:
+                    big_blocks_id[i].append(b["number"])
+        file.write_json(doc_in.dir_output / "big_blocks_id.json", big_blocks_id)
 
         return DocOutParams()

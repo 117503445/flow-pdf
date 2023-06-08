@@ -1,4 +1,11 @@
-from .common import PageWorker, Block, Range, is_common_span, rectangle_relation, RectRelation
+from .common import (
+    PageWorker,
+    Block,
+    Range,
+    is_common_span,
+    rectangle_relation,
+    RectRelation,
+)
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -27,6 +34,7 @@ class PageInParams(PageInputParams):
     raw_dict: dict
     drawings: list
 
+
 @dataclass
 class DocOutParams(DocOutputParams):
     core_y: Range
@@ -34,7 +42,7 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
-    big_blocks: list[list] # column -> block
+    big_blocks: list[list]  # column -> block
 
 
 @dataclass
@@ -63,11 +71,10 @@ class BigBlockWorker(PageWorker):
                     # for line in b["lines"]:
                     #     if line["bbox"][0] < column.min + 20:
                     #         near_lines_count += 1
-                
+
                     # if (near_lines_count / len(b["lines"])) > 0.8 or (near_lines_count == 1 and len(b["lines"]) != 1):
                     #     big_blocks[i].append(b)
                     break
-
 
         def is_big_block(block):
             def is_in_width_range(block):
@@ -90,19 +97,23 @@ class BigBlockWorker(PageWorker):
                 for line in block["lines"]:
                     for span in line["spans"]:
                         sum_count += len(span["chars"])
-                        if is_common_span(span, doc_in.most_common_font, doc_in.most_common_size):
+                        if is_common_span(
+                            span, doc_in.most_common_font, doc_in.most_common_size
+                        ):
                             common_count += len(span["chars"])
 
                 return common_count / sum_count > 0.5
 
-
             def is_not_be_contained(block):
                 # deep_root 0
                 for drawing in page_in.drawings:
-                    if rectangle_relation(block["bbox"], drawing['rect']) == RectRelation.CONTAINED_BY:
+                    if (
+                        rectangle_relation(block["bbox"], drawing["rect"])
+                        == RectRelation.CONTAINED_BY
+                    ):
                         return False
                 return True
-            
+
             def is_enough_lower(block):
                 chars_count = 0
                 lower_chars_count = 0
@@ -111,10 +122,10 @@ class BigBlockWorker(PageWorker):
                     for span in line["spans"]:
                         for char in span["chars"]:
                             chars_count += 1
-                            if char['c'].islower():
+                            if char["c"].islower():
                                 lower_chars_count += 1
-                
-                self.logger.debug(f"lower_chars_count: {lower_chars_count}, chars_count: {chars_count}, ratio: {lower_chars_count / chars_count}")
+
+                # self.logger.debug(f"lower_chars_count: {lower_chars_count}, chars_count: {chars_count}, ratio: {lower_chars_count / chars_count}")
                 return lower_chars_count / chars_count > 0.5 and chars_count > 10
 
             judgers = [
