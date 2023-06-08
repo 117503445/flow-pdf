@@ -14,8 +14,12 @@ from common import version
 
 def get_files_from_cfg():
     cfg = yaml.load(Path("./config.yaml").read_text(), Loader=yaml.FullLoader)
+
+    dir_input = Path(cfg["path"]["input"])
+    dir_output = Path(cfg["path"]["output"])
+
     for file in cfg["files"]:
-        yield (Path(file["input"]), Path(file["output"]))
+        yield (dir_input / f"{file}.pdf"), (dir_output / file)
 
 
 def get_files_from_dir():

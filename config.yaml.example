@@ -1,5 +1,7 @@
+path:
+  input: ./data
+  output: /tmp/flow-pdf/out
+
 files:
-  - input: ./data/bitcoin.pdf
-    output: ./data/bitcoin
-  - input: ./data/raft.pdf
-    output: ./data/raft
+  - hotstuff
+  - bitcoin
