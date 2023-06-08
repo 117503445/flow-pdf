@@ -23,8 +23,8 @@
 - [x] 新的版本重新启动任务
 - [x] 清理失败任务
 - [x] 异常页面大小处理 metabolome
+- [-] Big Block 禁止单行多 lines
 - [ ] Shot 去除白边
-- [ ] Big Block 禁止单行多 lines
 - [ ] be Log Trace ID
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] font size 范围优化

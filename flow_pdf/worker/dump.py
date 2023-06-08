@@ -82,7 +82,10 @@ class DumpWorker(PageWorker):
                         )
 
                     page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
-
+            page.draw_rect( (175.56077575683594,
+                    109.79204559326172,
+                    185.58013916015625,
+                    127.0074462890625), color=fitz.utils.getColor('black'))
             # block
             # rects = []
             # for block in page_in.raw_dict["blocks"]:

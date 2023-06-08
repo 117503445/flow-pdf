@@ -8,5 +8,6 @@
         }
     },
     "python.formatting.provider": "black",
-    "mypy.enabled": true
+    "mypy.enabled": true,
+    "editor.fontLigatures": true
 }

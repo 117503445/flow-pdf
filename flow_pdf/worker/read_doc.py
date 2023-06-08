@@ -11,6 +11,7 @@ from .common import (
 import fitz
 from fitz import Page
 from dataclasses import dataclass
+from htutil import file
 
 
 @dataclass
@@ -59,6 +60,14 @@ class ReadDocWorker(PageWorker):
             #     self.logger.info(f"p1 {page.mediabox}")
             #     self.logger.info(f"p1 {page.rect}")
             #     self.logger.info(f"p1 {page.cropbox}")
+
+            # t = page.get_text('text', flags=fitz.TEXTFLAGS_TEXT & ~fitz.TEXT_PRESERVE_LIGATURES)  # type: ignore
+            # file.write_text(doc_in.dir_output / "text" / f"{page_index}.txt", t)
+
+            tr = page.get_texttrace()
+            file.write_json(doc_in.dir_output / "texttrace" / f"{page_index}.json", tr)
+
+            
 
             raw_dict = page.get_text("rawdict")  # type: ignore
             try:
