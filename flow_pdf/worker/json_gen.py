@@ -102,8 +102,7 @@ class JSONGenWorker(PageWorker):
                 shots = page_in.shot_rects[c_i]
 
                 column_block_elements = []
-                for b in blocks:
-
+                for b_i, b in enumerate(blocks):
                     def get_span_type(span):
                         if is_common_span(
                             span, doc_in.most_common_font, doc_in.most_common_size
@@ -122,10 +121,9 @@ class JSONGenWorker(PageWorker):
                             delta = line["bbox"][0] - b["bbox"][0]
                             if delta > MIN_DELTA:
                                 last_line = b["lines"][i - 1]
-                                if last_line["bbox"][0] - b["bbox"][0] < MIN_DELTA:
+                                if last_line["bbox"][0] - b["bbox"][0] < MIN_DELTA and last_line["bbox"][3] < line["bbox"][1]:
                                     p_lines_list.append([])
                         p_lines_list[-1].append(line)
-
                     for p_lines in p_lines_list:
                         p = {
                             "type": "paragraph",
