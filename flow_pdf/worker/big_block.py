@@ -77,8 +77,6 @@ class BigBlockWorker(PageWorker):
                     <= doc_in.big_text_width_range.max * 1.1
                 )
 
-
-
             def is_line_y_increase(block):
                 for i in range(len(block["lines"]) - 1):
                     if block["lines"][i]["bbox"][3] > block["lines"][i + 1]["bbox"][3]:
@@ -105,12 +103,26 @@ class BigBlockWorker(PageWorker):
                         return False
                 return True
             
+            def is_enough_lower(block):
+                chars_count = 0
+                lower_chars_count = 0
+
+                for line in block["lines"]:
+                    for span in line["spans"]:
+                        for char in span["chars"]:
+                            chars_count += 1
+                            if char['c'].islower():
+                                lower_chars_count += 1
+                
+                self.logger.debug(f"lower_chars_count: {lower_chars_count}, chars_count: {chars_count}, ratio: {lower_chars_count / chars_count}")
+                return lower_chars_count / chars_count > 0.5 and chars_count > 10
 
             judgers = [
                 (is_in_width_range, True),
                 (is_line_y_increase, False),
                 (is_common_text_too_little, True),
                 (is_not_be_contained, True),
+                (is_enough_lower, True),
             ]
             for judger, enabled in judgers:
                 if enabled and not judger(block):
