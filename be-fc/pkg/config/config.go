@@ -21,6 +21,12 @@ func ReadConfig() {
 	v.SetConfigName("config")
 	v.SetConfigType("toml")
 	v.AddConfigPath("./config")
+
+    v.BindEnv("OSS.AK", "ak")
+    v.BindEnv("OSS.SK", "sk")
+    v.BindEnv("OSS.Endpoint", "endpoint")
+    v.BindEnv("OSS.Bucket", "bucket")
+
 	if err := v.ReadInConfig(); err != nil {
 		panic(err)
 	}
