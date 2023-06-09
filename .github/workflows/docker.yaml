@@ -13,8 +13,6 @@ jobs:
         # with:
         # fetch-depth: '0'
 
-      - run: echo $(git rev-parse HEAD)
-
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -70,3 +68,25 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      # https://github.com/actions/setup-node
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: build dist
+        run: |
+          cd ./fe
+          wget -qO- https://get.pnpm.io/install.sh | sh -
+          pnpm install
+          pnpm build
+
+      - name: upload files to OSS
+        uses: fangbinwei/aliyun-oss-website-action@v1
+        with:
+          accessKeyId: ${{ secrets.ACCESS_KEY_ID }}
+          accessKeySecret: ${{ secrets.ACCESS_KEY_SECRET }}
+          bucket: flow-pdf-fe
+          endpoint: https://oss-cn-hangzhou.aliyuncs.com
+          folder: ./fe/dist
