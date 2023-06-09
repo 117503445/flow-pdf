@@ -10,6 +10,10 @@ import {
   createHashRouter,
 } from "react-router-dom";
 
+console.log("VITE_BE_HOST", import.meta.env.VITE_BE_HOST);
+console.log("VITE_STATIC_HOST", import.meta.env.VITE_STATIC_HOST)
+
+
 const router = createHashRouter([
   {
     path: "/",

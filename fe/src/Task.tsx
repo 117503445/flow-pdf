@@ -9,7 +9,19 @@ function Task() {
 
 
     async function fetchTask() {
-        const response = await fetch(import.meta.env.VITE_BE_HOST + `/static/${id}/task.json`)
+
+        let statusURL = import.meta.env.VITE_BE_HOST + `/static/${id}/task.json`
+        let resultURL = import.meta.env.VITE_BE_HOST + `/static/${id}/output/index.html`;
+
+        if (import.meta.env.VITE_STATIC_HOST.length > 0) {
+            statusURL = import.meta.env.VITE_STATIC_HOST + `/output/${id}/task.json`
+            resultURL = import.meta.env.VITE_STATIC_HOST + `/output/${id}/output/index.html`
+        }
+
+        console.log("statusURL", statusURL);
+        console.log("resultURL", resultURL);
+
+        const response = await fetch(statusURL)
         if (response.status != 200) {
             return
         }
@@ -17,9 +29,7 @@ function Task() {
         const s = data['status'];
         setStatus(s);
         if (s == "done") {
-            const url = import.meta.env.VITE_BE_HOST + `/static/${id}/output/index.html`;
-            console.log(url);
-            window.location.replace(url);
+            window.location.replace(resultURL);
         }
     }
 

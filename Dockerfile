@@ -30,8 +30,6 @@ COPY --from=fe-build /root/fe/dist /root/app/fe/dist
 COPY flow_pdf flow_pdf
 COPY script script
 
-RUN ./script/write_git_info.sh
-
 WORKDIR /root/app/flow_pdf
 EXPOSE 8080
 ENTRYPOINT [ "uvicorn", "be:app", "--reload", "--host", "0.0.0.0", "--port", "8080"]

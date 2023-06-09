@@ -1,9 +1,7 @@
-name: docker
+name: be-fc
 
 on:
   push:
-    branches:
-      - "master"
 
 jobs:
   build:
@@ -12,9 +10,7 @@ jobs:
       # https://github.com/actions/checkout
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: '0'
-      
+
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -42,11 +38,11 @@ jobs:
       # https://github.com/docker/metadata-action
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: |
-            117503445/flow-pdf
-            registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf
+            117503445/flow-pdf-be-fc
+            registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf-be-fc
           tags: |
             type=schedule
             type=ref,event=branch
@@ -56,11 +52,12 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
             type=raw,value=latest
+
       # https://github.com/docker/build-push-action
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: ./be-fc
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
