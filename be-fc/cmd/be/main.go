@@ -14,50 +14,99 @@
  * limitations under the License.
  */
 
- package main
+package main
 
- import (
-	 "context"
-	 "fmt"
- 
-	 "github.com/cloudwego/hertz/pkg/app"
-	 "github.com/cloudwego/hertz/pkg/app/server"
-	 "github.com/cloudwego/hertz/pkg/protocol/consts"
- )
- 
- func main() {
-	 // WithMaxRequestBodySize can set the size of the body
-	 h := server.Default(server.WithHostPorts("127.0.0.1:8080"), server.WithMaxRequestBodySize(20<<20))
- 
-	 h.GET("/", func(ctx context.Context, c *app.RequestContext) {
-		 c.JSON(consts.StatusOK, "Hello")
-	 })
- 
-	 h.POST("/singleFile", func(ctx context.Context, c *app.RequestContext) {
-		 // single file
-		 file, _ := c.FormFile("file")
-		 fmt.Println(file.Filename)
- 
-		 // Upload the file to specific dst
-		 c.SaveUploadedFile(file, fmt.Sprintf("./file/upload/%s", file.Filename))
- 
-		 c.String(consts.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
-	 })
- 
-	 h.POST("/multiFile", func(ctx context.Context, c *app.RequestContext) {
-		 // Multipart form
-		 form, _ := c.MultipartForm()
-		 files := form.File["file"]
- 
-		 for _, file := range files {
-			 fmt.Println(file.Filename)
- 
-			 // Upload the file to specific dst.
-			 c.SaveUploadedFile(file, fmt.Sprintf("./file/upload/%s", file.Filename))
-		 }
-		 c.String(consts.StatusOK, fmt.Sprintf("%d files uploaded!", len(files)))
-	 })
- 
-	 h.Spin()
- }
- 
+import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"fmt"
+	"io"
+	"os"
+
+	"github.com/117503445/flow-pdf-be-fc/pkg/common"
+	"github.com/117503445/flow-pdf-be-fc/pkg/oss"
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
+)
+
+func main() {
+	common.Start()
+
+	// WithMaxRequestBodySize can set the size of the body
+	h := server.Default(server.WithHostPorts("0.0.0.0:8080"), server.WithMaxRequestBodySize(20<<20))
+
+	h.GET("/", func(ctx context.Context, c *app.RequestContext) {
+		c.JSON(consts.StatusOK, "Hello from flow-pdf")
+	})
+
+	h.POST("/api/task", func(ctx context.Context, c *app.RequestContext) {
+		// single file
+		fileHeader, _ := c.FormFile("file")
+
+		file, err := fileHeader.Open()
+		if err != nil {
+			c.JSON(consts.StatusOK, map[string]interface{}{
+				"code":    1,
+				"message": "Failed",
+				"data": map[string]interface{}{
+					"err": err.Error(),
+				},
+			},
+			)
+		}
+
+		buf := new(bytes.Buffer)
+		_, err = io.Copy(buf, file)
+		if err != nil {
+			c.JSON(consts.StatusOK, map[string]interface{}{
+				"code":    1,
+				"message": "Failed",
+				"data": map[string]interface{}{
+					"err": err.Error(),
+				},
+			},
+			)
+		}
+
+		h := sha256.New()
+		h.Write(buf.Bytes())
+		sha256sum := fmt.Sprintf("%x", h.Sum(nil))
+		taskID := sha256sum
+
+		err = os.WriteFile(fmt.Sprintf("./%s.pdf", taskID), buf.Bytes(), 0644)
+		if err != nil {
+			c.JSON(consts.StatusOK, map[string]interface{}{
+				"code":    1,
+				"message": "Failed",
+				"data": map[string]interface{}{
+					"err": err.Error(),
+				},
+			},
+			)
+		}
+
+		err = oss.GlobalManager.Put(fmt.Sprintf("input/%s.pdf", taskID), fmt.Sprintf("./%s.pdf", taskID))
+		if err != nil {
+			c.JSON(consts.StatusOK, map[string]interface{}{
+				"code":    2,
+				"message": "upload fail",
+				"data": map[string]interface{}{
+					"err": err.Error(),
+				},
+			},
+			)
+		}
+
+		c.JSON(consts.StatusOK, map[string]interface{}{
+			"code":    0,
+			"message": "Success",
+			"data": map[string]interface{}{
+				"taskID": "",
+			},
+		})
+	})
+
+	h.Spin()
+}
