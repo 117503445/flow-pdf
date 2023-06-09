@@ -72,6 +72,8 @@ for event in events["events"]:
 
     bucket.get_object_to_file(file_k, file_input)
 
+    # TODO: skip finished task
+
     dir_output: Path = Path("/tmp") / "output" / stem
     dir_output.mkdir(parents=True, exist_ok=True)
 
@@ -90,7 +92,7 @@ for event in events["events"]:
     e = Executer(file_input, dir_output, cfg)
     e.register(workers_prod)
     e.execute()
-    
+
     bucket.put_object(
         f"output/{stem}/task.json",
         json.dumps(

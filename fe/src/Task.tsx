@@ -13,7 +13,7 @@ function Task() {
         let statusURL = import.meta.env.VITE_BE_HOST + `/static/${id}/task.json`
         let resultURL = import.meta.env.VITE_BE_HOST + `/static/${id}/output/index.html`;
 
-        if (import.meta.env.VITE_STATIC_HOST != undefined) {
+        if (import.meta.env.VITE_STATIC_HOST.length > 0) {
             statusURL = import.meta.env.VITE_STATIC_HOST + `/output/${id}/task.json`
             resultURL = import.meta.env.VITE_STATIC_HOST + `/output/${id}/output/index.html`
         }
