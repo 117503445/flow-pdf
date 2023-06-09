@@ -66,12 +66,13 @@ for event in events["events"]:
     bucket = oss2.Bucket(auth, os.getenv("endpoint"), event["oss"]["bucket"]["name"])
 
     file_k = event["oss"]["object"]["key"]
+    stem = Path(file_k).stem
 
-    file_input = dir_input / os.path.basename(file_k)
+    file_input = dir_input / stem
 
     bucket.get_object_to_file(file_k, file_input)
 
-    dir_output: Path = Path("/tmp") / "output" / os.path.basename(file_k)
+    dir_output: Path = Path("/tmp") / "output" / stem
     dir_output.mkdir(parents=True, exist_ok=True)
 
     logger.info(f"start {file_input.name}")
@@ -85,7 +86,7 @@ for event in events["events"]:
     for file in dir_output.glob("**/*"):
         if file.is_file():
             oss_key = (
-                f"output/{os.path.basename(file_k)}/{file.relative_to(dir_output)}"
+                f"output/{stem}/{file.relative_to(dir_output)}"
             )
             logger.info(f"upload, oss_key = {oss_key}, file = {file}")
 

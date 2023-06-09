@@ -10,8 +10,8 @@ jobs:
       # https://github.com/actions/checkout
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: '0'
+        # with:
+          # fetch-depth: '0'
 
       - run: echo $(git rev-parse HEAD)
       
@@ -56,6 +56,8 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
             type=raw,value=latest
+        env:
+          SHA: ${{ github.sha }}
       # https://github.com/docker/build-push-action
       - name: Build and push
         uses: docker/build-push-action@v3
