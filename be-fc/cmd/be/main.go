@@ -43,7 +43,7 @@ func main() {
 
 	h.POST("/api/task", func(ctx context.Context, c *app.RequestContext) {
 		// single file
-		fileHeader, _ := c.FormFile("file")
+		fileHeader, _ := c.FormFile("f")
 
 		file, err := fileHeader.Open()
 		if err != nil {
