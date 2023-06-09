@@ -1,0 +1,39 @@
+name: fe
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # https://github.com/actions/setup-node
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      # https://github.com/pnpm/action-setup
+      - name: install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.1
+
+      - name: build dist
+        run: |
+          cd ./fe
+          pnpm install
+          pnpm build-cloud
+
+      - name: upload files to OSS
+        uses: fangbinwei/aliyun-oss-website-action@v1
+        with:
+          accessKeyId: ${{ secrets.ACCESS_KEY_ID }}
+          accessKeySecret: ${{ secrets.ACCESS_KEY_SECRET }}
+          bucket: flow-pdf-fe
+          endpoint: https://oss-cn-hangzhou.aliyuncs.com
+          folder: ./fe/dist
