@@ -58,13 +58,16 @@ if not eventsStr:
 # }
 
 events: dict = json.loads(eventsStr)
+dir_input = Path("/tmp") / "input"
+dir_input.mkdir(parents=True, exist_ok=True)
+
 for event in events["events"]:
     auth = oss2.Auth(os.getenv("ak"), os.getenv("sk"))
     bucket = oss2.Bucket(auth, os.getenv("endpoint"), event["oss"]["bucket"]["name"])
 
     file_k = event["oss"]["object"]["key"]
 
-    file_input = Path("/tmp") / "input" / os.path.basename(file_k)
+    file_input = dir_input / os.path.basename(file_k)
 
     bucket.get_object_to_file(file_k, file_input)
 

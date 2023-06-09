@@ -12,6 +12,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+
+      - run: echo $(git rev-parse HEAD)
       
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
