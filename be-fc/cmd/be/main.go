@@ -44,6 +44,14 @@ func main() {
 	h.POST("/api/task", func(ctx context.Context, c *app.RequestContext) {
 		// single file
 		fileHeader, _ := c.FormFile("f")
+		if fileHeader == nil {
+			c.JSON(consts.StatusOK, map[string]interface{}{
+				"code":    2,
+				"message": "f not found",
+				"data":    map[string]interface{}{},
+			},
+			)
+		}
 
 		file, err := fileHeader.Open()
 		if err != nil {
@@ -103,7 +111,7 @@ func main() {
 			"code":    0,
 			"message": "Success",
 			"data": map[string]interface{}{
-				"taskID": "",
+				"taskID": taskID,
 			},
 		})
 	})
