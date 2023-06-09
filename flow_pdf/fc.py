@@ -76,18 +76,36 @@ for event in events["events"]:
     dir_output.mkdir(parents=True, exist_ok=True)
 
     logger.info(f"start {file_input.name}")
+
+    bucket.put_object(
+        f"output/{stem}/task.json",
+        json.dumps(
+            {
+                "status": "executing",
+            }
+        ),
+    )
+
     cfg = ExecuterConfig(version, False)  # type: ignore
     e = Executer(file_input, dir_output, cfg)
     e.register(workers_prod)
     e.execute()
+    
+    bucket.put_object(
+        f"output/{stem}/task.json",
+        json.dumps(
+            {
+                "status": "done",
+            }
+        ),
+    )
+
     logger.info(f"end {file_input.name}")
 
     # upload files to oss, rescursive
     for file in dir_output.glob("**/*"):
         if file.is_file():
-            oss_key = (
-                f"output/{stem}/{file.relative_to(dir_output)}"
-            )
+            oss_key = f"output/{stem}/{file.relative_to(dir_output)}"
             logger.info(f"upload, oss_key = {oss_key}, file = {file}")
 
             bucket.put_object_from_file(oss_key, str(file))
