@@ -44,7 +44,7 @@ jobs:
       # https://github.com/docker/metadata-action
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: |
             117503445/flow-pdf
@@ -75,10 +75,15 @@ jobs:
         with:
           node-version: "18"
 
+      # https://github.com/pnpm/action-setup
+      - name: install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.1
+
       - name: build dist
         run: |
           cd ./fe
-          wget -qO- https://get.pnpm.io/install.sh | sh -
           pnpm install
           pnpm build
 
