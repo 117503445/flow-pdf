@@ -65,7 +65,6 @@ class JSONGenWorker(PageWorker):
                     bg = Image.new(img.mode, img.size, img.getpixel((0, 0)))
                     img = img.crop(ImageChops.difference(img, bg).getbbox())
                     img.save(f)
-                
 
             def save_shot_pixmap(
                 shot: list[tuple[float, float, float, float]], file_dest: Path
@@ -103,6 +102,7 @@ class JSONGenWorker(PageWorker):
 
                 column_block_elements = []
                 for b_i, b in enumerate(blocks):
+
                     def get_span_type(span):
                         if is_common_span(
                             span, doc_in.most_common_font, doc_in.most_common_size
@@ -121,7 +121,10 @@ class JSONGenWorker(PageWorker):
                             delta = line["bbox"][0] - b["bbox"][0]
                             if delta > MIN_DELTA:
                                 last_line = b["lines"][i - 1]
-                                if last_line["bbox"][0] - b["bbox"][0] < MIN_DELTA and last_line["bbox"][3] < line["bbox"][1]:
+                                if (
+                                    last_line["bbox"][0] - b["bbox"][0] < MIN_DELTA
+                                    and last_line["bbox"][3] < line["bbox"][1]
+                                ):
                                     p_lines_list.append([])
                         p_lines_list[-1].append(line)
                     for p_lines in p_lines_list:
@@ -167,24 +170,29 @@ class JSONGenWorker(PageWorker):
                                             }
                                         )
                                 elif get_span_type(group[0]) == "shot":
-                                    file_shot = (
-                                        doc_in.dir_output
-                                        / "output"
-                                        / "assets"
-                                        / f"page_{page_index}_shot_{shot_counter}.png"
-                                    )
-                                    rects = []
-                                    for r in group:
-                                        rects.append(r["bbox"])
-                                    save_shot_pixmap(rects, file_shot)
+                                    if not (
+                                        len(group) == 1
+                                        and len(group[0]["chars"]) == 1
+                                        and group[0]["chars"][0]["c"] == " "
+                                    ): # space shoud be ignored, like zero.pdf
+                                        file_shot = (
+                                            doc_in.dir_output
+                                            / "output"
+                                            / "assets"
+                                            / f"page_{page_index}_shot_{shot_counter}.png"
+                                        )
+                                        rects = []
+                                        for r in group:
+                                            rects.append(r["bbox"])
+                                        save_shot_pixmap(rects, file_shot)
 
-                                    shot_counter += 1
-                                    p["children"].append(
-                                        {
-                                            "type": "shot",
-                                            "path": f"./assets/{file_shot.name}",
-                                        }
-                                    )
+                                        shot_counter += 1
+                                        p["children"].append(
+                                            {
+                                                "type": "shot",
+                                                "path": f"./assets/{file_shot.name}",
+                                            }
+                                        )
                         column_block_elements.append(p)
                 for shot in shots:
                     rect = get_min_bounding_rect(shot)
@@ -261,7 +269,5 @@ class JSONGenWorker(PageWorker):
             doc_in.dir_output / "output" / "doc.json",
             {"meta": {"flow-pdf-version": self.version}, "elements": elements},
         )
-
-
 
         return DocOutParams()
