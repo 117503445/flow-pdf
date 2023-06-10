@@ -19,6 +19,7 @@ RUN --mount=target=. \
 FROM gcr.io/distroless/static:nonroot as prd
 WORKDIR /home/nonroot
 COPY --from=build /app/flow-pdf-be-sc /home/nonroot
+COPY git.txt git.txt
 # this is the numeric version of user nonroot:nonroot to check runAsNonRoot in kubernetes
 USER 65532:65532
 EXPOSE 8080
