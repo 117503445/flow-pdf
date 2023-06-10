@@ -23,15 +23,15 @@
 - [x] 新的版本重新启动任务
 - [x] 清理失败任务
 - [x] 异常页面大小处理 metabolome
-- [ ] Shot 去除白边
+- [-] be Log Trace ID
+- [x] Cloud 函数计算
+- [ ] Table of Contents
 - [ ] Big Block 禁止单行多 lines
-- [ ] be Log Trace ID
+- [ ] Shot 去除白边
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] font size 范围优化
 - [ ] shot 可复制文字 alt-data
 - [ ] list 识别支持
 - [ ] figure 识别支持
-- [ ] Table of Contents
-- [ ] Cloud 函数计算
 - [ ] Docker CLI
 - [ ] devcontainer

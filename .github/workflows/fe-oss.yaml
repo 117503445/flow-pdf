@@ -1,7 +1,10 @@
-name: fe
+name: fe-oss
 
 on:
   push:
+    paths:
+      - ".github/workflows/fe-oss.yml"
+      - "fe/**"
 
 jobs:
   build:

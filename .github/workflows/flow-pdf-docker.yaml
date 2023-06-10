@@ -1,7 +1,13 @@
-name: be-fc
+name: flow-pdf-docker
 
 on:
   push:
+    paths:
+      - ".github/workflows/flow-pdf-docker.yml"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "pyproject.toml"
+      - "flow_pdf/**"
 
 jobs:
   build:
@@ -27,6 +33,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - run: ./script/write_git_info.sh
+        env:
+          SHA: ${{ github.sha }}
+
       # https://github.com/docker/login-action
       - name: Login to ACR
         uses: docker/login-action@v2
@@ -41,8 +51,8 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            117503445/flow-pdf-be-fc
-            registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf-be-fc
+            117503445/flow-pdf
+            registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf
           tags: |
             type=schedule
             type=ref,event=branch
@@ -57,7 +67,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: ./be-fc
+          context: .
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
