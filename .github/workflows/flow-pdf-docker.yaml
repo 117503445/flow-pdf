@@ -33,7 +33,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - run: ./script/write_git_info.sh
+      - run: cd flow_pdf && ../script/write_git_info.sh
         env:
           SHA: ${{ github.sha }}
 

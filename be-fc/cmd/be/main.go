@@ -38,7 +38,12 @@ func main() {
 	h := server.Default(server.WithHostPorts("0.0.0.0:8080"), server.WithMaxRequestBodySize(20<<20))
 
 	h.GET("/", func(ctx context.Context, c *app.RequestContext) {
-		c.JSON(consts.StatusOK, "Hello from flow-pdf")
+		version, err := os.ReadFile("git.txt")
+		if err != nil {
+			c.JSON(consts.StatusOK, "Hello from flow-pdf, err = "+err.Error())
+			return
+		}
+		c.JSON(consts.StatusOK, "Hello from flow-pdf, version = "+string(version))
 	})
 
 	h.POST("/api/task", func(ctx context.Context, c *app.RequestContext) {
