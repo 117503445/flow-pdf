@@ -35,6 +35,7 @@ func main() {
 	common.Start()
 
 	// WithMaxRequestBodySize can set the size of the body
+	// 20<<20 -> 20MB
 	h := server.Default(server.WithHostPorts("0.0.0.0:8080"), server.WithMaxRequestBodySize(20<<20))
 
 	h.GET("/", func(ctx context.Context, c *app.RequestContext) {
