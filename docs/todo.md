@@ -23,8 +23,10 @@
 - [x] 新的版本重新启动任务
 - [x] 清理失败任务
 - [x] 异常页面大小处理 metabolome
-- [-] be Log Trace ID
 - [x] Cloud 函数计算
+- [-] be Log Trace ID
+- [ ] 文件大小检查
+- [ ] OSS 文件保留 7 天
 - [ ] Table of Contents
 - [ ] Big Block 禁止单行多 lines
 - [ ] Shot 去除白边
