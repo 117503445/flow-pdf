@@ -81,6 +81,8 @@ jobs:
 
       - id: commit
         uses: pr-mpt/actions-commit-hash@v2
+        with:
+          prefix: "sha-"
 
       - name: Update fc version
         run: |
