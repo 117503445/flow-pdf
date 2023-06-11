@@ -96,4 +96,9 @@ jobs:
         run: |
           s config add --AccountID ${{secrets.AccountID}} --AccessKeyID ${{secrets.FC_ACCESS_KEY_ID}} --AccessKeySecret ${{secrets.FC_ACCESS_KEY_SECRET}} -a default
 
-          s cli fc-api updateFunction --region cn-hangzhou --access default --serviceName flow-pdf --functionName convert-pdf --customContainerConfig '{"image": "registry-vpc.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf:${{ steps.commit.outputs.short }}", "command": ["python", "fc.py"]}'
+          CONFIG='{
+            "image": "registry-vpc.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf:latest",
+            "command": "[\"python\", \"fc.py\"]"
+          }'
+
+          s cli fc-api updateFunction --region cn-hangzhou --access default --serviceName flow-pdf --functionName convert-pdf --customContainerConfig $CONFIG
