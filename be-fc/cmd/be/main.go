@@ -103,28 +103,6 @@ func main() {
 
 		objectKey := fmt.Sprintf("input/%s.pdf", taskID)
 
-		exist, err := oss.GlobalManager.IsExist(objectKey)
-		if err != nil {
-			c.JSON(consts.StatusOK, map[string]interface{}{
-				"code":    1,
-				"message": "Failed",
-				"data": map[string]interface{}{
-					"err": err.Error(),
-				},
-			})
-			return
-		}
-		if exist {
-			c.JSON(consts.StatusOK, map[string]interface{}{
-				"code":    0,
-				"message": "Success",
-				"data": map[string]interface{}{
-					"taskID": taskID,
-				},
-			})
-			return
-		}
-
 		err = oss.GlobalManager.Put(objectKey, fmt.Sprintf("./%s.pdf", taskID))
 		if err != nil {
 			c.JSON(consts.StatusOK, map[string]interface{}{

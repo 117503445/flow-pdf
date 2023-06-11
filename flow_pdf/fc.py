@@ -68,11 +68,19 @@ for event in events["events"]:
     file_k = event["oss"]["object"]["key"]
     stem = Path(file_k).stem
 
+    cloud_file_task = f"output/{stem}/task.json"
+    cloud_file_doc = f"output/{stem}/output/doc.json"
+    if bucket.object_exists(cloud_file_doc):
+        doc = bucket.get_object(cloud_file_doc).read()
+        doc = json.loads(doc)
+        if doc["meta"]["flow-pdf-version"] == version:
+            continue
+        else:
+            print("todo remove", bucket.list_objects_v2(prefix=f"output/{stem}/"))
+
     file_input = dir_input / stem
 
     bucket.get_object_to_file(file_k, file_input)
-
-    # TODO: skip finished task
 
     dir_output: Path = Path("/tmp") / "output" / stem
     dir_output.mkdir(parents=True, exist_ok=True)
@@ -80,7 +88,7 @@ for event in events["events"]:
     logger.info(f"start {file_input.name}")
 
     bucket.put_object(
-        f"output/{stem}/task.json",
+        cloud_file_task,
         json.dumps(
             {
                 "status": "executing",
@@ -94,7 +102,7 @@ for event in events["events"]:
     e.execute()
 
     bucket.put_object(
-        f"output/{stem}/task.json",
+        cloud_file_task,
         json.dumps(
             {
                 "status": "done",
