@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
       # https://github.com/actions/checkout
       - name: Checkout
