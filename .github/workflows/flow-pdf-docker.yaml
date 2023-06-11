@@ -3,7 +3,7 @@ name: flow-pdf-docker
 on:
   push:
     paths:
-      - ".github/workflows/flow-pdf-docker.yml"
+      - ".github/workflows/flow-pdf-docker.yaml"
       - "Dockerfile"
       - ".dockerignore"
       - "pyproject.toml"

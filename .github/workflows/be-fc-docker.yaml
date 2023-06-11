@@ -3,7 +3,7 @@ name: be-fc-docker
 on:
   push:
     paths:
-      - ".github/workflows/be-fc-docker.yml"
+      - ".github/workflows/be-fc-docker.yaml"
       - "be-fc/**"
 jobs:
   build:
