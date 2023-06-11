@@ -17,7 +17,7 @@
 
 请先 [安装](https://immersivetranslate.com/docs/installation) 拓展
 
-然后在 PDF 点击翻译按钮，或配置自动开启翻译
+然后在拓展设置中点击翻译按钮，或配置自动开启翻译
 
 ![entry](./docs/entry.png)
 

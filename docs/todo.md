@@ -25,10 +25,10 @@
 - [x] 异常页面大小处理 metabolome
 - [x] Cloud 函数计算
 - [-] be Log Trace ID
+- [-] Big Block 禁止单行多 lines
+- [x] OSS 文件保留 7 天
 - [ ] 文件大小检查
-- [ ] OSS 文件保留 7 天
 - [ ] Table of Contents
-- [ ] Big Block 禁止单行多 lines
 - [ ] Shot 去除白边
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] font size 范围优化
