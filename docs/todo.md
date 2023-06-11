@@ -27,6 +27,7 @@
 - [-] be Log Trace ID
 - [-] Big Block 禁止单行多 lines
 - [x] OSS 文件保留 7 天
+- [x] devcontainer
 - [ ] 文件大小检查
 - [ ] Table of Contents
 - [ ] Shot 去除白边
@@ -36,4 +37,3 @@
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Docker CLI
-- [ ] devcontainer

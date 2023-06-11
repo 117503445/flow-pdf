@@ -1,5 +1,5 @@
 {
-    "image": "117503445/dev-base",
+    "image": "117503445/dev-python",
     "customizations": {
       "vscode": {
         // Add the IDs of extensions you want installed when the container is created.
