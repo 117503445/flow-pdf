@@ -55,8 +55,8 @@ func main() {
 				"code":    2,
 				"message": "f not found",
 				"data":    map[string]interface{}{},
-			},
-			)
+			})
+			return
 		}
 
 		file, err := fileHeader.Open()
@@ -67,8 +67,8 @@ func main() {
 				"data": map[string]interface{}{
 					"err": err.Error(),
 				},
-			},
-			)
+			})
+			return
 		}
 
 		buf := new(bytes.Buffer)
@@ -80,8 +80,8 @@ func main() {
 				"data": map[string]interface{}{
 					"err": err.Error(),
 				},
-			},
-			)
+			})
+			return
 		}
 
 		h := sha256.New()
@@ -97,11 +97,35 @@ func main() {
 				"data": map[string]interface{}{
 					"err": err.Error(),
 				},
-			},
-			)
+			})
+			return
 		}
 
-		err = oss.GlobalManager.Put(fmt.Sprintf("input/%s.pdf", taskID), fmt.Sprintf("./%s.pdf", taskID))
+		objectKey := fmt.Sprintf("input/%s.pdf", taskID)
+
+		exist, err := oss.GlobalManager.IsExist(objectKey)
+		if err != nil {
+			c.JSON(consts.StatusOK, map[string]interface{}{
+				"code":    1,
+				"message": "Failed",
+				"data": map[string]interface{}{
+					"err": err.Error(),
+				},
+			})
+			return
+		}
+		if exist {
+			c.JSON(consts.StatusOK, map[string]interface{}{
+				"code":    0,
+				"message": "Success",
+				"data": map[string]interface{}{
+					"taskID": taskID,
+				},
+			})
+			return
+		}
+
+		err = oss.GlobalManager.Put(objectKey, fmt.Sprintf("./%s.pdf", taskID))
 		if err != nil {
 			c.JSON(consts.StatusOK, map[string]interface{}{
 				"code":    2,
@@ -109,8 +133,8 @@ func main() {
 				"data": map[string]interface{}{
 					"err": err.Error(),
 				},
-			},
-			)
+			})
+			return
 		}
 
 		c.JSON(consts.StatusOK, map[string]interface{}{

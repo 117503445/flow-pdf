@@ -51,3 +51,7 @@ func NewManager(config *managerConfig) *manager {
 func (m *manager) Put(objectKey string, filePath string) error {
 	return m.bucket.PutObjectFromFile(objectKey, filePath)
 }
+
+func (m *manager) IsExist(objectKey string) (bool, error) {
+	return m.bucket.IsObjectExist(objectKey)
+}
