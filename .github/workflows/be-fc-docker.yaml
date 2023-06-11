@@ -88,6 +88,7 @@ jobs:
         with:
           prefix: "sha-"
 
+      # https://help.aliyun.com/document_detail/295913.html
       - name: Update fc version
         run: |
           s config add --AccountID ${{secrets.AccountID}} --AccessKeyID ${{secrets.FC_ACCESS_KEY_ID}} --AccessKeySecret ${{secrets.FC_ACCESS_KEY_SECRET}} -a default

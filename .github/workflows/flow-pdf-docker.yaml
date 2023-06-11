@@ -17,6 +17,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - run: cd flow_pdf && ../script/write_git_info.sh
+        env:
+          SHA: ${{ github.sha }}
+
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -32,10 +36,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - run: cd flow_pdf && ../script/write_git_info.sh
-        env:
-          SHA: ${{ github.sha }}
 
       # https://github.com/docker/login-action
       - name: Login to ACR
@@ -72,3 +72,28 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+  update-fc-version:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    steps:
+      # https://github.com/actions/setup-node
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: install serverless-devs
+        run: npm install -g @serverless-devs/s
+
+      - id: commit
+        uses: pr-mpt/actions-commit-hash@v2
+        with:
+          prefix: "sha-"
+          
+      # https://help.aliyun.com/document_detail/295913.html
+      - name: Update fc version
+        run: |
+          s config add --AccountID ${{secrets.AccountID}} --AccessKeyID ${{secrets.FC_ACCESS_KEY_ID}} --AccessKeySecret ${{secrets.FC_ACCESS_KEY_SECRET}} -a default
+
+          s cli fc-api updateFunction --region cn-hangzhou --access default --serviceName flow-pdf --functionName convert-pdf --customContainerConfig '{"image": "registry-vpc.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf:${{ steps.commit.outputs.short }}"}'
