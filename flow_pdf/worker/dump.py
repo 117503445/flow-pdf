@@ -83,6 +83,18 @@ class DumpWorker(PageWorker):
 
                     page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
 
+            # block with id
+            for block in page_in.raw_dict["blocks"]:
+                rect = block["bbox"]
+                a = f"b-{block['number']}"
+                page.add_freetext_annot(
+                    (rect[2] - len(a) * 6, rect[1], rect[2], rect[1] + 10),
+                    a,
+                    fill_color=fitz.utils.getColor("white"),
+                    border_color=fitz.utils.getColor("black"),
+                )
+                page.draw_rect(rect, color=fitz.utils.getColor("black"))  # type: ignore
+
             # block
             # rects = []
             # for block in page_in.raw_dict["blocks"]:

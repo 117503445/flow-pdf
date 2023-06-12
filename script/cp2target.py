@@ -17,9 +17,7 @@ for f in sorted(dir_output.glob("*")):
     dir_dest = dir_target / f.name / "big_blocks_id"
     if file_id.exists():
         if not dir_dest.exists():
-            dir_dest.mkdir(parents=True)
-            file.write_text(dir_dest / "note.txt", f"created time: {current_time}\n\n")
-            shutil.copy(file_id, dir_dest)
+            changed_list.append(f)
         else:
             cur = file.read_json(file_id)
             expect = file.read_json(dir_dest / "big_blocks_id.json")
