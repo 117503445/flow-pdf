@@ -1,5 +1,7 @@
 # todo
 
+## task
+
 - [x] page worker
 - [x] worker 文件缓存支持
 - [x] page worker local page result
@@ -39,3 +41,9 @@
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Docker CLI
+
+## big-blocks
+
+- [x] dag 3
+- [x] metabolome 6
+- [ ] metabolome 7

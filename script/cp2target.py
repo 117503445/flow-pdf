@@ -28,11 +28,17 @@ for f in sorted(dir_output.glob("*")):
                 changed_list.append(f)
 
 if changed_list:
-    print('please input the index of the accepted files, like "1 3"')
+    print('please input the index of the accepted files, like "1 3", or "a" to select all')
     for i, f in enumerate(changed_list):
         print(f'{i}: {f.stem}')
 
-    accepted_list = [int(i) for i in input().split(' ')]
+    user_input = input()
+
+    if user_input == 'a':
+        accepted_list = list(range(len(changed_list)))
+    else:
+        accepted_list = [int(i) for i in input().split(' ')]
+
     for i in accepted_list:
         f = changed_list[i]
         file_id = f / "big_blocks_id.json"

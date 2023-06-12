@@ -127,12 +127,29 @@ class BigBlockWorker(PageWorker):
                 # self.logger.debug(f"lower_chars_count: {lower_chars_count}, chars_count: {chars_count}, ratio: {lower_chars_count / chars_count}")
                 return lower_chars_count / chars_count > 0.5 and chars_count > 10
 
+            def is_single_line_has_end(block):
+                line_height = (
+                    block["lines"][0]["bbox"][3] - block["lines"][0]["bbox"][1]
+                )
+                block_height = block["bbox"][3] - block["bbox"][1]
+                if block_height / line_height < 1.5:
+                    if block["lines"][0]["spans"][-1]["chars"][-1]["c"] not in [
+                        ".",
+                        "。",
+                        "!",
+                        "！",
+                        "?",
+                    ]:
+                        return False
+                return True
+
             judgers = [
                 (is_in_width_range, True),
-                (is_line_y_increase, False),
+                (is_line_y_increase, False),  # lines maybe in same y
                 (is_common_text_too_little, True),
                 (is_not_be_contained, True),
                 (is_enough_lower, True),
+                (is_single_line_has_end, False),  # like bitcoin
             ]
             for judger, enabled in judgers:
                 if enabled and not judger(block):
@@ -142,6 +159,30 @@ class BigBlockWorker(PageWorker):
         for i, blocks in enumerate(big_blocks):
             big_blocks[i] = list(filter(is_big_block, blocks))
             big_blocks[i] = sorted(big_blocks[i], key=lambda block: block["bbox"][1])
+
+        # single block should on the top of another block
+        for column_blocks in big_blocks:
+            for i in reversed(range(len(column_blocks))):
+                if i == len(column_blocks) - 1:
+                    continue
+                cur_block = column_blocks[i]
+                next_block = column_blocks[i + 1]
+
+
+                line_height = (
+                    cur_block["lines"][0]["bbox"][3] - cur_block["lines"][0]["bbox"][1]
+                )
+                block_height = cur_block["bbox"][3] - cur_block["bbox"][1]
+                if block_height / line_height < 1.5:
+                    if i + 1 >= len(column_blocks):
+                        print(i, len(column_blocks), doc_in.file_input)
+                    if (
+                        next_block["bbox"][1] - cur_block["bbox"][3]
+                        >= line_height * 0.5
+                    ):
+                        if i >= len(column_blocks):
+                            print(i, len(column_blocks), doc_in.file_input)
+                        del column_blocks[i]
 
         return PageOutParams(big_blocks), LocalPageOutParams()
 
