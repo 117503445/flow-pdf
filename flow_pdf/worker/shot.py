@@ -83,7 +83,6 @@ class ShotWorker(PageWorker):
             elements_rect.append(draw["rect"])
 
         # extend first rect in each column
-
         for shots in column_shots:
             if len(shots) == 0:
                 continue
@@ -107,6 +106,33 @@ class ShotWorker(PageWorker):
                 first_shot[0][2],
                 first_shot[0][3],
             )
+
+        # extend left
+        if column_shots:
+            column = column_shots[0]
+            for i in range(len(column)):
+                if len(column[i]) != 1:
+                    raise Exception("len(column[i]) != 1")
+                shot = column[i][0]
+                min_x0 = shot[0]
+                for r in elements_rect:
+                    if rectangle_relation(shot, r) == RectRelation.INTERSECT:
+                        min_x0 = min(min_x0, r[0])
+                column[i][0] = (min_x0, shot[1], shot[2], shot[3])
+
+        # extend right
+        if column_shots:
+            column = column_shots[-1]
+            for i in range(len(column)):
+                if len(column[i]) != 1:
+                    raise Exception("len(column[i]) != 1")
+                shot = column[i][0]
+                max_x1 = shot[2]
+                for r in elements_rect:
+                    if rectangle_relation(shot, r) == RectRelation.INTERSECT:
+                        max_x1 = max(max_x1, r[2])
+                column[i][0] = (shot[0], shot[1], max_x1, shot[3])
+        
 
         # delete empty rects
         BORDER_WIDTH = 4
