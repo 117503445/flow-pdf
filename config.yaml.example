@@ -2,6 +2,10 @@ path:
   input: ./data
   output: /tmp/flow-pdf/out
 
+compare:
+  enabled: False
+  target: ./data/target
+
 files:
   - hotstuff
   - bitcoin

@@ -11,10 +11,9 @@ import common  # type: ignore
 
 from common import version
 
+cfg = yaml.load(Path("./config.yaml").read_text(), Loader=yaml.FullLoader)
 
 def get_files_from_cfg():
-    cfg = yaml.load(Path("./config.yaml").read_text(), Loader=yaml.FullLoader)
-
     dir_input = Path(cfg["path"]["input"])
     dir_output = Path(cfg["path"]["output"])
 
@@ -52,3 +51,29 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
     ]
     for future in futures:
         future.result()
+
+if cfg['compare']['enabled']:
+    dir_target = Path(cfg['compare']['target'])
+    for _, dir_output in get_files_from_cfg():
+        dir_t = dir_target / dir_output.stem
+        file_t = dir_t / "big_blocks_id" / 'big_blocks_id.json'
+        if not file_t.exists():
+            logger.warning(f"target file not found: {file_t}")
+            continue
+
+        cur = file.read_json(dir_output  / 'big_blocks_id.json')
+        expect = file.read_json(file_t)
+
+        if cur != expect:
+            logger.debug(f'{dir_output.stem} changed')
+            for i in range(len(cur)):
+                if cur[i] != expect[i]:
+                    add_list = []
+                    del_list = []
+                    for j in range(len(cur[i])):
+                        if cur[i][j] not in expect[i]:
+                            add_list.append(cur[i][j])
+                    for j in range(len(expect[i])):
+                        if expect[i][j] not in cur[i]:
+                            del_list.append(expect[i][j])
+                    logger.debug(f'page {i}, add: {add_list}, del: {del_list}')
