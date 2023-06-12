@@ -28,7 +28,9 @@
 - [-] Big Block 禁止单行多 lines
 - [x] OSS 文件保留 7 天
 - [x] devcontainer
-- [ ] 文件大小检查
+- [x] 文件大小检查
+- [ ] 失败图片自动重试
+- [ ] shot 左右拓展
 - [ ] Table of Contents
 - [ ] Shot 去除白边
 - [ ] Ligature 连字识别 (Hotstuff)

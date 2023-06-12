@@ -13,9 +13,11 @@ function Task() {
         let statusURL = import.meta.env.VITE_BE_HOST + `/static/${id}/task.json`
         let resultURL = import.meta.env.VITE_BE_HOST + `/static/${id}/output/index.html`;
 
-        if (import.meta.env.VITE_STATIC_HOST.length > 0) {
-            statusURL = import.meta.env.VITE_STATIC_HOST + `/output/${id}/task.json`
-            resultURL = import.meta.env.VITE_STATIC_HOST + `/output/${id}/output/index.html`
+        const VITE_STATIC_HOST = import.meta.env.VITE_STATIC_HOST;
+
+        if (VITE_STATIC_HOST != null && VITE_STATIC_HOST != "") {
+            statusURL = VITE_STATIC_HOST + `/output/${id}/task.json`
+            resultURL = VITE_STATIC_HOST + `/output/${id}/output/index.html`
         }
 
         console.log("statusURL", statusURL);
