@@ -64,8 +64,7 @@ class BigBlockWorker(PageWorker):
         for b in blocks:
             for i, column in enumerate(doc_in.big_text_columns):
                 delta = (column.max - column.min) * 0.1
-                delta = 0
-                if column.min - delta <= b["bbox"][0] <= column.max + delta:
+                if column.min - delta <= b["bbox"][0] <= column.min + delta:
                     big_blocks[i].append(b)
                     # near_lines_count = 0
                     # for line in b["lines"]:

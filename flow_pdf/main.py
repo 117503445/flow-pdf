@@ -54,7 +54,13 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
 
 if cfg['compare']['enabled']:
     dir_target = Path(cfg['compare']['target'])
-    for _, dir_output in get_files_from_cfg():
+
+    dir_output_list = []
+    for _, d in get_files_from_cfg():
+        dir_output_list.append(d)
+    dir_output_list.sort()
+
+    for dir_output in dir_output_list:
         dir_t = dir_target / dir_output.stem
         file_t = dir_t / "big_blocks_id" / 'big_blocks_id.json'
         if not file_t.exists():
