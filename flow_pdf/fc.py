@@ -101,6 +101,14 @@ for event in events["events"]:
     e.register(workers_prod)
     e.execute()
 
+    # upload files to oss, rescursive
+    for file in dir_output.glob("**/*"):
+        if file.is_file():
+            oss_key = f"output/{stem}/{file.relative_to(dir_output)}"
+            logger.info(f"upload, oss_key = {oss_key}, file = {file}")
+
+            bucket.put_object_from_file(oss_key, str(file))
+
     bucket.put_object(
         cloud_file_task,
         json.dumps(
@@ -111,11 +119,3 @@ for event in events["events"]:
     )
 
     logger.info(f"end {file_input.name}")
-
-    # upload files to oss, rescursive
-    for file in dir_output.glob("**/*"):
-        if file.is_file():
-            oss_key = f"output/{stem}/{file.relative_to(dir_output)}"
-            logger.info(f"upload, oss_key = {oss_key}, file = {file}")
-
-            bucket.put_object_from_file(oss_key, str(file))
