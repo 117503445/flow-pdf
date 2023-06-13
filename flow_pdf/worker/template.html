@@ -32,4 +32,32 @@
       margin-bottom: 20px;
     }
   </style>
+  <script>
+    function loadImage(img, src, maxRetries, delay) {
+      let retries = 0;
+
+      img.onerror = function () {
+        if (retries < maxRetries) {
+          const nextDelay = delay * Math.pow(2, retries);
+          retries++;
+
+          setTimeout(function () {
+            img.src = src;
+          }, nextDelay);
+        } else {
+          console.error("can't load image, src =", src);
+        }
+      };
+
+      img.src = src;
+    }
+
+    window.onload = function () {
+      const images = document.getElementsByTagName("img");
+
+      for (let i = 0; i < images.length; i++) {
+        loadImage(images[i], images[i].src, 3, 1000);
+      }
+    };
+  </script>
 </html>
