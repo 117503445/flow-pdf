@@ -32,9 +32,9 @@
 - [x] devcontainer
 - [x] 文件大小检查
 - [x] shot 左右拓展
-- [ ] 失败图片自动重试
+- [x] 失败图片自动重试
+- [x] Shot 去除白边
 - [ ] Table of Contents
-- [ ] Shot 去除白边
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] font size 范围优化
 - [ ] shot 可复制文字 alt-data

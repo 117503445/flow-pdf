@@ -1,4 +1,11 @@
-from .common import PageWorker, Block, Range, get_min_bounding_rect, rectangle_relation, RectRelation
+from .common import (
+    PageWorker,
+    Block,
+    Range,
+    get_min_bounding_rect,
+    rectangle_relation,
+    RectRelation,
+)
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -45,20 +52,17 @@ class LocalPageOutParams(LocalPageOutputParams):
     pass
 
 
-
-
-
 class ShotWorker(PageWorker):
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
-        column_shots: list[list[list[tuple[float, float, float, float]]]] = [ [] for _ in range(len(doc_in.big_text_columns))]
-        
+        column_shots: list[list[list[tuple[float, float, float, float]]]] = [
+            [] for _ in range(len(doc_in.big_text_columns))
+        ]
 
         if page_index in doc_in.abnormal_size_pages:
             column_shots[0].append([(0, 0, page_in.width, page_in.height)])
             return PageOutParams(column_shots), LocalPageOutParams()
-
 
         # shot between big blocks
         for i, column in enumerate(doc_in.big_text_columns):
@@ -81,6 +85,24 @@ class ShotWorker(PageWorker):
             elements_rect.append(block["bbox"])
         for draw in page_in.drawings:
             elements_rect.append(draw["rect"])
+
+        # remove top and bottom blank
+        for shots in column_shots:
+            for i in reversed(range(len(shots))):
+                shot = shots[i]
+                if len(shot) != 1:
+                    raise Exception("len(shot) != 1")
+
+                except_intersect_rects = []
+                for r in elements_rect:
+                    if rectangle_relation(shot[0], r) != RectRelation.NOT_INTERSECT:
+                        except_intersect_rects.append(r)
+                if except_intersect_rects:
+                    min_y0 = min([r[1] for r in except_intersect_rects])
+                    min_y0 = max(min_y0, shot[0][1])
+                    max_y1 = max([r[3] for r in except_intersect_rects])
+                    max_y1 = min(max_y1, shot[0][3])
+                    shot[0] = (shot[0][0], min_y0, shot[0][2], max_y1)
 
         # extend first rect in each column
         for shots in column_shots:
@@ -132,7 +154,6 @@ class ShotWorker(PageWorker):
                     if rectangle_relation(shot, r) == RectRelation.INTERSECT:
                         max_x1 = max(max_x1, r[2])
                 column[i][0] = (shot[0], shot[1], max_x1, shot[3])
-        
 
         # delete empty rects
         BORDER_WIDTH = 4
