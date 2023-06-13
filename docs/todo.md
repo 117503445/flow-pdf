@@ -46,4 +46,4 @@
 
 - [x] dag 3
 - [x] metabolome 6
-- [ ] metabolome 7
+- [x] metabolome 7

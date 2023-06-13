@@ -1,3 +1,4 @@
+import io
 from .common import PageWorker, Block, Range, is_common_span, get_min_bounding_rect
 from .common import (
     DocInputParams,
@@ -92,6 +93,30 @@ class JSONGenWorker(PageWorker):
                         page_shot.draw_rect((r[0], r[3], r[2], max_y), color=color, fill=color)  # type: ignore
                 page_shot.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
 
+
+            def save_inline_shot_pixmap(
+                shot: list[tuple[float, float, float, float]], file_dest: Path
+            ):
+                for i in range(len(shot)):
+                    shot[i] = (
+                        int(shot[i][0]),
+                        int(shot[i][1]),
+                        int(shot[i][2]),
+                        int(shot[i][3]),
+                    )
+
+                r = get_min_bounding_rect(shot)
+                img_d = page.get_pixmap(clip=r, dpi=288).tobytes()  # type: ignore
+                img_full = Image.open(io.BytesIO(img_d))
+
+                img = Image.new("RGB", img_full.size, (255, 255, 255))
+                for s in shot:
+                    img_d = page.get_pixmap(clip=s, dpi=288).tobytes()  # type: ignore
+                    img_shot = Image.open(io.BytesIO(img_d))
+                    img.paste(img_shot, (int(s[0] - r[0]) * 4, int(s[1] - r[1]) * 4))
+
+                img.save(file_dest)
+
             shot_counter = 0
 
             block_elements = []
@@ -184,7 +209,7 @@ class JSONGenWorker(PageWorker):
                                         rects = []
                                         for r in group:
                                             rects.append(r["bbox"])
-                                        save_shot_pixmap(rects, file_shot)
+                                        save_inline_shot_pixmap(rects, file_shot)
 
                                         shot_counter += 1
                                         p["children"].append(

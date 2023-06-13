@@ -307,7 +307,9 @@ def is_common_span(span, most_common_font, most_common_size) -> bool:
     return True
 
 
-def get_min_bounding_rect(rects):
+def get_min_bounding_rect(
+    rects: list[tuple[float, float, float, float]]
+) -> tuple[float, float, float, float]:
     x0 = min(rects, key=lambda r: r[0])[0]
     y0 = min(rects, key=lambda r: r[1])[1]
     x1 = max(rects, key=lambda r: r[2])[2]
@@ -321,24 +323,6 @@ class RectRelation(Enum):
     CONTAINED_BY = 2  # 1 被 2 包含
     INTERSECT = 3  # 相交
 
-
-# def rectangle_relation(
-#     rect1: tuple[float, float, float, float], rect2: tuple[float, float, float, float]
-# ) -> RectRelation:
-#     x1, y2, x2, y1 = rect1
-#     x3, y4, x4, y3 = rect2
-
-#     if x1 >= x4 or x2 <= x3 or y1 <= y4 or y2 >= y3:
-#         return RectRelation.NOT_INTERSECT
-
-#     elif x1 >= x3 and x2 <= x4 and y1 <= y3 and y2 >= y4:
-#         return RectRelation.CONTAINS
-
-#     elif x1 <= x3 and x2 >= x4 and y1 >= y3 and y2 <= y4:
-#         return RectRelation.CONTAINED_BY
-
-#     else:
-#         return RectRelation.INTERSECT
 
 def rectangle_relation(
     rect1: tuple[float, float, float, float], rect2: tuple[float, float, float, float]
