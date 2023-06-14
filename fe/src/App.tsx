@@ -63,6 +63,9 @@ function App() {
         <input type="file" name="f" accept=".pdf" />
         <button type="submit" disabled={isDisabled}>提交</button>
       </form>
+
+      <p>You can see more help on <a href='https://github.com/117503445/flow-pdf'>GitHub</a> (like how to translate)</p>
+      <p>If it helps you, please give it a star :)</p>
     </>
   )
 }

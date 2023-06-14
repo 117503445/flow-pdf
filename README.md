@@ -1,15 +1,13 @@
 # flow-pdf
 
+<https://flow-pdf.117503445.top>
+
 现代化的 PDF 阅读体验！
 
 - 保留公式位置的正确翻译
 - 自定义文字样式（字体，大小 ...
 
 ![demo](./docs/demo.png)
-
-## 快速上手
-
-<https://flow-pdf.117503445.top>
 
 ## 翻译
 
