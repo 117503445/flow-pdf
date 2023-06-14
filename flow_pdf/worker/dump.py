@@ -18,7 +18,7 @@ import fitz.utils
 @dataclass
 class DocInParams(DocInputParams):
     most_common_font: str
-    most_common_size: int
+    common_size_range: Range
 
     big_text_width_range: Range
     big_text_columns: list[Range]
@@ -83,18 +83,6 @@ class DumpWorker(PageWorker):
 
                     page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
 
-            # block with id
-            # for block in page_in.raw_dict["blocks"]:
-            #     rect = block["bbox"]
-            #     a = f"b-{block['number']}"
-            #     page.add_freetext_annot(
-            #         (rect[2] - len(a) * 6, rect[1], rect[2], rect[1] + 10),
-            #         a,
-            #         fill_color=fitz.utils.getColor("white"),
-            #         border_color=fitz.utils.getColor("black"),
-            #     )
-            #     page.draw_rect(rect, color=fitz.utils.getColor("black"))  # type: ignore
-
             # block
             # rects = []
             # for block in page_in.raw_dict["blocks"]:
@@ -111,13 +99,13 @@ class DumpWorker(PageWorker):
             # add_annot(page, rects, "l", "red")
 
             # block span
-            for block in page_in.raw_dict["blocks"]:
-                rects = []
-                if block["type"] == 0:
-                    for line in block["lines"]:
-                        for span in line["spans"]:
-                            rects.append(span["bbox"])
-                add_annot(page, rects, "", "purple")
+            # for block in page_in.raw_dict["blocks"]:
+            #     rects = []
+            #     if block["type"] == 0:
+            #         for line in block["lines"]:
+            #             for span in line["spans"]:
+            #                 rects.append(span["bbox"])
+            #     add_annot(page, rects, "", "purple")
 
             # block common span
             # for block in page_in.raw_dict["blocks"]:
@@ -159,28 +147,40 @@ class DumpWorker(PageWorker):
             #     rects.append(block["bbox"])
             # add_annot(page, rects, "image", "red")
 
-            # big block
-            # for c in page_in.big_blocks:
-            #     rects = []
-            #     for block in c:
-            #         rects.append(block["bbox"])
-            #     add_annot(page, rects, "big-block", "blue")
-
-            # shot in column view
-            # if page_index in doc_in.abnormal_size_pages:
-            #     rects = page_in.shot_rects[0][0]
-            #     add_annot(page, rects, "shot-abnormal-page", "green")
-            # else:
-            #     for c in page_in.shot_rects:
-            #         rects = []
-            #         for shot in c:
-            #             rects.append(get_min_bounding_rect(shot))
-            #         add_annot(page, rects, "shot", "green")
-
             # shot in rect view
             # for c in page_in.shot_rects:
             #     for shot in c:
             #         add_annot(page, shot, "shot-r", "green")
+
+            # block with id
+            for block in page_in.raw_dict["blocks"]:
+                rect = block["bbox"]
+                a = f"b-{block['number']}"
+                page.add_freetext_annot(
+                    (rect[2] - len(a) * 6, rect[1], rect[2], rect[1] + 10),
+                    a,
+                    fill_color=fitz.utils.getColor("white"),
+                    border_color=fitz.utils.getColor("black"),
+                )
+                page.draw_rect(rect, color=fitz.utils.getColor("black"))  # type: ignore
+
+            # big block
+            for c in page_in.big_blocks:
+                rects = []
+                for block in c:
+                    rects.append(block["bbox"])
+                add_annot(page, rects, "big-block", "blue")
+
+            # shot in column view
+            if page_index in doc_in.abnormal_size_pages:
+                rects = page_in.shot_rects[0][0]
+                add_annot(page, rects, "shot-abnormal-page", "green")
+            else:
+                for c in page_in.shot_rects:
+                    rects = []
+                    for shot in c:
+                        rects.append(get_min_bounding_rect(shot))
+                    add_annot(page, rects, "shot", "green")
 
             file.write_json(
                 doc_in.dir_output / "shot_rects" / f"{page_index}.json",
@@ -211,7 +211,7 @@ class DumpWorker(PageWorker):
             file_meta,
             {
                 "most_common_font": doc_in.most_common_font,
-                "most_common_size": doc_in.most_common_size,
+                "common_size_range": doc_in.common_size_range,
                 "big_text_width_range": doc_in.big_text_width_range,
                 "big_text_columns": doc_in.big_text_columns,
                 "core_y": doc_in.core_y,

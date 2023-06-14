@@ -24,7 +24,7 @@ class DocInParams(DocInputParams):
     big_text_columns: list[Range]
 
     most_common_font: str
-    most_common_size: int
+    common_size_range: Range
 
     abnormal_size_pages: list[int]
 
@@ -97,7 +97,7 @@ class BigBlockWorker(PageWorker):
                     for span in line["spans"]:
                         sum_count += len(span["chars"])
                         if is_common_span(
-                            span, doc_in.most_common_font, doc_in.most_common_size
+                            span, doc_in.most_common_font, doc_in.common_size_range
                         ):
                             common_count += len(span["chars"])
 

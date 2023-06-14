@@ -20,7 +20,7 @@ from PIL import Image, ImageChops
 @dataclass
 class DocInParams(DocInputParams):
     most_common_font: str
-    most_common_size: int
+    common_size_range: Range
 
     big_text_width_range: Range
     big_text_columns: list[Range]
@@ -130,7 +130,7 @@ class JSONGenWorker(PageWorker):
 
                     def get_span_type(span):
                         if is_common_span(
-                            span, doc_in.most_common_font, doc_in.most_common_size
+                            span, doc_in.most_common_font, doc_in.common_size_range
                         ):
                             span_type = "text"
                         else:

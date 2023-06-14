@@ -34,9 +34,9 @@
 - [x] shot 左右拓展
 - [x] 失败图片自动重试
 - [x] Shot 去除白边
+- [x] font size 范围优化
 - [ ] Table of Contents
 - [ ] Ligature 连字识别 (Hotstuff)
-- [ ] font size 范围优化
 - [ ] shot 可复制文字 alt-data
 - [ ] list 识别支持
 - [ ] figure 识别支持
