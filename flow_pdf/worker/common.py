@@ -10,7 +10,7 @@ from htutil import file
 import logging
 from enum import Enum
 
-fitz.TOOLS.set_small_glyph_heights(True)
+# fitz.TOOLS.set_small_glyph_heights(True)
 
 
 @dataclass
@@ -299,7 +299,7 @@ class Range(NamedTuple):
     max: float
 
 
-def is_common_span(span, most_common_font, common_size_range) -> bool:
+def is_common_span(span, most_common_font: str, common_size_range: Range) -> bool:
     if most_common_font and span["font"] != most_common_font:
         return False
     if common_size_range:

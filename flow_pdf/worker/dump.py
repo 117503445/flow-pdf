@@ -113,9 +113,20 @@ class DumpWorker(PageWorker):
             #     if block["type"] == 0:
             #         for line in block["lines"]:
             #             for span in line["spans"]:
-            #                 if is_common_span(span, doc_in.most_common_font, doc_in.most_common_size):
+            #                 if is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
             #                     rects.append(span["bbox"])
             #     add_annot(page, rects, "", "purple")
+
+            # block not common span
+            rects = []
+            for c in page_in.big_blocks:
+                for block in c:
+                    if block["type"] == 0:
+                        for line in block["lines"]:
+                            for span in line["spans"]:
+                                if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
+                                    rects.append(span["bbox"])
+            add_annot(page, rects, "", "purple")
 
             # new line
             # rects = []
