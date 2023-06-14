@@ -65,7 +65,7 @@ function App() {
       </form>
 
       <p>You can see more help on <a href='https://github.com/117503445/flow-pdf'>GitHub</a> (like how to translate)</p>
-      <p>If it helps you, please give it a star :)</p>
+      <p>If it helps you, please give me a star :)</p>
     </>
   )
 }
