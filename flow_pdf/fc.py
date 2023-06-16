@@ -76,7 +76,11 @@ for event in events["events"]:
         if doc["meta"]["flow-pdf-version"] == version:
             continue
         else:
-            print("todo remove", bucket.list_objects_v2(prefix=f"output/{stem}/"))
+            # TODO remove
+            # rescursive delete file in oss
+            print("TODO remove")
+            print(bucket.list_objects_v2(prefix=f"output/{stem}/"))
+            pass
 
     file_input = dir_input / stem
 
@@ -99,23 +103,35 @@ for event in events["events"]:
     cfg = ExecuterConfig(version, False)  # type: ignore
     e = Executer(file_input, dir_output, cfg)
     e.register(workers_prod)
-    e.execute()
+    try:
+        e.execute()
 
-    # upload files to oss, rescursive
-    for file in dir_output.glob("**/*"):
-        if file.is_file():
-            oss_key = f"output/{stem}/{file.relative_to(dir_output)}"
-            logger.info(f"upload, oss_key = {oss_key}, file = {file}")
+        # upload files to oss, rescursive
+        for file in dir_output.glob("**/*"):
+            if file.is_file():
+                oss_key = f"output/{stem}/{file.relative_to(dir_output)}"
+                logger.info(f"upload, oss_key = {oss_key}, file = {file}")
+                bucket.put_object_from_file(oss_key, str(file))
 
-            bucket.put_object_from_file(oss_key, str(file))
-
-    bucket.put_object(
-        cloud_file_task,
-        json.dumps(
-            {
-                "status": "done",
-            }
-        ),
-    )
+        bucket.put_object(
+            cloud_file_task,
+            json.dumps(
+                {
+                    "status": "done",
+                }
+            ),
+        )
+    except Exception as e:
+        logger.error(e)
+        bucket.put_object(
+            cloud_file_task,
+            json.dumps(
+                {
+                    "status": "error",
+                    "error": str(e),
+                }
+            ),
+        )
+        continue
 
     logger.info(f"end {file_input.name}")

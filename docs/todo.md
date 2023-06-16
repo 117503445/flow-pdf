@@ -35,6 +35,9 @@
 - [x] 失败图片自动重试
 - [x] Shot 去除白边
 - [x] font size 范围优化
+- [ ] 出错后前端显示
+- [ ] 大规模数据集
+- [ ] fc 删除旧版本数据
 - [ ] Table of Contents
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] shot 可复制文字 alt-data

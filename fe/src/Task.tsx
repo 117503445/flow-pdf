@@ -30,8 +30,11 @@ function Task() {
         const data = await response.json();
         const s = data['status'];
         setStatus(s);
+
         if (s == "done") {
             window.location.replace(resultURL);
+        } else if (s == "error") {
+            clearInterval(timer);
         }
     }
 
