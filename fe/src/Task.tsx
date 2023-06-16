@@ -7,22 +7,20 @@ function Task() {
     const [timer, setTimer] = useState(0);
     const [status, setStatus] = useState("uncreated");
 
+    let statusURL = import.meta.env.VITE_BE_HOST + `/static/${id}/task.json`
+    let resultURL = import.meta.env.VITE_BE_HOST + `/static/${id}/output/index.html`;
+
+    const VITE_STATIC_HOST = import.meta.env.VITE_STATIC_HOST;
+
+    if (VITE_STATIC_HOST != null && VITE_STATIC_HOST != "") {
+        statusURL = VITE_STATIC_HOST + `/output/${id}/task.json`
+        resultURL = VITE_STATIC_HOST + `/output/${id}/output/index.html`
+    }
+
+    console.log("statusURL", statusURL);
+    console.log("resultURL", resultURL);
 
     async function fetchTask() {
-
-        let statusURL = import.meta.env.VITE_BE_HOST + `/static/${id}/task.json`
-        let resultURL = import.meta.env.VITE_BE_HOST + `/static/${id}/output/index.html`;
-
-        const VITE_STATIC_HOST = import.meta.env.VITE_STATIC_HOST;
-
-        if (VITE_STATIC_HOST != null && VITE_STATIC_HOST != "") {
-            statusURL = VITE_STATIC_HOST + `/output/${id}/task.json`
-            resultURL = VITE_STATIC_HOST + `/output/${id}/output/index.html`
-        }
-
-        console.log("statusURL", statusURL);
-        console.log("resultURL", resultURL);
-
         const response = await fetch(statusURL)
         if (response.status != 200) {
             return
@@ -34,6 +32,7 @@ function Task() {
         if (s == "done") {
             window.location.replace(resultURL);
         } else if (s == "error") {
+            console.log("clear timer", timer);
             clearInterval(timer);
         }
     }
@@ -41,7 +40,7 @@ function Task() {
     useEffect(() => {
         setTimer(setInterval(async () => {
             await fetchTask();
-        }, 1000));
+        }, 3000));
 
         return () => clearInterval(timer);
     }, []);

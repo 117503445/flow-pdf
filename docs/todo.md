@@ -35,8 +35,10 @@
 - [x] 失败图片自动重试
 - [x] Shot 去除白边
 - [x] font size 范围优化
-- [ ] 出错后前端显示
+- [x] 出错后前端显示
 - [ ] 大规模数据集
+- [ ] fc 挂载 OSS
+- [ ] fc-be 内网 endpoint / 挂载 OSS
 - [ ] fc 删除旧版本数据
 - [ ] Table of Contents
 - [ ] Ligature 连字识别 (Hotstuff)
