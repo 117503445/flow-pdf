@@ -1,4 +1,4 @@
-from .common import PageWorker, Block
+from .common import PageWorker, Block, add_annot
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -44,6 +44,11 @@ class LocalPageOutParams(LocalPageOutputParams):
 
 
 class ReadDocWorker(PageWorker):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.disable_cache = True
+
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
@@ -71,10 +76,23 @@ class ReadDocWorker(PageWorker):
 
             width, height = page.mediabox_size
 
+
+            # block
+            rects = []
+            for block in raw_dict["blocks"]:
+                rects.append(block["bbox"])
+            add_annot(page, rects, "block", "blue")
+
+            page.get_pixmap(dpi=150).save(doc_in.dir_output / "pre-marked" / f"{page_index}.png")  # type: ignore
+
             return (
                 PageOutParams(raw_dict, drawings, blocks, images, width, height),
                 LocalPageOutParams(),
             )
+
+    def post_run_page(self, doc_in: DocInParams, page_in: list[PageInParams]):  # type: ignore[override]
+        for p in ["pre-marked"]:
+            (doc_in.dir_output / p).mkdir(parents=True, exist_ok=True)
 
     def after_run_page(  # type: ignore[override]
         self,

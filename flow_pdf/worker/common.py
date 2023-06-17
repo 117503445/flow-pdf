@@ -5,7 +5,7 @@ from typing import NamedTuple
 import fitz
 import concurrent.futures
 from dataclasses import dataclass, fields, asdict
-
+import fitz.utils
 from htutil import file
 import logging
 from enum import Enum
@@ -344,3 +344,20 @@ def rectangle_relation(
 
     # 如果不相交，也不包含，则两个矩形必定相交
     return RectRelation.INTERSECT
+
+
+def add_annot(page, rects, annot: str, color):
+    if not rects:
+        return
+
+    for i, rect in enumerate(rects):
+        if annot:
+            a = f"{annot}-{i}"
+            page.add_freetext_annot(
+                (rect[0], rect[1], rect[0] + len(a) * 6, rect[1] + 10),
+                a,
+                fill_color=fitz.utils.getColor("white"),
+                border_color=fitz.utils.getColor("black"),
+            )
+
+        page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore

@@ -1,4 +1,4 @@
-from .common import PageWorker, Range, Block, is_common_span, get_min_bounding_rect
+from .common import PageWorker, Range, Block, is_common_span, get_min_bounding_rect, add_annot
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -67,27 +67,8 @@ class DumpWorker(PageWorker):
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
 
-            def add_annot(page, rects, annot: str, color):
-                if not rects:
-                    return
 
-                for i, rect in enumerate(rects):
-                    if annot:
-                        a = f"{annot}-{i}"
-                        page.add_freetext_annot(
-                            (rect[0], rect[1], rect[0] + len(a) * 6, rect[1] + 10),
-                            a,
-                            fill_color=fitz.utils.getColor("white"),
-                            border_color=fitz.utils.getColor("black"),
-                        )
 
-                    page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
-
-            # block
-            # rects = []
-            # for block in page_in.raw_dict["blocks"]:
-            #     rects.append(block["bbox"])
-            # add_annot(page, rects, "block", "blue")
 
             # block line
             # for block in page_in.raw_dict["blocks"]:
@@ -163,6 +144,13 @@ class DumpWorker(PageWorker):
             #     for shot in c:
             #         add_annot(page, shot, "shot-r", "green")
 
+            # big block
+            for c in page_in.big_blocks:
+                rects = []
+                for block in c:
+                    rects.append(block["bbox"])
+                add_annot(page, rects, "big-block", "blue")
+
             # block with id
             for block in page_in.raw_dict["blocks"]:
                 rect = block["bbox"]
@@ -174,13 +162,6 @@ class DumpWorker(PageWorker):
                     border_color=fitz.utils.getColor("black"),
                 )
                 page.draw_rect(rect, color=fitz.utils.getColor("black"))  # type: ignore
-
-            # big block
-            for c in page_in.big_blocks:
-                rects = []
-                for block in c:
-                    rects.append(block["bbox"])
-                add_annot(page, rects, "big-block", "blue")
 
             # shot in column view
             if page_index in doc_in.abnormal_size_pages:
