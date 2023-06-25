@@ -81,7 +81,7 @@ class ReadDocWorker(PageWorker):
             rects = []
             for block in raw_dict["blocks"]:
                 rects.append(block["bbox"])
-            add_annot(page, rects, "block", "blue")
+            add_annot(page, rects, "", "blue")
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "pre-marked" / f"{page_index}.png")  # type: ignore
 

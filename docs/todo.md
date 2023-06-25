@@ -52,3 +52,22 @@
 - [x] dag 3
 - [x] metabolome 6
 - [x] metabolome 7
+- [ ] pbft 符号作为 block
+- [ ] gossip 每行一个 block
+
+Li et al. - 2020 - A decentralized blockchain with high throughput an
+    - [ ] 3 shot 延展不足
+    - [ ] big-block 判断过严格
+
+Zhao et al. - 2021 - A learned sketch for subgraph counting
+
+    - [ ] 3 8 big-block 判断过严格
+    - [ ] shot 空白延展过度（问题不大）
+
+Lenzen and Sheikholeslami - 2022 - A Recursive Early-Stopping Phase King Protocol
+
+    - [] 7 big-block 漏报
+
+Wang et al. - 2019 - A survey on consensus mechanisms and mining strate
+
+    - [] 8, 10, 13 shot 延展不足

@@ -40,46 +40,51 @@ def create_task(file_input: Path, dir_output: Path):
     cfg = ExecuterConfig(version, True)  # type: ignore
     e = Executer(file_input, dir_output, cfg)
     e.register(workers_dev)
-    e.execute()
+    try:
+        e.execute()
+    except Exception as e:
+        logger.error(f'{file_input.name} failed')
+        file.write_text(dir_output / "error.txt", str(e))
     logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")
 
 
-with concurrent.futures.ProcessPoolExecutor() as executor:
-    futures = [
-        executor.submit(create_task, file_input, dir_output)
-        for file_input, dir_output in get_files_from_cfg()
-    ]
-    for future in futures:
-        future.result()
+if __name__ == "__main__":
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [
+            executor.submit(create_task, file_input, dir_output)
+            for file_input, dir_output in get_files_from_cfg()
+        ]
+        for future in futures:
+            future.result()
 
-if cfg['compare']['enabled']:
-    dir_target = Path(cfg['compare']['target'])
+    if cfg['compare']['enabled']:
+        dir_target = Path(cfg['compare']['target'])
 
-    dir_output_list = []
-    for _, d in get_files_from_cfg():
-        dir_output_list.append(d)
-    dir_output_list.sort()
+        dir_output_list = []
+        for _, d in get_files_from_cfg():
+            dir_output_list.append(d)
+        dir_output_list.sort()
 
-    for dir_output in dir_output_list:
-        dir_t = dir_target / dir_output.stem
-        file_t = dir_t / "big_blocks_id" / 'big_blocks_id.json'
-        if not file_t.exists():
-            logger.warning(f"target file not found: {file_t}")
-            continue
+        for dir_output in dir_output_list:
+            dir_t = dir_target / dir_output.stem
+            file_t = dir_t / "big_blocks_id" / 'big_blocks_id.json'
+            if not file_t.exists():
+                logger.warning(f"target file not found: {file_t}")
+                continue
 
-        cur = file.read_json(dir_output  / 'big_blocks_id.json')
-        expect = file.read_json(file_t)
+            cur = file.read_json(dir_output  / 'big_blocks_id.json')
+            expect = file.read_json(file_t)
 
-        if cur != expect:
-            logger.debug(f'{dir_output.stem} changed')
-            for i in range(len(cur)):
-                if cur[i] != expect[i]:
-                    add_list = []
-                    del_list = []
-                    for j in range(len(cur[i])):
-                        if cur[i][j] not in expect[i]:
-                            add_list.append(cur[i][j])
-                    for j in range(len(expect[i])):
-                        if expect[i][j] not in cur[i]:
-                            del_list.append(expect[i][j])
-                    logger.debug(f'page {i}, add: {add_list}, del: {del_list}')
+            if cur != expect:
+                logger.debug(f'{dir_output.stem} changed')
+                for i in range(len(cur)):
+                    if cur[i] != expect[i]:
+                        add_list = []
+                        del_list = []
+                        for j in range(len(cur[i])):
+                            if cur[i][j] not in expect[i]:
+                                add_list.append(cur[i][j])
+                        for j in range(len(expect[i])):
+                            if expect[i][j] not in cur[i]:
+                                del_list.append(expect[i][j])
+                        logger.debug(f'page {i}, add: {add_list}, del: {del_list}')
