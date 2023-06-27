@@ -36,13 +36,17 @@
 - [x] Shot 去除白边
 - [x] font size 范围优化
 - [x] 出错后前端显示
-- [ ] 大规模数据集
+- [x] 大规模数据集
+- [ ] 基于位置进行 Block 合并
+- [ ] Shot 绝对大小
+- [ ] 前端上传文件后清除 input
 - [ ] fc 挂载 OSS
 - [ ] fc-be 内网 endpoint / 挂载 OSS
 - [ ] fc 删除旧版本数据
 - [ ] Table of Contents
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] shot 可复制文字 alt-data
+- [ ] 斜体识别
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Docker CLI
@@ -71,3 +75,79 @@ Lenzen and Sheikholeslami - 2022 - A Recursive Early-Stopping Phase King Protoco
 Wang et al. - 2019 - A survey on consensus mechanisms and mining strate
 
     - [] 8, 10, 13 shot 延展不足
+
+Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar
+
+    - [] JSONGen 有问题
+
+Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance
+
+    - [] no-common-span 提取
+
+Bankhamer et al. - 2022 - Population Protocols for Exact Plurality Consensus
+
+    - [] 3 big-block 误报，漏报
+
+Beaver 等。 - 2010 - Finding a needle in haystack Facebook's photo sto
+
+    - [] 5 6 shot 空白延展过度
+
+Chang 等。 - 2008 - Bigtable A distributed storage system for structu
+
+    - [] min() arg is an empty sequence
+
+Data_Replication_Using_Read-One-Write-All_Monitori
+
+    - [] min() arg is an empty sequence
+
+Dean and Ghemawat - 2008 - MapReduce simplified data processing on large clu
+
+    - [] 大量 big-block 漏报
+
+Gilad 等。 - 2017 - Algorand Scaling byzantine agreements for cryptoc
+
+    - [] 大量 big-block 漏报
+
+Guo 等 - 2020 - Dumbo Faster asynchronous bft protocols
+
+    - [] Invalid bandwriter header dimensions/setup
+
+Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult
+
+    - [] min() arg is an empty sequence
+
+Kotla 和 Dahlin - 2004 - High throughput Byzantine fault tolerance
+
+    - [] Invalid bandwriter header dimensions/setup
+
+Li et al. - 2020 - A decentralized blockchain with high throughput an
+
+    - [] 大量 big-block 漏报
+
+Li et al. - 2020 - GHAST Breaking confirmation delay barrier in naka
+
+    - [] Invalid bandwriter header dimensions/setup
+
+Liu 等。 - 2018 - Scalable byzantine consensus via hardware-assisted
+
+    - [] Invalid bandwriter header dimensions/setup
+
+Miller 等 - 2016 - The honey badger of BFT protocols
+
+    - [] 大量 big-block 漏报
+
+practical byzantine fault tolerance
+
+    - [] big-block 排列不规则
+
+Sankar 等。 - 2017 - Survey of consensus protocols on blockchain applic
+
+    - [] min() arg is an empty sequence
+
+Scales 等。 - 2010 - The design of a practical system for fault-toleran
+
+    - [] min() arg is an empty sequence
+
+Zhu et al. - 2022 - Postharvest quality monitoring and cold chain mana
+
+    - [] min() arg is an empty sequence

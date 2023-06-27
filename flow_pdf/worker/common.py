@@ -354,7 +354,8 @@ def add_annot(page, rects, annot: str, color):
         if annot:
             a = f"{annot}-{i}"
             page.add_freetext_annot(
-                (rect[0], rect[1], rect[0] + len(a) * 6, rect[1] + 10),
+                # (rect[0], rect[1], rect[0] + len(a) * 6, rect[1] + 10),
+                (rect[2] - len(a) * 6, rect[1], rect[2] , rect[1] + 10),
                 a,
                 fill_color=fitz.utils.getColor("white"),
                 border_color=fitz.utils.getColor("black"),
