@@ -1,4 +1,4 @@
-from .common import Worker, Block
+from .common import Worker
 from .common import (
     DocInputParams,
     PageInputParams,

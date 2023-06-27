@@ -1,4 +1,4 @@
-from .common import PageWorker, Range
+from .common import PageWorker
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -9,6 +9,7 @@ from .common import (
 
 
 from dataclasses import dataclass
+from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle, Range
 
 
 @dataclass
@@ -18,7 +19,7 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    raw_dict: dict
+    page_info: MPage
 
 
 @dataclass
@@ -45,20 +46,18 @@ class FontCounterWorker(PageWorker):
         font_counter: dict[str, int] = {}
         size_counter: dict[float, int] = {}
 
-        for block in page_in.raw_dict["blocks"]:
-            if block["type"] != 0:
-                continue
-            for line in block["lines"]:
-                for span in line["spans"]:
-                    font: str = span["font"]
+        for block in page_in.page_info.get_text_blocks():
+            for line in block.lines:
+                for span in line.spans:
+                    font = span.font
                     if font not in font_counter:
                         font_counter[font] = 0
-                    font_counter[font] += len(span["chars"])
+                    font_counter[font] += len(span.chars)
 
-                    size: float = span["size"]
+                    size = span.size
                     if size not in size_counter:
                         size_counter[size] = 0
-                    size_counter[size] += len(span["chars"])
+                    size_counter[size] += len(span.chars)
 
         return PageOutParams(), LocalPageOutParams(font_counter, size_counter)
 

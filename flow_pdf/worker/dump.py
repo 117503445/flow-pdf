@@ -1,4 +1,4 @@
-from .common import PageWorker, Range, Block, is_common_span, get_min_bounding_rect, add_annot
+from .common import PageWorker, is_common_span, get_min_bounding_rect, add_annot
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -10,10 +10,19 @@ from .common import (
 from dataclasses import dataclass
 
 from htutil import file
-from fitz import Page
+from fitz import Page # type: ignore
 import fitz
 import fitz.utils
-
+from .flow_type import (
+    MSimpleBlock,
+    MPage,
+    init_mpage_from_mupdf,
+    Rectangle,
+    Range,
+    MTextBlock,
+    Shot,
+    ShotR,
+)
 
 @dataclass
 class DocInParams(DocInputParams):
@@ -29,9 +38,9 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    raw_dict: dict
-    big_blocks: list[list]  # column -> block
-    shot_rects: list[list]  # column -> block
+    big_blocks: list[list[MTextBlock]]  # column -> blocks
+    page_info: MPage
+    shot_rects: list[list[Shot]]  # column -> shots
     image_blocks: list[dict]
     images: list
     drawings: list
@@ -67,15 +76,12 @@ class DumpWorker(PageWorker):
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
 
-
-
-
             # block line
             # for block in page_in.raw_dict["blocks"]:
             #     rects = []
             #     if block["type"] == 0:
             #         for line in block["lines"]:
-            #             rects.append(line["bbox"])
+            #             rects.append(line.bbox)
             #     add_annot(page, rects, "", "red")
             # add_annot(page, rects, "l", "red")
 
@@ -85,7 +91,7 @@ class DumpWorker(PageWorker):
             #     if block["type"] == 0:
             #         for line in block["lines"]:
             #             for span in line["spans"]:
-            #                 rects.append(span["bbox"])
+            #                 rects.append(span.bbox)
             #     add_annot(page, rects, "", "purple")
 
             # block common span
@@ -95,7 +101,7 @@ class DumpWorker(PageWorker):
             #         for line in block["lines"]:
             #             for span in line["spans"]:
             #                 if is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
-            #                     rects.append(span["bbox"])
+            #                     rects.append(span.bbox)
             #     add_annot(page, rects, "", "purple")
 
             # block not common span
@@ -106,7 +112,7 @@ class DumpWorker(PageWorker):
             #             for line in block["lines"]:
             #                 for span in line["spans"]:
             #                     if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
-            #                         rects.append(span["bbox"])
+            #                         rects.append(span.bbox)
             # add_annot(page, rects, "", "purple")
 
             # new line
@@ -114,11 +120,11 @@ class DumpWorker(PageWorker):
             # for b in page_in.big_blocks:
             #     for i in range(1, len(b["lines"])):
             #         line = b["lines"][i]
-            #         delta = line["bbox"][0] - b["bbox"][0]
+            #         delta = line.bbox[0] - b.bbox[0]
             #         if delta > 1:
             #             last_line = b["lines"][i - 1]
-            #             if last_line["bbox"][0] - b["bbox"][0] < 1:
-            #                 rects.append(line["bbox"])
+            #             if last_line.bbox[0] - b.bbox[0] < 1:
+            #                 rects.append(line.bbox)
             # add_annot(page, rects, "new-line", "pink")
 
             # drawings
@@ -130,13 +136,13 @@ class DumpWorker(PageWorker):
             # image-block
             # rects = []
             # for block in page_in.image_blocks:
-            #     rects.append(block["bbox"])
+            #     rects.append(block.bbox)
             # add_annot(page, rects, "image-block", "red")
 
             # image
             # rects = []
             # for block in page_in.images:
-            #     rects.append(block["bbox"])
+            #     rects.append(block.bbox)
             # add_annot(page, rects, "image", "red")
 
             # shot in rect view
@@ -148,12 +154,12 @@ class DumpWorker(PageWorker):
             for c in page_in.big_blocks:
                 rects = []
                 for block in c:
-                    rects.append(block["bbox"])
+                    rects.append(block.bbox)
                 add_annot(page, rects, "big-block", "blue")
 
             # block with id
             # for block in page_in.raw_dict["blocks"]:
-            #     rect = block["bbox"]
+            #     rect = block.bbox
             #     a = f"b-{block['number']}"
             #     page.add_freetext_annot(
             #         (rect[2] - len(a) * 6, rect[1], rect[2], rect[1] + 10),
@@ -168,9 +174,9 @@ class DumpWorker(PageWorker):
                 rects = page_in.shot_rects[0][0]
                 add_annot(page, rects, "shot-abnormal-page", "green")
             else:
-                for c in page_in.shot_rects:
+                for shots in page_in.shot_rects:
                     rects = []
-                    for shot in c:
+                    for shot in shots:
                         rects.append(get_min_bounding_rect(shot))
                     add_annot(page, rects, "shot", "green")
 
@@ -215,7 +221,7 @@ class DumpWorker(PageWorker):
         for i, page in enumerate(page_in):
             for bs in page.big_blocks:
                 for b in bs:
-                    big_blocks_id[i].append(b["number"])
+                    big_blocks_id[i].append(b.number)
         file.write_json(doc_in.dir_output / "big_blocks_id.json", big_blocks_id)
 
         return DocOutParams()

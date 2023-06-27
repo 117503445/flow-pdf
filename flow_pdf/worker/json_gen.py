@@ -1,5 +1,5 @@
 import io
-from .common import PageWorker, Block, Range, is_common_span, get_min_bounding_rect
+from .common import PageWorker, is_common_span, get_min_bounding_rect
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -7,7 +7,7 @@ from .common import (
     PageOutputParams,
     LocalPageOutputParams,
 )
-from fitz import Document, Page, TextPage
+from fitz import Document, Page, TextPage  # type: ignore
 from htutil import file
 import fitz
 import fitz.utils
@@ -15,6 +15,18 @@ from pathlib import Path
 
 from dataclasses import dataclass
 from PIL import Image, ImageChops
+
+from .flow_type import (
+    MSimpleBlock,
+    MPage,
+    init_mpage_from_mupdf,
+    Rectangle,
+    Range,
+    MTextBlock,
+    Shot,
+    ShotR,
+    MLine
+)
 
 
 @dataclass
@@ -30,8 +42,8 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    big_blocks: list[list]  # column -> block
-    shot_rects: list[list]  # column -> block
+    big_blocks: list[list[MTextBlock]]  # column -> blocks
+    shot_rects: list[list[Shot]]  # column -> shots
 
 
 @dataclass
@@ -68,14 +80,14 @@ class JSONGenWorker(PageWorker):
                     img.save(f)
 
             def save_shot_pixmap(
-                shot: list[tuple[float, float, float, float]], file_dest: Path
+                shot: list[Rectangle], file_dest: Path
             ):
                 if len(shot) == 1:
                     page.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
                     return
 
                 for i in range(len(shot) - 1):
-                    if shot[i][2] >= shot[i + 1][0]:
+                    if shot[i].x1 >= shot[i + 1].x0:
                         self.logger.warning(
                             f"Shot rect not increasing in x: {shot[i]} {shot[i+1]}"
                         )
@@ -83,26 +95,25 @@ class JSONGenWorker(PageWorker):
                         return
 
                 page_shot: Page = doc.load_page(page_index)
-                min_y = min([s[1] for s in shot])
-                max_y = max([s[3] for s in shot])
+                min_y = min([s.y0 for s in shot])
+                max_y = max([s.y1 for s in shot])
                 for r in shot:
                     color = fitz.utils.getColor("white")
-                    if r[1] > min_y:
+                    if r.y0 > min_y:
                         page_shot.draw_rect((r[0], min_y, r[2], r[1]), color=color, fill=color)  # type: ignore
-                    if r[3] < max_y:
+                    if r.y1 < max_y:
                         page_shot.draw_rect((r[0], r[3], r[2], max_y), color=color, fill=color)  # type: ignore
                 page_shot.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
 
-
             def save_inline_shot_pixmap(
-                shot: list[tuple[float, float, float, float]], file_dest: Path
+                shot: list[Rectangle], file_dest: Path
             ):
                 for i in range(len(shot)):
-                    shot[i] = (
-                        int(shot[i][0]),
-                        int(shot[i][1]),
-                        int(shot[i][2]),
-                        int(shot[i][3]),
+                    shot[i] = Rectangle(
+                        int(shot[i].x0),
+                        int(shot[i].y0),
+                        int(shot[i].x1),
+                        int(shot[i].y1),
                     )
 
                 r = get_min_bounding_rect(shot)
@@ -113,7 +124,7 @@ class JSONGenWorker(PageWorker):
                 for s in shot:
                     img_d = page.get_pixmap(clip=s, dpi=288).tobytes()  # type: ignore
                     img_shot = Image.open(io.BytesIO(img_d))
-                    img.paste(img_shot, (int(s[0] - r[0]) * 4, int(s[1] - r[1]) * 4))
+                    img.paste(img_shot, (int(s.x0 - r.x0) * 4, int(s.y0 - r.y0) * 4))
 
                 img.save(file_dest)
 
@@ -137,18 +148,18 @@ class JSONGenWorker(PageWorker):
                             span_type = "shot"
                         return span_type
 
-                    p_lines_list: list[list] = [[]]
-                    for i in range(len(b["lines"])):
-                        line = b["lines"][i]
+                    p_lines_list: list[list[MLine]] = [[]]
+                    for i in range(len(b.lines)):
+                        line = b.lines[i]
 
                         MIN_DELTA = 1
                         if i >= 1:
-                            delta = line["bbox"][0] - b["bbox"][0]
+                            delta = line.bbox.x0 - b.bbox.x0
                             if delta > MIN_DELTA:
-                                last_line = b["lines"][i - 1]
+                                last_line = b.lines[i - 1]
                                 if (
-                                    last_line["bbox"][0] - b["bbox"][0] < MIN_DELTA
-                                    and last_line["bbox"][3] < line["bbox"][1]
+                                    last_line.bbox.x0 - b.bbox.x0 < MIN_DELTA
+                                    and last_line.bbox.y1 < line.bbox.y0
                                 ):
                                     p_lines_list.append([])
                         p_lines_list[-1].append(line)
@@ -156,10 +167,10 @@ class JSONGenWorker(PageWorker):
                         p = {
                             "type": "paragraph",
                             "children": [],
-                            "y0": p_lines[0]["bbox"][1],
+                            "y0": p_lines[0].bbox.y0,
                         }
                         for line in p_lines:
-                            spans = line["spans"]
+                            spans = line.spans
 
                             result = []
                             current_value = None
@@ -179,8 +190,8 @@ class JSONGenWorker(PageWorker):
                                 if get_span_type(group[0]) == "text":
                                     t = ""
                                     for span in group:
-                                        for char in span["chars"]:
-                                            t += char["c"]
+                                        for char in span.chars:
+                                            t += char.c
                                     if (
                                         len(p["children"]) > 0
                                         and p["children"][-1]["type"] == "text"
@@ -197,9 +208,9 @@ class JSONGenWorker(PageWorker):
                                 elif get_span_type(group[0]) == "shot":
                                     if not (
                                         len(group) == 1
-                                        and len(group[0]["chars"]) == 1
-                                        and group[0]["chars"][0]["c"] == " "
-                                    ): # space shoud be ignored, like zero.pdf
+                                        and len(group[0].chars) == 1
+                                        and group[0].chars[0].c == " "
+                                    ):  # space shoud be ignored, like zero.pdf
                                         file_shot = (
                                             doc_in.dir_output
                                             / "output"
@@ -208,7 +219,7 @@ class JSONGenWorker(PageWorker):
                                         )
                                         rects = []
                                         for r in group:
-                                            rects.append(r["bbox"])
+                                            rects.append(r.bbox)
                                         save_inline_shot_pixmap(rects, file_shot)
 
                                         shot_counter += 1
@@ -235,7 +246,7 @@ class JSONGenWorker(PageWorker):
                     column_block_elements.append(
                         {
                             "type": "shot",
-                            "y0": rect[1],
+                            "y0": rect.y0,
                             "path": f"./assets/{file_shot.name}",
                         }
                     )

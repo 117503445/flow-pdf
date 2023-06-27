@@ -1,4 +1,10 @@
 from typing import Union
+from typing import NamedTuple
+
+
+class Range(NamedTuple):
+    min: float
+    max: float
 
 
 class Point:
@@ -70,9 +76,9 @@ class MChar:
 
 
 def init_mchar_from_mupdf(mupdf_char) -> MChar:
-    bbox = init_rectangle_from_mupdf(mupdf_char.bbox)
-    c = mupdf_char.c
-    origin = init_point_from_mupdf(mupdf_char.origin)
+    bbox = init_rectangle_from_mupdf(mupdf_char['bbox'])
+    c = mupdf_char['c']
+    origin = init_point_from_mupdf(mupdf_char['origin'])
     return MChar(bbox, c, origin)
 
 
@@ -106,13 +112,13 @@ class MSpan:
 
 
 def init_mspan_from_mupdf(mupdf_span) -> MSpan:
-    bbox = init_rectangle_from_mupdf(mupdf_span.bbox)
-    color = mupdf_span.color
-    font = mupdf_span.font
-    size = mupdf_span.size
-    flags = mupdf_span.flags
-    origin = init_point_from_mupdf(mupdf_span.origin)
-    chars = [init_mchar_from_mupdf(mupdf_char) for mupdf_char in mupdf_span.chars]
+    bbox = init_rectangle_from_mupdf(mupdf_span['bbox'])
+    color = mupdf_span['color']
+    font = mupdf_span['font']
+    size = mupdf_span['size']
+    flags = mupdf_span['flags']
+    origin = init_point_from_mupdf(mupdf_span['origin'])
+    chars = [init_mchar_from_mupdf(mupdf_char) for mupdf_char in mupdf_span['chars']]
     return MSpan(bbox, color, font, size, flags, origin, chars)
 
 
@@ -133,51 +139,45 @@ class MLine:
 
 
 def init_mline_from_mupdf(mupdf_line) -> MLine:
-    bbox = init_rectangle_from_mupdf(mupdf_line.bbox)
-    wmode = mupdf_line.wmode
-    dir = init_point_from_mupdf(mupdf_line.dir)
-    spans = [init_mspan_from_mupdf(mupdf_span) for mupdf_span in mupdf_line.spans]
+    bbox = init_rectangle_from_mupdf(mupdf_line['bbox'])
+    wmode = mupdf_line['wmode']
+    dir = init_point_from_mupdf(mupdf_line['dir'])
+    spans = [init_mspan_from_mupdf(mupdf_span) for mupdf_span in mupdf_line['spans']]
     return MLine(bbox, wmode, dir, spans)
 
 
 class MTextBlock:
-    type: int
     bbox: Rectangle
     number: int
     lines: list[MLine]
 
-    def __init__(self, type: int, bbox: Rectangle, number: int, lines: list[MLine]):
-        self.type = type
+    def __init__(self, bbox: Rectangle, number: int, lines: list[MLine]):
         self.bbox = bbox
         self.number = number
         self.lines = lines
 
 
 def init_mtextblock_from_mupdf(mupdf_block) -> MTextBlock:
-    type = mupdf_block.type
-    bbox = init_rectangle_from_mupdf(mupdf_block.bbox)
-    number = mupdf_block.number
-    lines = [init_mline_from_mupdf(mupdf_line) for mupdf_line in mupdf_block.lines]
-    return MTextBlock(type, bbox, number, lines)
+    bbox = init_rectangle_from_mupdf(mupdf_block['bbox'])
+    number = mupdf_block['number']
+    lines = [init_mline_from_mupdf(mupdf_line) for mupdf_line in mupdf_block['lines']]
+    return MTextBlock(bbox, number, lines)
 
 
 class MImageBlock:
-    type: int
     bbox: Rectangle
     number: int
 
     # TODO
-    def __init__(self, type: int, bbox: Rectangle, number: int):
-        self.type = type
+    def __init__(self, bbox: Rectangle, number: int):
         self.bbox = bbox
         self.number = number
 
 
 def init_mimageblock_from_mupdf(mupdf_block) -> MImageBlock:
-    type = mupdf_block.type
-    bbox = init_rectangle_from_mupdf(mupdf_block.bbox)
-    number = mupdf_block.number
-    return MImageBlock(type, bbox, number)
+    bbox = init_rectangle_from_mupdf(mupdf_block['bbox'])
+    number = mupdf_block['number']
+    return MImageBlock(bbox, number)
 
 
 class MPage:
@@ -193,16 +193,37 @@ class MPage:
         self.height = height
         self.blocks = blocks
 
+    def get_text_blocks(self) -> list[MTextBlock]:
+        return [block for block in self.blocks if isinstance(block, MTextBlock)]
+
+    def get_image_blocks(self) -> list[MImageBlock]:
+        return [block for block in self.blocks if isinstance(block, MImageBlock)]
+
 
 def init_mpage_from_mupdf(mupdf_page) -> MPage:
-    width = mupdf_page.width
-    height = mupdf_page.height
+    width = mupdf_page['width']
+    height = mupdf_page['height']
     blocks: list[Union[MTextBlock, MImageBlock]] = []
-    for mupdf_block in mupdf_page.blocks:
-        if mupdf_block.type == 0:
+    for mupdf_block in mupdf_page['blocks']:
+        if mupdf_block['type'] == 0:
             blocks.append(init_mtextblock_from_mupdf(mupdf_block))
-        elif mupdf_block.type == 1:
+        elif mupdf_block['type'] == 1:
             blocks.append(init_mimageblock_from_mupdf(mupdf_block))
         else:
             raise ValueError("Unknown block type")
     return MPage(width, height, blocks)
+
+
+class MSimpleBlock:
+    # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)
+    def __init__(self, block: list) -> None:
+        self.x0 = block[0]
+        self.y0 = block[1]
+        self.x1 = block[2]
+        self.y1 = block[3]
+        self.lines: str = block[4]
+        self.block_no = block[5]
+        self.block_type = block[6]
+
+ShotR = Rectangle
+Shot = list[ShotR]  # Shot may be consist of multiple Rectangles

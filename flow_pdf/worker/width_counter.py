@@ -1,4 +1,4 @@
-from .common import PageWorker, Block, Range
+from .common import PageWorker
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -6,6 +6,7 @@ from .common import (
     PageOutputParams,
     LocalPageOutputParams,
 )
+from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle, Range
 
 import numpy as np
 from dataclasses import dataclass
@@ -19,7 +20,7 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    blocks: list[Block]
+    blocks: list[MSimpleBlock]
 
 
 @dataclass
@@ -35,14 +36,14 @@ class PageOutParams(PageOutputParams):
 
 @dataclass
 class LocalPageOutParams(LocalPageOutputParams):
-    large_blocks: list[Block]
+    large_blocks: list[MSimpleBlock]
 
 
 class WidthCounterWorker(PageWorker):
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
-        def is_big_block(block: Block):
+        def is_big_block(block: MSimpleBlock):
             BIG_BLOCK_MIN_WORDS = 50
 
             words = block.lines.split(" ")

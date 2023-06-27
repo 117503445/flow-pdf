@@ -1,4 +1,4 @@
-from .common import PageWorker, Block, add_annot
+from .common import PageWorker, add_annot
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -6,10 +6,11 @@ from .common import (
     PageOutputParams,
     LocalPageOutputParams,
 )
+from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle
 
 
 import fitz
-from fitz import Page
+from fitz import Page  # type: ignore
 from dataclasses import dataclass
 
 
@@ -30,9 +31,9 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
-    raw_dict: dict
+    page_info: MPage
     drawings: list
-    blocks: list[Block]
+    blocks: list[MSimpleBlock]
     images: list
     width: int
     height: int
@@ -66,21 +67,21 @@ class ReadDocWorker(PageWorker):
             #     self.logger.info(f"p1 {page.cropbox}")
 
             raw_dict = page.get_text("rawdict")  # type: ignore
+            raw_dict = init_mpage_from_mupdf(raw_dict)
             try:
                 drawings = page.get_drawings()
             except Exception as e:
                 self.logger.warning(f"get_drawings failed: {e}")
                 drawings = []
-            blocks = [Block(b) for b in page.get_text("blocks")]  # type: ignore
+            blocks = [MSimpleBlock(b) for b in page.get_text("blocks")]  # type: ignore
             images = page.get_image_info()  # type: ignore
 
             width, height = page.mediabox_size
 
-
             # block
-            rects = []
-            for block in raw_dict["blocks"]:
-                rects.append(block["bbox"])
+            rects: list[Rectangle] = []
+            for block in raw_dict.blocks:
+                rects.append(block.bbox)
             add_annot(page, rects, "", "blue")
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "pre-marked" / f"{page_index}.png")  # type: ignore

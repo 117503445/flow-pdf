@@ -1,7 +1,6 @@
 from pathlib import Path
 import inspect
 import time
-from typing import NamedTuple
 import fitz
 import concurrent.futures
 from dataclasses import dataclass, fields, asdict
@@ -9,6 +8,8 @@ import fitz.utils
 from htutil import file
 import logging
 from enum import Enum
+from fitz import Page  # type: ignore
+from .flow_type import Rectangle, Range, MSpan
 
 # fitz.TOOLS.set_small_glyph_heights(True)
 
@@ -282,40 +283,23 @@ class ParamsStore:
         self.page_params[page_index][name] = value
 
 
-class Block:
-    # blocks example: (x0, y0, x1, y1, "lines in the block", block_no, block_type)
-    def __init__(self, block: list) -> None:
-        self.x0 = block[0]
-        self.y0 = block[1]
-        self.x1 = block[2]
-        self.y1 = block[3]
-        self.lines: str = block[4]
-        self.block_no = block[5]
-        self.block_type = block[6]
-
-
-class Range(NamedTuple):
-    min: float
-    max: float
-
-
-def is_common_span(span, most_common_font: str, common_size_range: Range) -> bool:
-    if most_common_font and span["font"] != most_common_font:
+def is_common_span(span: MSpan, most_common_font: str, common_size_range: Range) -> bool:
+    if most_common_font and span.font != most_common_font:
         return False
     if common_size_range:
-        if span["size"] < common_size_range.min or span["size"] > common_size_range.max:
+        if span.size < common_size_range.min or span.size > common_size_range.max:
             return False
     return True
 
 
 def get_min_bounding_rect(
-    rects: list[tuple[float, float, float, float]]
-) -> tuple[float, float, float, float]:
-    x0 = min(rects, key=lambda r: r[0])[0]
-    y0 = min(rects, key=lambda r: r[1])[1]
-    x1 = max(rects, key=lambda r: r[2])[2]
-    y1 = max(rects, key=lambda r: r[3])[3]
-    return (x0, y0, x1, y1)
+    rects: list[Rectangle]
+) -> Rectangle:
+    x0 = min(rects, key=lambda r: r.x0).x0
+    y0 = min(rects, key=lambda r: r.y0).y0
+    x1 = max(rects, key=lambda r: r.x1).x1
+    y1 = max(rects, key=lambda r: r.y1).y1
+    return Rectangle(x0, y0, x1, y1)
 
 
 class RectRelation(Enum):
@@ -326,11 +310,11 @@ class RectRelation(Enum):
 
 
 def rectangle_relation(
-    rect1: tuple[float, float, float, float], rect2: tuple[float, float, float, float]
+    rect1: Rectangle, rect2: Rectangle
 ) -> RectRelation:
     # 解析矩形参数
-    x1_1, y1_1, x2_1, y2_1 = rect1
-    x1_2, y1_2, x2_2, y2_2 = rect2
+    x1_1, y1_1, x2_1, y2_1 = rect1.x0, rect1.y0, rect1.x1, rect1.y1
+    x1_2, y1_2, x2_2, y2_2 = rect2.x0, rect2.y0, rect2.x1, rect2.y1
 
     # 检查是否相交
     if x2_1 <= x1_2 or x1_1 >= x2_2 or y2_1 <= y1_2 or y1_1 >= y2_2:
@@ -346,7 +330,7 @@ def rectangle_relation(
     return RectRelation.INTERSECT
 
 
-def add_annot(page, rects, annot: str, color):
+def add_annot(page: Page, rects: list[Rectangle], annot: str, color: str):
     if not rects:
         return
 
@@ -355,10 +339,11 @@ def add_annot(page, rects, annot: str, color):
             a = f"{annot}-{i}"
             page.add_freetext_annot(
                 # (rect[0], rect[1], rect[0] + len(a) * 6, rect[1] + 10),
-                (rect[2] - len(a) * 6, rect[1], rect[2] , rect[1] + 10),
+                (rect.x1 - len(a) * 6, rect.y0, rect.x1, rect.y0 + 10),
                 a,
                 fill_color=fitz.utils.getColor("white"),
                 border_color=fitz.utils.getColor("black"),
             )
 
-        page.draw_rect(rect, color=fitz.utils.getColor(color))  # type: ignore
+        r = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y1) # type: ignore
+        page.draw_rect(r, color=fitz.utils.getColor(color))  # type: ignore

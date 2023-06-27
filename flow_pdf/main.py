@@ -1,13 +1,12 @@
 import yaml
 from pathlib import Path
-import fitz
-from fitz import Document, Page
 import shutil
 import time
 from htutil import file
 from worker import Executer, ExecuterConfig, workers_dev  # type: ignore
 import concurrent.futures
 import common  # type: ignore
+import traceback
 
 from common import version
 
@@ -45,7 +44,7 @@ def create_task(file_input: Path, dir_output: Path):
         e.execute()
     except Exception as e:
         logger.error(f"{file_input.name} failed")
-        file.write_text(dir_output / "error.txt", str(e))
+        file.write_text(dir_output / "error.txt", traceback.format_exc())
     logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")
 
 
