@@ -71,7 +71,7 @@ class DumpWorker(PageWorker):
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
-            page: Page = doc.load_page(page_index)
+            page: Page = doc.load_page(page_index) # type: ignore
             file.write_text(doc_in.dir_output / "rawjson" / f"{page_index}.json", page.get_text("rawjson"))  # type: ignore
 
             file.write_text(doc_in.dir_output / "json" / f"{page_index}.json", page.get_text("json"))  # type: ignore

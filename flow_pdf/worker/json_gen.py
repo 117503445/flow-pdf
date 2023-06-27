@@ -168,6 +168,7 @@ class JSONGenWorker(PageWorker):
                             "children": [],
                             "y0": p_lines[0].bbox.y0,
                         }
+                        chidren: list = p["children"] # type: ignore
                         for line in p_lines:
                             spans = line.spans
 
@@ -191,15 +192,16 @@ class JSONGenWorker(PageWorker):
                                     for span in group:
                                         for char in span.chars:
                                             t += char.c
-                                            
+
+                                    
                                     if (
-                                        len(p["children"]) > 0
-                                        and p["children"][-1]["type"] == "text"
+                                        len(chidren) > 0
+                                        and chidren[-1]["type"] == "text"
                                     ):
                                         # TODO
-                                        p["children"][-1]["text"] += f" {t}"
+                                        chidren[-1]["text"] += f" {t}"
                                     else:
-                                        p["children"].append(
+                                        chidren.append(
                                             {
                                                 "type": "text",
                                                 "text": t,
@@ -223,7 +225,7 @@ class JSONGenWorker(PageWorker):
                                         save_inline_shot_pixmap(rects, file_shot)
 
                                         shot_counter += 1
-                                        p["children"].append(
+                                        chidren.append(
                                             {
                                                 "type": "shot",
                                                 "path": f"./assets/{file_shot.name}",
@@ -251,7 +253,7 @@ class JSONGenWorker(PageWorker):
                         }
                     )
 
-                column_block_elements.sort(key=lambda x: x["y0"])
+                column_block_elements.sort(key=lambda x: x["y0"]) # type: ignore
                 for e in column_block_elements:
                     del e["y0"]
                 block_elements.extend(column_block_elements)
