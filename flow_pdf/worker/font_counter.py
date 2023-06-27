@@ -118,21 +118,21 @@ class FontCounterWorker(PageWorker):
 
                 arr.sort()
 
-                start = end = max_start = max_end = 0
-                max_count = count = 1
+                max_start = 0
+                max_end = 0
+                max_len = 1
 
-                for i in range(1, len(arr)):
-                    if arr[i] - arr[start] < sub_arr_range:
-                        end = i
-                        count += 1
+                start = 0
+                end = 0
+                while end < len(arr):
+                    if arr[end] - arr[start] > sub_arr_range:
+                        start += 1
                     else:
-                        start = end = i
-                        count = 1
-
-                    if count > max_count:
-                        max_count = count
-                        max_start = start
-                        max_end = end
+                        if end - start + 1 > max_len:
+                            max_len = end - start + 1
+                            max_start = start
+                            max_end = end
+                        end += 1
 
                 return Range(arr[max_start], arr[max_end])
 

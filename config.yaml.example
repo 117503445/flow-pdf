@@ -1,5 +1,5 @@
 path:
-  input: ./data
+  input: ./data/in
   output: /tmp/flow-pdf/out
 
 compare:
