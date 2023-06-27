@@ -39,6 +39,9 @@ class Rectangle:
         self.x1 = x1
         self.y1 = y1
 
+    def to_tuple(self) -> tuple[float, float, float, float]:
+        return (self.x0, self.y0, self.x1, self.y1)
+
 
 def init_rectangle_from_mupdf(mupdf_rect) -> Rectangle:
     x0 = mupdf_rect[0]
@@ -76,9 +79,9 @@ class MChar:
 
 
 def init_mchar_from_mupdf(mupdf_char) -> MChar:
-    bbox = init_rectangle_from_mupdf(mupdf_char['bbox'])
-    c = mupdf_char['c']
-    origin = init_point_from_mupdf(mupdf_char['origin'])
+    bbox = init_rectangle_from_mupdf(mupdf_char["bbox"])
+    c = mupdf_char["c"]
+    origin = init_point_from_mupdf(mupdf_char["origin"])
     return MChar(bbox, c, origin)
 
 
@@ -112,13 +115,13 @@ class MSpan:
 
 
 def init_mspan_from_mupdf(mupdf_span) -> MSpan:
-    bbox = init_rectangle_from_mupdf(mupdf_span['bbox'])
-    color = mupdf_span['color']
-    font = mupdf_span['font']
-    size = mupdf_span['size']
-    flags = mupdf_span['flags']
-    origin = init_point_from_mupdf(mupdf_span['origin'])
-    chars = [init_mchar_from_mupdf(mupdf_char) for mupdf_char in mupdf_span['chars']]
+    bbox = init_rectangle_from_mupdf(mupdf_span["bbox"])
+    color = mupdf_span["color"]
+    font = mupdf_span["font"]
+    size = mupdf_span["size"]
+    flags = mupdf_span["flags"]
+    origin = init_point_from_mupdf(mupdf_span["origin"])
+    chars = [init_mchar_from_mupdf(mupdf_char) for mupdf_char in mupdf_span["chars"]]
     return MSpan(bbox, color, font, size, flags, origin, chars)
 
 
@@ -139,10 +142,10 @@ class MLine:
 
 
 def init_mline_from_mupdf(mupdf_line) -> MLine:
-    bbox = init_rectangle_from_mupdf(mupdf_line['bbox'])
-    wmode = mupdf_line['wmode']
-    dir = init_point_from_mupdf(mupdf_line['dir'])
-    spans = [init_mspan_from_mupdf(mupdf_span) for mupdf_span in mupdf_line['spans']]
+    bbox = init_rectangle_from_mupdf(mupdf_line["bbox"])
+    wmode = mupdf_line["wmode"]
+    dir = init_point_from_mupdf(mupdf_line["dir"])
+    spans = [init_mspan_from_mupdf(mupdf_span) for mupdf_span in mupdf_line["spans"]]
     return MLine(bbox, wmode, dir, spans)
 
 
@@ -158,9 +161,9 @@ class MTextBlock:
 
 
 def init_mtextblock_from_mupdf(mupdf_block) -> MTextBlock:
-    bbox = init_rectangle_from_mupdf(mupdf_block['bbox'])
-    number = mupdf_block['number']
-    lines = [init_mline_from_mupdf(mupdf_line) for mupdf_line in mupdf_block['lines']]
+    bbox = init_rectangle_from_mupdf(mupdf_block["bbox"])
+    number = mupdf_block["number"]
+    lines = [init_mline_from_mupdf(mupdf_line) for mupdf_line in mupdf_block["lines"]]
     return MTextBlock(bbox, number, lines)
 
 
@@ -175,8 +178,8 @@ class MImageBlock:
 
 
 def init_mimageblock_from_mupdf(mupdf_block) -> MImageBlock:
-    bbox = init_rectangle_from_mupdf(mupdf_block['bbox'])
-    number = mupdf_block['number']
+    bbox = init_rectangle_from_mupdf(mupdf_block["bbox"])
+    number = mupdf_block["number"]
     return MImageBlock(bbox, number)
 
 
@@ -201,13 +204,13 @@ class MPage:
 
 
 def init_mpage_from_mupdf(mupdf_page) -> MPage:
-    width = mupdf_page['width']
-    height = mupdf_page['height']
+    width = mupdf_page["width"]
+    height = mupdf_page["height"]
     blocks: list[Union[MTextBlock, MImageBlock]] = []
-    for mupdf_block in mupdf_page['blocks']:
-        if mupdf_block['type'] == 0:
+    for mupdf_block in mupdf_page["blocks"]:
+        if mupdf_block["type"] == 0:
             blocks.append(init_mtextblock_from_mupdf(mupdf_block))
-        elif mupdf_block['type'] == 1:
+        elif mupdf_block["type"] == 1:
             blocks.append(init_mimageblock_from_mupdf(mupdf_block))
         else:
             raise ValueError("Unknown block type")
@@ -224,6 +227,7 @@ class MSimpleBlock:
         self.lines: str = block[4]
         self.block_no = block[5]
         self.block_type = block[6]
+
 
 ShotR = Rectangle
 Shot = list[ShotR]  # Shot may be consist of multiple Rectangles

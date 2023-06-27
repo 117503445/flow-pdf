@@ -217,7 +217,7 @@ class DumpWorker(PageWorker):
             },
         )
 
-        big_blocks_id: list[list] = [[] for _ in range(len(page_in))]
+        big_blocks_id: list[list[int]] = [[] for _ in range(len(page_in))]
         for i, page in enumerate(page_in):
             for bs in page.big_blocks:
                 for b in bs:

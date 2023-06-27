@@ -25,7 +25,7 @@ from .flow_type import (
     MTextBlock,
     Shot,
     ShotR,
-    MLine
+    MLine,
 )
 
 
@@ -79,11 +79,12 @@ class JSONGenWorker(PageWorker):
                     img = img.crop(ImageChops.difference(img, bg).getbbox())
                     img.save(f)
 
-            def save_shot_pixmap(
-                shot: list[Rectangle], file_dest: Path
-            ):
+            def save_shot_pixmap(shot: list[Rectangle], file_dest: Path):
+                x = []
+                for s in shot:
+                    x.append(s.__dict__)
                 if len(shot) == 1:
-                    page.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
+                    page.get_pixmap(clip=get_min_bounding_rect(shot).to_tuple(), dpi=288).save(file_dest)  # type: ignore
                     return
 
                 for i in range(len(shot) - 1):
@@ -91,7 +92,7 @@ class JSONGenWorker(PageWorker):
                         self.logger.warning(
                             f"Shot rect not increasing in x: {shot[i]} {shot[i+1]}"
                         )
-                        page.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
+                        page.get_pixmap(clip=get_min_bounding_rect(shot).to_tuple(), dpi=288).save(file_dest)  # type: ignore
                         return
 
                 page_shot: Page = doc.load_page(page_index)
@@ -100,14 +101,12 @@ class JSONGenWorker(PageWorker):
                 for r in shot:
                     color = fitz.utils.getColor("white")
                     if r.y0 > min_y:
-                        page_shot.draw_rect((r[0], min_y, r[2], r[1]), color=color, fill=color)  # type: ignore
+                        page_shot.draw_rect((r.x0, min_y, r.x1, r.y0), color=color, fill=color)  # type: ignore
                     if r.y1 < max_y:
-                        page_shot.draw_rect((r[0], r[3], r[2], max_y), color=color, fill=color)  # type: ignore
-                page_shot.get_pixmap(clip=get_min_bounding_rect(shot), dpi=288).save(file_dest)  # type: ignore
+                        page_shot.draw_rect((r.x0, r.y1, r.x1, max_y), color=color, fill=color)  # type: ignore
+                page_shot.get_pixmap(clip=get_min_bounding_rect(shot).to_tuple(), dpi=288).save(file_dest)  # type: ignore
 
-            def save_inline_shot_pixmap(
-                shot: list[Rectangle], file_dest: Path
-            ):
+            def save_inline_shot_pixmap(shot: list[Rectangle], file_dest: Path):
                 for i in range(len(shot)):
                     shot[i] = Rectangle(
                         int(shot[i].x0),
@@ -117,12 +116,12 @@ class JSONGenWorker(PageWorker):
                     )
 
                 r = get_min_bounding_rect(shot)
-                img_d = page.get_pixmap(clip=r, dpi=288).tobytes()  # type: ignore
+                img_d = page.get_pixmap(clip=r.to_tuple(), dpi=288).tobytes()  # type: ignore
                 img_full = Image.open(io.BytesIO(img_d))
 
                 img = Image.new("RGB", img_full.size, (255, 255, 255))
                 for s in shot:
-                    img_d = page.get_pixmap(clip=s, dpi=288).tobytes()  # type: ignore
+                    img_d = page.get_pixmap(clip=s.to_tuple(), dpi=288).tobytes()  # type: ignore
                     img_shot = Image.open(io.BytesIO(img_d))
                     img.paste(img_shot, (int(s.x0 - r.x0) * 4, int(s.y0 - r.y0) * 4))
 
