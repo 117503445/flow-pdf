@@ -191,6 +191,7 @@ class JSONGenWorker(PageWorker):
                                     for span in group:
                                         for char in span.chars:
                                             t += char.c
+                                            
                                     if (
                                         len(p["children"]) > 0
                                         and p["children"][-1]["type"] == "text"

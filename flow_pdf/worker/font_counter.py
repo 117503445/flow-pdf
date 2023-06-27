@@ -10,7 +10,7 @@ from .common import (
 
 from dataclasses import dataclass
 from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle, Range
-
+from htutil import file
 
 @dataclass
 class DocInParams(DocInputParams):
@@ -87,8 +87,6 @@ class FontCounterWorker(PageWorker):
         most_common_font_radio = font_counter[most_common_font] / sum(
             font_counter.values()
         )
-        if most_common_font_radio < 0.3:
-            self.logger.warning(f"most common font radio is {most_common_font_radio}")
 
         most_common_size = sorted(
             size_counter.items(), key=lambda x: x[1], reverse=True
@@ -97,7 +95,7 @@ class FontCounterWorker(PageWorker):
         most_common_size_radio = size_counter[most_common_size] / sum(
             size_counter.values()
         )
-        if most_common_size_radio >= 0.3:
+        if most_common_size_radio >= 0.5:
             common_size_range = Range(most_common_size, most_common_size)
         else:
             self.logger.info(f"most common font size is {most_common_size_radio}")
@@ -134,11 +132,14 @@ class FontCounterWorker(PageWorker):
                             max_end = end
                         end += 1
 
+                radio = max_len / len(arr)
+                self.logger.info(f'most common font size radio is {radio}')
+
                 return Range(arr[max_start], arr[max_end])
 
-            if size_list:
-                common_size_range = sub_array_range(size_list, 2)
-            else:
-                common_size_range = Range(0, float("inf"))
+            if not size_list:
+                raise ValueError("size_list is empty")
+            
+            common_size_range = sub_array_range(size_list, 3)
 
         return DocOutParams(most_common_font, common_size_range)

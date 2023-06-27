@@ -49,7 +49,7 @@ def create_task(file_input: Path, dir_output: Path):
 
 
 if __name__ == "__main__":
-    with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:
         futures = [
             executor.submit(create_task, file_input, dir_output)
             for file_input, dir_output in get_files_from_cfg()
