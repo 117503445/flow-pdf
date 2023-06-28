@@ -79,13 +79,11 @@ class DumpWorker(PageWorker):
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
 
             # block line
-            # for block in page_in.raw_dict["blocks"]:
-            #     rects = []
-            #     if block["type"] == 0:
-            #         for line in block.lines:
-            #             rects.append(line.bbox)
-            #     add_annot(page, rects, "", "red")
-            # add_annot(page, rects, "l", "red")
+            for block in page_in.page_info.get_text_blocks():
+                rects = []
+                for line in block.lines:
+                    rects.append(line.bbox)
+                add_annot(page, rects, "", "red")
 
             # block span
             # for block in page_in.raw_dict["blocks"]:

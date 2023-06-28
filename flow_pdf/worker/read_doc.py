@@ -67,7 +67,7 @@ class ReadDocWorker(PageWorker):
             #     self.logger.info(f"p1 {page.cropbox}")
 
             raw_dict = page.get_text("rawdict")  # type: ignore
-            raw_dict = init_mpage_from_mupdf(raw_dict)
+            page_info = init_mpage_from_mupdf(raw_dict)
             try:
                 drawings = page.get_drawings()
             except Exception as e:
@@ -78,16 +78,33 @@ class ReadDocWorker(PageWorker):
 
             width, height = page.mediabox_size
 
+            # block line
+            enable_block_line = True
+            for text_block in page_info.get_text_blocks():
+                rects: list[Rectangle] = []
+                for line in text_block.lines:
+                    rects.append(line.bbox)
+                add_annot(page, rects, "", "red")
+
             # block
-            rects: list[Rectangle] = []
-            for block in raw_dict.blocks:
-                rects.append(block.bbox)
+            rects = []
+            for block in page_info.blocks:
+                delta = 0
+                if enable_block_line:
+                    delta = 3
+                b = Rectangle(
+                    block.bbox.x0 - delta,
+                    block.bbox.y0 - delta,
+                    block.bbox.x1 + delta,
+                    block.bbox.y1 + delta,
+                )
+                rects.append(b)
             add_annot(page, rects, "", "blue")
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "pre-marked" / f"{page_index}.png")  # type: ignore
 
             return (
-                PageOutParams(raw_dict, drawings, blocks, images, width, height),
+                PageOutParams(page_info, drawings, blocks, images, width, height),
                 LocalPageOutParams(),
             )
 

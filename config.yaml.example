@@ -2,6 +2,9 @@ path:
   input: ./data/in
   output: /tmp/flow-pdf/out
 
+processbar:
+  enabled: True
+
 compare:
   enabled: False
   target: ./data/target
