@@ -170,22 +170,39 @@ class BigBlockWorker(PageWorker):
             big_blocks[i] = sorted(big_blocks[i], key=lambda block: block.bbox.y0)
 
         # single block should on the top of another block
+        # for column_blocks in big_blocks:
+        #     for i in reversed(range(len(column_blocks))):
+        #         if i == len(column_blocks) - 1:
+        #             continue
+        #         cur_block = column_blocks[i]
+        #         next_block = column_blocks[i + 1]
+
+        #         line_height = cur_block.lines[0].bbox.y1 - cur_block.lines[0].bbox.y0
+        #         block_height = cur_block.bbox.y1 - cur_block.bbox.y0
+        #         if block_height / line_height < 1.5:
+        #             if i + 1 >= len(column_blocks):
+        #                 print(i, len(column_blocks), doc_in.file_input)
+        #             if next_block.bbox.y0 - cur_block.bbox.y1 >= line_height * 0.5:
+        #                 if i >= len(column_blocks):
+        #                     print(i, len(column_blocks), doc_in.file_input)
+        #                 del column_blocks[i]
+
+        # merge
         for column_blocks in big_blocks:
             for i in reversed(range(len(column_blocks))):
                 if i == len(column_blocks) - 1:
                     continue
+
                 cur_block = column_blocks[i]
                 next_block = column_blocks[i + 1]
 
-                line_height = cur_block.lines[0].bbox.y1 - cur_block.lines[0].bbox.y0
-                block_height = cur_block.bbox.y1 - cur_block.bbox.y0
-                if block_height / line_height < 1.5:
-                    if i + 1 >= len(column_blocks):
-                        print(i, len(column_blocks), doc_in.file_input)
-                    if next_block.bbox.y0 - cur_block.bbox.y1 >= line_height * 0.5:
-                        if i >= len(column_blocks):
-                            print(i, len(column_blocks), doc_in.file_input)
-                        del column_blocks[i]
+                if next_block.bbox.y0 - cur_block.bbox.y1 <= 10:
+                    cur_block.lines.extend(next_block.lines)
+                    cur_block.bbox.x0 = min(cur_block.bbox.x0, next_block.bbox.x0)
+                    cur_block.bbox.y0 = min(cur_block.bbox.y0, next_block.bbox.y0)
+                    cur_block.bbox.y1 = max(cur_block.bbox.y1, next_block.bbox.y1)
+                    cur_block.bbox.x1 = max(cur_block.bbox.x1, next_block.bbox.x1)
+                    del column_blocks[i + 1]
 
         return PageOutParams(big_blocks), LocalPageOutParams()
 

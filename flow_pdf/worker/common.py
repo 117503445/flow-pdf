@@ -278,8 +278,8 @@ class ParamsStore:
 
     def page_set(self, name: str, page_index: int, value):
         # print(f"set page{page_index}.[{name}]")
-        if name in self.page_params[page_index]:
-            raise Exception(f"page{page_index}.[{name}] already set")
+        # if name in self.page_params[page_index]:
+        #     raise Exception(f"page{page_index}.[{name}] already set")
         self.page_params[page_index][name] = value
 
 

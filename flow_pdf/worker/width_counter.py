@@ -118,6 +118,8 @@ class WidthCounterWorker(PageWorker):
             < b.bbox.x1 - b.bbox.x0
             < width_range.max + delta * 0.1
         ]
+        if not big_text_block:
+            raise Exception("no big text found")
 
         BIG_TEXT_THRESHOLD = 0.6
         if len(big_text_block) / len(blocks) < BIG_TEXT_THRESHOLD:
