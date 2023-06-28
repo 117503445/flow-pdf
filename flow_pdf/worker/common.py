@@ -347,3 +347,32 @@ def add_annot(page: Page, rects: list[Rectangle], annot: str, color: str):
 
         r = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y1) # type: ignore
         page.draw_rect(r, color=fitz.utils.getColor(color))  # type: ignore
+
+
+def frequent_sub_array(arr: list[float], sub_arr_range: int) -> list[float]:
+    """
+    返回 arr 中包含最多元素的连续子数组，且该子数组的最大值与最小值之差小于 sub_arr_range。
+    """
+
+    if len(arr) == 0:
+        raise ValueError("arr is empty")
+
+    arr.sort()
+
+    max_start = 0
+    max_end = 0
+    max_len = 1
+
+    start = 0
+    end = 0
+    while end < len(arr):
+        if arr[end] - arr[start] > sub_arr_range:
+            start += 1
+        else:
+            if end - start + 1 > max_len:
+                max_len = end - start + 1
+                max_start = start
+                max_end = end
+            end += 1
+
+    return arr[max_start : max_end + 1]

@@ -5,6 +5,7 @@ from .common import (
     DocOutputParams,
     PageOutputParams,
     LocalPageOutputParams,
+    frequent_sub_array
 )
 from .flow_type import (
     MSimpleBlock,
@@ -88,32 +89,33 @@ class WidthCounterWorker(PageWorker):
             raise Exception("no big text found")
 
         # TODO not use DBSCAN
-        db = DBSCAN(eps=3).fit(np.array(widths).reshape(-1, 1))  # type: ignore
-        labels = db.labels_
-        # get most common label
-        label_counts = Counter(labels)
-        most_common_label = sorted(
-            label_counts.items(), key=lambda x: x[1], reverse=True
-        )[0][0]
+        # db = DBSCAN(eps=3).fit(np.array(widths).reshape(-1, 1))  # type: ignore
+        # labels = db.labels_
+        # # get most common label
+        # label_counts = Counter(labels)
+        # most_common_label = sorted(
+        #     label_counts.items(), key=lambda x: x[1], reverse=True
+        # )[0][0]
 
-        most_common_widths = [
-            w for i, w in enumerate(widths) if labels[i] == most_common_label
-        ]
+        # most_common_widths = [
+        #     w for i, w in enumerate(widths) if labels[i] == most_common_label
+        # ]
+
+        most_common_widths = frequent_sub_array(widths, 3)
 
         width_range = Range(min(most_common_widths), max(most_common_widths))
         self.logger.debug(f"width_range: {width_range}")
-        if width_range.max - width_range.min > 30:
-            self.logger.debug(f'widths: {widths}, labels: {list(labels)}')
-            self.logger.debug(f"width range too big")
-            raise Exception("width range too big")
+        # if width_range.max - width_range.min > 30:
+            # self.logger.debug(f'widths: {widths}, labels: {list(labels)}')
+            # self.logger.debug(f"width range too big")
+            # raise Exception("width range too big")
 
         delta = width_range.max - width_range.min
-        delta = 0
         big_text_block = [
             b
             for b in blocks
             if width_range.min - delta * 0.1
-            < b.lines[0].bbox.x1 - b.lines[0].bbox.x0
+            < b.bbox.x1 - b.bbox.x0
             < width_range.max + delta * 0.1
         ]
 
@@ -136,23 +138,30 @@ class WidthCounterWorker(PageWorker):
 
         db = DBSCAN(eps=10, min_samples=min_samples).fit(x0_list)  # type: ignore
         labels = db.labels_
-        self.logger.debug(f"x0_list: {x0_list}, labels: {labels}")
+        # self.logger.debug(f"x0_list: {x0_list}, labels: {labels}")
 
-        columns = []
+        big_text_columns = []
         for label in set(labels):
             if label == -1:
                 continue
 
             blocks = [b for j, b in enumerate(big_text_block) if labels[j] == label]
-            if not blocks:
-                raise Exception("no blocks found")
-            
-            bbox_list = [b.bbox for b in blocks]
-            self.logger.debug(f'label: {label}, blocks: {bbox_list}')
+            # bbox_list = [b.bbox for b in blocks]
+            # self.logger.debug(f'label: {label}, blocks: {bbox_list}')
             column = Range(
                 min([b.bbox.x0 for b in blocks]), max([b.bbox.x1 for b in blocks])
             )
-            columns.append(column)
-        big_text_columns = columns
+            big_text_columns.append(column)
+
+        # Bano - 2022 - Twins Bft systems made robust
+        # merge columns
+        if len(big_text_columns) > 1:
+            for i in reversed(range(len(big_text_columns) - 1)):
+                cur = big_text_columns[i]
+                next = big_text_columns[i + 1]
+
+                if cur.max - next.min > (width_range.max - width_range.min) * 0.1:
+                    big_text_columns[i] = Range(cur.min, next.max)
+                    del big_text_columns[i + 1]
 
         return DocOutParams(width_range, big_text_columns)

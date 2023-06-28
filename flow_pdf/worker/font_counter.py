@@ -5,12 +5,14 @@ from .common import (
     DocOutputParams,
     PageOutputParams,
     LocalPageOutputParams,
+    frequent_sub_array,
 )
 
 
 from dataclasses import dataclass
 from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle, Range
 from htutil import file
+
 
 @dataclass
 class DocInParams(DocInputParams):
@@ -87,6 +89,7 @@ class FontCounterWorker(PageWorker):
         most_common_font_radio = font_counter[most_common_font] / sum(
             font_counter.values()
         )
+        self.logger.info(f"most_common_font_radio is {most_common_font_radio}")
 
         most_common_size = sorted(
             size_counter.items(), key=lambda x: x[1], reverse=True
@@ -98,7 +101,7 @@ class FontCounterWorker(PageWorker):
         if most_common_size_radio >= 0.5:
             common_size_range = Range(most_common_size, most_common_size)
         else:
-            self.logger.info(f"most common font size is {most_common_size_radio}")
+            self.logger.info(f"most_common_size_radio is {most_common_size_radio}")
             most_common_size = 0
 
             size_list: list[float] = []
@@ -106,40 +109,12 @@ class FontCounterWorker(PageWorker):
                 for _ in range(c):
                     size_list.append(s)
 
-            def sub_array_range(arr: list[float], sub_arr_range: int) -> Range:
-                """
-                返回 arr 中包含最多元素的连续子数组，使得该子数组的最大值与最小值之差小于 sub_arr_range。
-                """
-
-                if len(arr) == 0:
-                    raise ValueError("arr is empty")
-
-                arr.sort()
-
-                max_start = 0
-                max_end = 0
-                max_len = 1
-
-                start = 0
-                end = 0
-                while end < len(arr):
-                    if arr[end] - arr[start] > sub_arr_range:
-                        start += 1
-                    else:
-                        if end - start + 1 > max_len:
-                            max_len = end - start + 1
-                            max_start = start
-                            max_end = end
-                        end += 1
-
-                radio = max_len / len(arr)
-                self.logger.info(f'most common font size radio is {radio}')
-
-                return Range(arr[max_start], arr[max_end])
-
             if not size_list:
                 raise ValueError("size_list is empty")
-            
-            common_size_range = sub_array_range(size_list, 3)
+
+            frequent_size_list = frequent_sub_array(size_list, 3)
+            radio = len(frequent_size_list) / len(size_list)
+            self.logger.debug(f"frequent size list radio is {radio}")
+            common_size_range = Range(min(frequent_size_list), max(frequent_size_list))
 
         return DocOutParams(most_common_font, common_size_range)

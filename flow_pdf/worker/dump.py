@@ -10,7 +10,7 @@ from .common import (
 from dataclasses import dataclass
 
 from htutil import file
-from fitz import Page # type: ignore
+from fitz import Page  # type: ignore
 import fitz
 import fitz.utils
 from .flow_type import (
@@ -23,6 +23,7 @@ from .flow_type import (
     Shot,
     ShotR,
 )
+
 
 @dataclass
 class DocInParams(DocInputParams):
@@ -71,7 +72,7 @@ class DumpWorker(PageWorker):
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
-            page: Page = doc.load_page(page_index) # type: ignore
+            page: Page = doc.load_page(page_index)  # type: ignore
             file.write_text(doc_in.dir_output / "rawjson" / f"{page_index}.json", page.get_text("rawjson"))  # type: ignore
 
             file.write_text(doc_in.dir_output / "json" / f"{page_index}.json", page.get_text("json"))  # type: ignore
@@ -183,6 +184,18 @@ class DumpWorker(PageWorker):
                 doc_in.dir_output / "shot_rects" / f"{page_index}.json",
                 page_in.shot_rects,
             )
+
+            # big column
+            rects = []
+            for column_range in doc_in.big_text_columns:
+                r = Rectangle(
+                    column_range.min - 3,
+                    doc_in.core_y.min - 3,
+                    column_range.max + 3,
+                    doc_in.core_y.max + 3,
+                )
+                rects.append(r)
+            add_annot(page, rects, "", "pink")
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
 
