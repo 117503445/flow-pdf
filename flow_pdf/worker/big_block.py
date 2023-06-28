@@ -72,7 +72,10 @@ class BigBlockWorker(PageWorker):
         for b in blocks:
             for i, column in enumerate(doc_in.big_text_columns):
                 delta = (column.max - column.min) * 0.1
-                if column.min - delta <= b.bbox.x0 <= column.min + delta:
+                if (
+                    column.min - delta <= b.bbox.x0 <= column.min + delta
+                    and column.max - delta <= b.bbox.x1 <= column.max + delta
+                ):
                     big_blocks[i].append(b)
                     # near_lines_count = 0
                     # for line in b.lines:
@@ -136,9 +139,7 @@ class BigBlockWorker(PageWorker):
                 return lower_chars_count / chars_count > 0.5 and chars_count > 10
 
             def is_single_line_has_end(block: MTextBlock):
-                line_height = (
-                    block.lines[0].bbox.y1 - block.lines[0].bbox.y0
-                )
+                line_height = block.lines[0].bbox.y1 - block.lines[0].bbox.y0
                 block_height = block.bbox.y1 - block.bbox.y0
                 if block_height / line_height < 1.5:
                     if block.lines[0].spans[-1].chars[-1].c not in [
@@ -152,7 +153,7 @@ class BigBlockWorker(PageWorker):
                 return True
 
             judgers = [
-                (is_in_width_range, True),
+                (is_in_width_range, False),
                 (is_line_y_increase, False),  # lines maybe in same y
                 (is_common_text_too_little, True),
                 (is_not_be_contained, True),
@@ -176,17 +177,12 @@ class BigBlockWorker(PageWorker):
                 cur_block = column_blocks[i]
                 next_block = column_blocks[i + 1]
 
-                line_height = (
-                    cur_block.lines[0].bbox.y1 - cur_block.lines[0].bbox.y0
-                )
+                line_height = cur_block.lines[0].bbox.y1 - cur_block.lines[0].bbox.y0
                 block_height = cur_block.bbox.y1 - cur_block.bbox.y0
                 if block_height / line_height < 1.5:
                     if i + 1 >= len(column_blocks):
                         print(i, len(column_blocks), doc_in.file_input)
-                    if (
-                        next_block.bbox.y0 - cur_block.bbox.y1
-                        >= line_height * 0.5
-                    ):
+                    if next_block.bbox.y0 - cur_block.bbox.y1 >= line_height * 0.5:
                         if i >= len(column_blocks):
                             print(i, len(column_blocks), doc_in.file_input)
                         del column_blocks[i]
@@ -201,6 +197,9 @@ class BigBlockWorker(PageWorker):
         local_page_out: list[LocalPageOutParams],
     ) -> DocOutParams:
         block_list = [b for page in page_out for bs in page.big_blocks for b in bs]
+        if not block_list:
+            self.logger.debug(f"no big block, doc_in = {doc_in}")
+            raise Exception("no big block")
 
         core_y = Range(
             min([b.bbox.y0 for b in block_list]),

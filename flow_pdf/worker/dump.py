@@ -79,11 +79,11 @@ class DumpWorker(PageWorker):
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
 
             # block line
-            for block in page_in.page_info.get_text_blocks():
-                rects = []
-                for line in block.lines:
-                    rects.append(line.bbox)
-                add_annot(page, rects, "", "red")
+            # for block in page_in.page_info.get_text_blocks():
+            #     rects = []
+            #     for line in block.lines:
+            #         rects.append(line.bbox)
+            #     add_annot(page, rects, "", "red")
 
             # block span
             # for block in page_in.raw_dict["blocks"]:
@@ -105,14 +105,14 @@ class DumpWorker(PageWorker):
             #     add_annot(page, rects, "", "purple")
 
             # block not common span
-            rects = []
-            for blocks in page_in.big_blocks:
-                for block in blocks:
-                        for line in block.lines:
-                            for span in line.spans:
-                                if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
-                                    rects.append(span.bbox)
-            add_annot(page, rects, "", "purple")
+            # rects = []
+            # for blocks in page_in.big_blocks:
+            #     for block in blocks:
+            #             for line in block.lines:
+            #                 for span in line.spans:
+            #                     if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
+            #                         rects.append(span.bbox)
+            # add_annot(page, rects, "", "purple")
 
             # new line
             # rects = []

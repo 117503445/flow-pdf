@@ -12,11 +12,13 @@ from tqdm import tqdm
 from common import version
 
 cfg = yaml.load(Path("./config.yaml").read_text(), Loader=yaml.FullLoader)
-disable_pbar = not cfg["processbar"]['enabled']
+disable_pbar = not cfg["processbar"]["enabled"]
+
+dir_output = Path(cfg["path"]["output"])
+
 
 def get_files_from_cfg():
     dir_input = Path(cfg["path"]["input"])
-    dir_output = Path(cfg["path"]["output"])
 
     for file in cfg["files"]:
         yield (dir_input / f"{file}.pdf"), (dir_output / file)
@@ -36,11 +38,11 @@ def create_task(file_input: Path, dir_output: Path):
     if disable_pbar:
         logger.info(f"start {file_input.name}")
     t = time.perf_counter()
-    if dir_output.exists():
-        shutil.rmtree(dir_output)
+    # if dir_output.exists():
+    #     shutil.rmtree(dir_output)
     dir_output.mkdir(parents=True)
 
-    cfg = ExecuterConfig(version, True)  # type: ignore
+    cfg = ExecuterConfig(version, False)  # type: ignore
     e = Executer(file_input, dir_output, cfg)
     e.register(workers_dev)
     try:
@@ -55,6 +57,11 @@ def create_task(file_input: Path, dir_output: Path):
 
 if __name__ == "__main__":
     files = list(get_files_from_cfg())
+
+    if dir_output.exists():
+        for d in dir_output.glob("*"):
+            shutil.rmtree(d)
+
     with tqdm(total=len(files), disable=disable_pbar) as progress:
         with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:
             futures = [

@@ -6,6 +6,9 @@ class Range(NamedTuple):
     min: float
     max: float
 
+    def __repr__(self) -> str:
+        return f"Range({self.min}, {self.max})"
+
 
 class Point:
     x: float
@@ -14,6 +17,9 @@ class Point:
     def __init__(self, x: float, y: float):
         self.x = x
         self.y = y
+
+    def __repr__(self) -> str:
+        return f"Point({self.x}, {self.y})"
 
 
 def init_point_from_mupdf(mupdf_point) -> Point:
@@ -41,6 +47,9 @@ class Rectangle:
 
     def to_tuple(self) -> tuple[float, float, float, float]:
         return (self.x0, self.y0, self.x1, self.y1)
+
+    def __repr__(self) -> str:
+        return f"Rectangle({self.x0}, {self.y0}, {self.x1}, {self.y1})"
 
 
 def init_rectangle_from_mupdf(mupdf_rect) -> Rectangle:
