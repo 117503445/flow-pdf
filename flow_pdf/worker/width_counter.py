@@ -88,27 +88,10 @@ class WidthCounterWorker(PageWorker):
         if not widths:
             raise Exception("no big text found")
 
-        # TODO not use DBSCAN
-        # db = DBSCAN(eps=3).fit(np.array(widths).reshape(-1, 1))  # type: ignore
-        # labels = db.labels_
-        # # get most common label
-        # label_counts = Counter(labels)
-        # most_common_label = sorted(
-        #     label_counts.items(), key=lambda x: x[1], reverse=True
-        # )[0][0]
-
-        # most_common_widths = [
-        #     w for i, w in enumerate(widths) if labels[i] == most_common_label
-        # ]
-
         most_common_widths = frequent_sub_array(widths, 3)
 
         width_range = Range(min(most_common_widths), max(most_common_widths))
         self.logger.debug(f"width_range: {width_range}")
-        # if width_range.max - width_range.min > 30:
-            # self.logger.debug(f'widths: {widths}, labels: {list(labels)}')
-            # self.logger.debug(f"width range too big")
-            # raise Exception("width range too big")
 
         delta = width_range.max - width_range.min
         big_text_block = [

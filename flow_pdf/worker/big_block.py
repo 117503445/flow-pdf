@@ -3,6 +3,7 @@ from .common import (
     is_common_span,
     rectangle_relation,
     RectRelation,
+    get_min_bounding_rect,
 )
 from .common import (
     DocInputParams,
@@ -18,6 +19,7 @@ from .flow_type import (
     Rectangle,
     Range,
     MTextBlock,
+    MLine,
 )
 
 
@@ -203,6 +205,35 @@ class BigBlockWorker(PageWorker):
                     cur_block.bbox.y1 = max(cur_block.bbox.y1, next_block.bbox.y1)
                     cur_block.bbox.x1 = max(cur_block.bbox.x1, next_block.bbox.x1)
                     del column_blocks[i + 1]
+
+        # split
+        for i, column_blocks in enumerate(big_blocks):
+            new_column_blocks: list[MTextBlock] = []
+            for b in column_blocks:
+                p_lines_list: list[list[MLine]] = [[]]
+                for j in range(len(b.lines)):
+                    line = b.lines[j]
+
+                    MIN_DELTA = 1
+                    if j >= 1:
+                        delta = line.bbox.x0 - b.bbox.x0
+                        if delta > MIN_DELTA:
+                            last_line = b.lines[j - 1]
+                            if (
+                                last_line.bbox.x0 - b.bbox.x0 < MIN_DELTA
+                                and last_line.bbox.y1 < line.bbox.y0
+                            ):
+                                p_lines_list.append([])
+                    p_lines_list[-1].append(line)
+
+                for p_lines in p_lines_list:
+                    rects = []
+                    for line in p_lines:
+                        rects.append(line.bbox)
+                    r = get_min_bounding_rect(rects)
+                    new_column_blocks.append(MTextBlock(r, 0, p_lines))
+
+            big_blocks[i] = new_column_blocks
 
         return PageOutParams(big_blocks), LocalPageOutParams()
 
