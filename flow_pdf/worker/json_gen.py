@@ -26,6 +26,7 @@ from .flow_type import (
     Shot,
     ShotR,
     MLine,
+    MSpan,
 )
 
 
@@ -106,26 +107,28 @@ class JSONGenWorker(PageWorker):
                         page_shot.draw_rect((r.x0, r.y1, r.x1, max_y), color=color, fill=color)  # type: ignore
                 page_shot.get_pixmap(clip=get_min_bounding_rect(shot).to_tuple(), dpi=288).save(file_dest)  # type: ignore
 
-            def save_inline_shot_pixmap(shot: list[Rectangle], file_dest: Path):
-                for i in range(len(shot)):
-                    shot[i] = Rectangle(
-                        int(shot[i].x0),
-                        int(shot[i].y0),
-                        int(shot[i].x1),
-                        int(shot[i].y1),
-                    )
+            # def save_inline_shot_pixmap(line: MLine, shot: list[Rectangle], file_dest: Path):
+            #     for i in range(len(shot)):
+            #         shot[i] = Rectangle(
+            #             int(shot[i].x0),
+            #             int(shot[i].y0),
+            #             int(shot[i].x1),
+            #             int(shot[i].y1),
+            #         )
 
-                r = get_min_bounding_rect(shot)
-                img_d = page.get_pixmap(clip=r.to_tuple(), dpi=288).tobytes()  # type: ignore
-                img_full = Image.open(io.BytesIO(img_d))
+            #     r = get_min_bounding_rect(shot)
+            #     r.y0 = line.bbox.y0
+            #     r.y1 = line.bbox.y1
+            #     img_d = page.get_pixmap(clip=r.to_tuple(), dpi=288).tobytes()  # type: ignore
+            #     img_full = Image.open(io.BytesIO(img_d))
 
-                img = Image.new("RGB", img_full.size, (255, 255, 255))
-                for s in shot:
-                    img_d = page.get_pixmap(clip=s.to_tuple(), dpi=288).tobytes()  # type: ignore
-                    img_shot = Image.open(io.BytesIO(img_d))
-                    img.paste(img_shot, (int(s.x0 - r.x0) * 4, int(s.y0 - r.y0) * 4))
+            #     img = Image.new("RGB", img_full.size, (255, 255, 255))
+            #     for s in shot:
+            #         img_d = page.get_pixmap(clip=s.to_tuple(), dpi=288).tobytes()  # type: ignore
+            #         img_shot = Image.open(io.BytesIO(img_d))
+            #         img.paste(img_shot, (int(s.x0 - r.x0) * 4, int(s.y0 - r.y0) * 4))
 
-                img.save(file_dest)
+            #     img.save(file_dest)
 
             shot_counter = 0
 
@@ -136,7 +139,7 @@ class JSONGenWorker(PageWorker):
                 shots = page_in.shot_rects[c_i]
 
                 column_block_elements = []
-                for b_i, b in enumerate(blocks):
+                for b in blocks:
 
                     def get_span_type(span):
                         if is_common_span(
@@ -168,13 +171,13 @@ class JSONGenWorker(PageWorker):
                             "children": [],
                             "y0": p_lines[0].bbox.y0,
                         }
-                        chidren: list = p["children"] # type: ignore
+                        chidren: list = p["children"]  # type: ignore
                         for line in p_lines:
                             spans = line.spans
 
-                            result = []
+                            result: list[list[MSpan]] = []
                             current_value = None
-                            current_group: list = []
+                            current_group: list[MSpan] = []
 
                             for span in spans:
                                 if get_span_type(span) != current_value:
@@ -186,14 +189,13 @@ class JSONGenWorker(PageWorker):
 
                             result.append(current_group)
 
-                            for group in result:
+                            for j, group in enumerate(result):
                                 if get_span_type(group[0]) == "text":
                                     t = ""
                                     for span in group:
                                         for char in span.chars:
                                             t += char.c
 
-                                    
                                     if (
                                         len(chidren) > 0
                                         and chidren[-1]["type"] == "text"
@@ -219,12 +221,20 @@ class JSONGenWorker(PageWorker):
                                             / "assets"
                                             / f"page_{page_index}_shot_{shot_counter}.png"
                                         )
-                                        rects = []
-                                        for r in group:
-                                            rects.append(r.bbox)
-                                        save_inline_shot_pixmap(rects, file_shot)
-
                                         shot_counter += 1
+                                        x0 = group[0].bbox.x0
+                                        if j != 0:
+                                            x0 = min(x0, result[j - 1][-1].bbox.x1)
+
+                                        x1 = group[-1].bbox.x1
+                                        if j != len(result) - 1:
+                                            x1 = max(x0, result[j + 1][0].bbox.x0)
+
+                                        r = Rectangle(
+                                            x0, line.bbox.y0, x1, line.bbox.y1
+                                        )
+                                        page.get_pixmap(clip=r.to_tuple(), dpi=576).save(file_shot) # type: ignore
+                                        
                                         chidren.append(
                                             {
                                                 "type": "shot",
@@ -253,7 +263,7 @@ class JSONGenWorker(PageWorker):
                         }
                     )
 
-                column_block_elements.sort(key=lambda x: x["y0"]) # type: ignore
+                column_block_elements.sort(key=lambda x: x["y0"])  # type: ignore
                 for e in column_block_elements:
                     del e["y0"]
                 block_elements.extend(column_block_elements)

@@ -85,6 +85,9 @@ class MChar:
         self.bbox = bbox
         self.c = c
         self.origin = origin
+    
+    def __repr__(self) -> str:
+        return f"MChar({self.bbox}, {self.c}, {self.origin})"
 
 
 def init_mchar_from_mupdf(mupdf_char) -> MChar:
@@ -122,6 +125,8 @@ class MSpan:
         self.origin = origin
         self.chars = chars
 
+    def __repr__(self) -> str:
+        return f"MSpan({self.bbox}, {self.color}, {self.font}, {self.size}, {self.flags}, {self.origin}, {self.chars})"
 
 def init_mspan_from_mupdf(mupdf_span) -> MSpan:
     bbox = init_rectangle_from_mupdf(mupdf_span["bbox"])
@@ -149,6 +154,9 @@ class MLine:
         self.dir = dir
         self.spans = spans
 
+    def __repr__(self) -> str:
+        return f"MLine({self.bbox}, {self.wmode}, {self.dir}, {self.spans})"
+
 
 def init_mline_from_mupdf(mupdf_line) -> MLine:
     bbox = init_rectangle_from_mupdf(mupdf_line["bbox"])
@@ -167,6 +175,9 @@ class MTextBlock:
         self.bbox = bbox
         self.number = number
         self.lines = lines
+    
+    def __repr__(self) -> str:
+        return f"MTextBlock({self.bbox}, {self.number}, {self.lines})"
 
 
 def init_mtextblock_from_mupdf(mupdf_block) -> MTextBlock:
