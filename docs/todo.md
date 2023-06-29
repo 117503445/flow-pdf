@@ -37,9 +37,9 @@
 - [x] font size 范围优化
 - [x] 出错后前端显示
 - [x] 大规模数据集
+- [x] 前端上传文件后清除 input
 - [ ] 基于位置进行 Block 合并
 - [ ] Shot 绝对大小
-- [ ] 前端上传文件后清除 input
 - [ ] fc 挂载 OSS
 - [ ] fc-be 内网 endpoint / 挂载 OSS
 - [ ] fc 删除旧版本数据

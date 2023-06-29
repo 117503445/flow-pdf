@@ -1,8 +1,10 @@
 import './App.css'
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 function App() {
   const [isDisabled, setIsDisabled] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     console.log('submit');
@@ -49,6 +51,10 @@ function App() {
       alert('Please allow popups for this website');
     }
 
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
     setIsDisabled(false)
   }
 
@@ -60,7 +66,7 @@ function App() {
 
 
       <form onSubmit={handleSubmit}>
-        <input type="file" name="f" accept=".pdf" />
+        <input type="file" name="f" accept=".pdf" ref={fileInputRef} />
         <button type="submit" disabled={isDisabled}>提交</button>
       </form>
 

@@ -106,14 +106,14 @@ class DumpWorker(PageWorker):
             #     add_annot(page, rects, "", "purple")
 
             # block not common span
-            # rects = []
-            # for blocks in page_in.big_blocks:
-            #     for block in blocks:
-            #             for line in block.lines:
-            #                 for span in line.spans:
-            #                     if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
-            #                         rects.append(span.bbox)
-            # add_annot(page, rects, "", "purple")
+            rects = []
+            for blocks in page_in.big_blocks:
+                for block in blocks:
+                        for line in block.lines:
+                            for span in line.spans:
+                                if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
+                                    rects.append(span.bbox)
+            add_annot(page, rects, "", "red")
 
             # new line
             # rects = []
@@ -157,17 +157,13 @@ class DumpWorker(PageWorker):
                     rects.append(block.bbox)
                 add_annot(page, rects, "big-block", "blue")
 
-            # block with id
-            # for block in page_in.raw_dict["blocks"]:
-            #     rect = block.bbox
-            #     a = f"b-{block['number']}"
-            #     page.add_freetext_annot(
-            #         (rect[2] - len(a) * 6, rect[1], rect[2], rect[1] + 10),
-            #         a,
-            #         fill_color=fitz.utils.getColor("white"),
-            #         border_color=fitz.utils.getColor("black"),
-            #     )
-            #     page.draw_rect(rect, color=fitz.utils.getColor("black"))  # type: ignore
+            # big block line
+            for c in page_in.big_blocks:
+                rects = []
+                for block in c:
+                    for line in block.lines:
+                        rects.append(line.bbox)
+                add_annot(page, rects, "", "purple")
 
             # shot in column view
             if page_index in doc_in.abnormal_size_pages:

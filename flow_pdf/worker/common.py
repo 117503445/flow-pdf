@@ -11,7 +11,7 @@ from enum import Enum
 from fitz import Page  # type: ignore
 from .flow_type import Rectangle, Range, MSpan
 
-# fitz.TOOLS.set_small_glyph_heights(True)
+fitz.TOOLS.set_small_glyph_heights(True)
 
 
 @dataclass
