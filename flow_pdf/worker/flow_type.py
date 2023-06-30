@@ -50,6 +50,12 @@ class Rectangle:
 
     def __repr__(self) -> str:
         return f"Rectangle({self.x0}, {self.y0}, {self.x1}, {self.y1})"
+    
+    def height(self) -> float:
+        return self.y1 - self.y0
+    
+    def width(self) -> float:
+        return self.x1 - self.x0
 
 
 def init_rectangle_from_mupdf(mupdf_rect) -> Rectangle:

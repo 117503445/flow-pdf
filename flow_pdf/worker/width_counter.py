@@ -5,7 +5,7 @@ from .common import (
     DocOutputParams,
     PageOutputParams,
     LocalPageOutputParams,
-    frequent_sub_array
+    frequent_sub_array,
 )
 from .flow_type import (
     MSimpleBlock,
@@ -14,6 +14,7 @@ from .flow_type import (
     Rectangle,
     Range,
     MTextBlock,
+    MLine,
 )
 
 import numpy as np
@@ -36,6 +37,7 @@ class PageInParams(PageInputParams):
 class DocOutParams(DocOutputParams):
     big_text_width_range: Range
     big_text_columns: list[Range]
+    big_text_line_height_range: Range
 
 
 @dataclass
@@ -142,11 +144,21 @@ class WidthCounterWorker(PageWorker):
         # merge columns
         if len(big_text_columns) > 1:
             for i in reversed(range(len(big_text_columns) - 1)):
-                cur = big_text_columns[i]
-                next = big_text_columns[i + 1]
+                cur: Range = big_text_columns[i]
+                next: Range = big_text_columns[i + 1]
 
                 if cur.max - next.min > (width_range.max - width_range.min) * 0.1:
                     big_text_columns[i] = Range(cur.min, next.max)
                     del big_text_columns[i + 1]
 
-        return DocOutParams(width_range, big_text_columns)
+        lines: list[MLine] = []
+        for b in big_text_block:
+            for line in b.lines:
+                if line.bbox.x1 - line.bbox.x0 > (b.bbox.x1 - b.bbox.x0) * 0.9:
+                    lines.append(line)
+
+        lines_height = [line.bbox.y1 - line.bbox.y0 for line in lines]
+        most_common_heights = frequent_sub_array(lines_height, 0.2)
+        height_range = Range(min(most_common_heights), max(most_common_heights))
+
+        return DocOutParams(width_range, big_text_columns, height_range)

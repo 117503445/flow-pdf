@@ -20,6 +20,8 @@ from .flow_type import (
     Range,
     MTextBlock,
     MLine,
+    MSpan,
+    Point,
 )
 
 
@@ -208,6 +210,79 @@ class BigBlockWorker(PageWorker):
 
         # TODO Line
         # Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance
+
+        for column_blocks in big_blocks:
+            for i, b in enumerate(column_blocks):
+                spans: list[MSpan] = []
+                for line in b.lines:
+                    spans.extend(line.spans)
+
+                spans.sort(key=lambda span: (span.bbox.x0, span.bbox.y0))
+
+                spans_list: list[list[MSpan]] = []
+
+                remain_spans: list[MSpan] = []
+                reremain_spans: list[MSpan] = []
+
+                for span in spans:
+                    if span.bbox.width() > b.bbox.width() * 0.5:
+                        spans_list.append([span])
+                    else:
+                        remain_spans.append(span)
+
+                remain_spans.sort(key=lambda span: (span.bbox.x0, span.bbox.y0))
+
+                for span in remain_spans:
+                    found = False
+                    for spans in spans_list:
+                        intersection_start = max(span.bbox.y0, spans[0].bbox.y0)
+                        intersection_end = min(span.bbox.y1, spans[0].bbox.y1)
+                        if intersection_end > intersection_start:
+                            found = True
+                            break
+                    if not found:
+                        spans_list.append([span])
+                    else:
+                        reremain_spans.append(span)
+
+                for span in reremain_spans:
+                    max_intersection_radio = 0.0
+                    max_intersection_spans: list[MSpan] = []
+
+                    for spans in spans_list:
+                        # h = spans[0].bbox.height()
+                        # D = 0.2
+                        # if (
+                        #     spans[0].bbox.y0 - h * D <= span.bbox.y0
+                        #     and span.bbox.y1 <= spans[0].bbox.y1 + h * D
+                        # ):
+
+                        intersection_start = max(span.bbox.y0, spans[0].bbox.y0)
+                        intersection_end = min(span.bbox.y1, spans[0].bbox.y1)
+                        radio = (
+                            intersection_end - intersection_start
+                        ) / span.bbox.height()
+                        if radio > max_intersection_radio:
+                            max_intersection_radio = radio
+                            max_intersection_spans = spans
+
+                    if max_intersection_radio == 0.0:
+                        raise Exception("max_intersection_radio == 0.0")
+
+                    max_intersection_spans.append(span)
+
+                lines: list[MLine] = []
+
+                for spans in spans_list:
+                    spans.sort(key=lambda span: (span.bbox.x0, span.bbox.y0))
+                    rects = []
+                    for span in spans:
+                        rects.append(span.bbox)
+                    lines.append(
+                        MLine(get_min_bounding_rect(rects), 0, Point(0, 0), spans)
+                    )
+
+                column_blocks[i] = MTextBlock(b.bbox, 0, lines)
 
         # split
         for i, column_blocks in enumerate(big_blocks):

@@ -349,7 +349,7 @@ def add_annot(page: Page, rects: list[Rectangle], annot: str, color: str):
         page.draw_rect(r, color=fitz.utils.getColor(color))  # type: ignore
 
 
-def frequent_sub_array(arr: list[float], sub_arr_range: int) -> list[float]:
+def frequent_sub_array(arr: list[float], sub_arr_range: float) -> list[float]:
     """
     Returns a contiguous subarray of arr with the most elements, and the difference between the maximum and minimum values of that subarray is less than sub_arr_range
     """

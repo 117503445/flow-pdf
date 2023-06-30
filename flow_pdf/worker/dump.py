@@ -158,12 +158,12 @@ class DumpWorker(PageWorker):
                 add_annot(page, rects, "big-block", "blue")
 
             # big block line
-            # for c in page_in.big_blocks:
-            #     rects = []
-            #     for block in c:
-            #         for line in block.lines:
-            #             rects.append(line.bbox)
-            #     add_annot(page, rects, "", "purple")
+            for c in page_in.big_blocks:
+                rects = []
+                for block in c:
+                    for line in block.lines:
+                        rects.append(line.bbox)
+                add_annot(page, rects, "", "purple")
 
             # shot in column view
             if page_index in doc_in.abnormal_size_pages:
