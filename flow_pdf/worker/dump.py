@@ -106,14 +106,14 @@ class DumpWorker(PageWorker):
             #     add_annot(page, rects, "", "purple")
 
             # block not common span
-            rects = []
-            for blocks in page_in.big_blocks:
-                for block in blocks:
-                        for line in block.lines:
-                            for span in line.spans:
-                                if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
-                                    rects.append(span.bbox)
-            add_annot(page, rects, "", "red")
+            # rects = []
+            # for blocks in page_in.big_blocks:
+            #     for block in blocks:
+            #             for line in block.lines:
+            #                 for span in line.spans:
+            #                     if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
+            #                         rects.append(span.bbox)
+            # add_annot(page, rects, "", "red")
 
             # new line
             # rects = []
@@ -158,12 +158,12 @@ class DumpWorker(PageWorker):
                 add_annot(page, rects, "big-block", "blue")
 
             # big block line
-            for c in page_in.big_blocks:
-                rects = []
-                for block in c:
-                    for line in block.lines:
-                        rects.append(line.bbox)
-                add_annot(page, rects, "", "purple")
+            # for c in page_in.big_blocks:
+            #     rects = []
+            #     for block in c:
+            #         for line in block.lines:
+            #             rects.append(line.bbox)
+            #     add_annot(page, rects, "", "purple")
 
             # shot in column view
             if page_index in doc_in.abnormal_size_pages:

@@ -206,6 +206,9 @@ class BigBlockWorker(PageWorker):
                     cur_block.bbox.x1 = max(cur_block.bbox.x1, next_block.bbox.x1)
                     del column_blocks[i + 1]
 
+        # TODO Line
+        # Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance
+
         # split
         for i, column_blocks in enumerate(big_blocks):
             new_column_blocks: list[MTextBlock] = []
@@ -213,18 +216,16 @@ class BigBlockWorker(PageWorker):
                 p_lines_list: list[list[MLine]] = [[]]
                 for j in range(len(b.lines)):
                     line = b.lines[j]
-
-                    MIN_DELTA = 1
-                    if j >= 1:
-                        delta = line.bbox.x0 - b.bbox.x0
-                        if delta > MIN_DELTA:
-                            last_line = b.lines[j - 1]
-                            if (
-                                last_line.bbox.x0 - b.bbox.x0 < MIN_DELTA
-                                and last_line.bbox.y1 < line.bbox.y0
-                            ):
-                                p_lines_list.append([])
                     p_lines_list[-1].append(line)
+
+                    # TODO
+                    # Danezis et al. - 2022 - Narwhal and Tusk a DAG-based mempool and efficien 8
+                    MIN_DELTA = 5
+                    if b.bbox.x1 - line.bbox.x1 > MIN_DELTA:
+                        p_lines_list.append([])
+
+                if len(p_lines_list[-1]) == 0:
+                    del p_lines_list[-1]
 
                 for p_lines in p_lines_list:
                     rects = []

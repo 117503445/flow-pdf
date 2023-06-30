@@ -50,6 +50,7 @@
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Docker CLI
+- [ ] Markdown output
 
 ## big-blocks
 

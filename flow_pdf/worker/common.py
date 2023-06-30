@@ -351,7 +351,7 @@ def add_annot(page: Page, rects: list[Rectangle], annot: str, color: str):
 
 def frequent_sub_array(arr: list[float], sub_arr_range: int) -> list[float]:
     """
-    返回 arr 中包含最多元素的连续子数组，且该子数组的最大值与最小值之差小于 sub_arr_range。
+    Returns a contiguous subarray of arr with the most elements, and the difference between the maximum and minimum values of that subarray is less than sub_arr_range
     """
 
     if len(arr) == 0:
