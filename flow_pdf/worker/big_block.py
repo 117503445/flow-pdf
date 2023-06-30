@@ -4,6 +4,7 @@ from .common import (
     rectangle_relation,
     RectRelation,
     get_min_bounding_rect,
+    frequent_sub_array
 )
 from .common import (
     DocInputParams,
@@ -282,12 +283,23 @@ class BigBlockWorker(PageWorker):
                         MLine(get_min_bounding_rect(rects), 0, Point(0, 0), spans)
                     )
 
+                lines.sort(key=lambda line: (line.bbox.y0, line.bbox.x0))
+
                 column_blocks[i] = MTextBlock(b.bbox, 0, lines)
 
         # split
         for i, column_blocks in enumerate(big_blocks):
             new_column_blocks: list[MTextBlock] = []
             for b in column_blocks:
+
+                MIN_DELTA = 5.0
+                deltas = []
+                for line in b.lines:
+                    deltas.append(b.bbox.x1 - line.bbox.x1)
+                sub_d = frequent_sub_array(deltas, 1)
+                if len(sub_d) / len(deltas) > 0.6:
+                    MIN_DELTA += sub_d[-1]
+
                 p_lines_list: list[list[MLine]] = [[]]
                 for j in range(len(b.lines)):
                     line = b.lines[j]
@@ -295,7 +307,7 @@ class BigBlockWorker(PageWorker):
 
                     # TODO
                     # Danezis et al. - 2022 - Narwhal and Tusk a DAG-based mempool and efficien 8
-                    MIN_DELTA = 5
+                    
                     if b.bbox.x1 - line.bbox.x1 > MIN_DELTA:
                         p_lines_list.append([])
 
