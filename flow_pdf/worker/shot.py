@@ -1,7 +1,5 @@
 from .common import (
     PageWorker,
-    Block,
-    Range,
     get_min_bounding_rect,
     rectangle_relation,
     RectRelation,
@@ -14,7 +12,17 @@ from .common import (
     LocalPageOutputParams,
 )
 
-
+from .flow_type import (
+    MSimpleBlock,
+    MPage,
+    init_mpage_from_mupdf,
+    Rectangle,
+    Range,
+    MTextBlock,
+    Shot,
+    ShotR,
+)
+from typing import Union
 from dataclasses import dataclass
 
 
@@ -29,8 +37,8 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    big_blocks: list[list]  # column -> block
-    raw_dict: dict
+    big_blocks: list[list[MTextBlock]]  # column -> blocks
+    page_info: MPage
     drawings: list
 
     width: int
@@ -44,7 +52,7 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
-    shot_rects: list[list]  # column -> block
+    shot_rects: list[list[Shot]]  # column -> shots
 
 
 @dataclass
@@ -52,37 +60,40 @@ class LocalPageOutParams(LocalPageOutputParams):
     pass
 
 
+def shot_between_blocks(
+    column_shots: list[list[Shot]], doc_in: DocInParams, page_in: PageInParams
+):
+    for i, column in enumerate(doc_in.big_text_columns):
+        shots: list[Shot] = []
+
+        last_y = doc_in.core_y.min
+        for block in page_in.big_blocks[i]:
+            r = (column.min, last_y, column.max, block.bbox.y0)
+            if r[3] - r[1] > 0:
+                shots.append([Rectangle(r[0], r[1], r[2], r[3])])
+            last_y = block.bbox.y1
+        shots.append([Rectangle(column.min, last_y, column.max, doc_in.core_y.max)])
+
+        column_shots[i] = shots
+
+
 class ShotWorker(PageWorker):
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
-        column_shots: list[list[list[tuple[float, float, float, float]]]] = [
+        column_shots: list[list[Shot]] = [
             [] for _ in range(len(doc_in.big_text_columns))
-        ]
+        ]  # column -> shots
 
         if page_index in doc_in.abnormal_size_pages:
-            column_shots[0].append([(0, 0, page_in.width, page_in.height)])
+            column_shots[0].append([Rectangle(0, 0, page_in.width, page_in.height)])
             return PageOutParams(column_shots), LocalPageOutParams()
 
-        # shot between big blocks
-        for i, column in enumerate(doc_in.big_text_columns):
-            shots: list[list[tuple[float, float, float, float]]] = []
+        shot_between_blocks(column_shots, doc_in, page_in)
 
-            last_y = doc_in.core_y.min
-            for block in page_in.big_blocks[i]:
-                r = (column.min, last_y, column.max, block["bbox"][1])
-                if r[3] - r[1] > 0:
-                    shots.append([r])
-                else:
-                    self.logger.warning(f"r.y1 <= r.y0, r = {r}")
-                last_y = block["bbox"][3]
-            shots.append([(column.min, last_y, column.max, doc_in.core_y.max)])
-
-            column_shots[i] = shots
-
-        elements_rect = []
-        for block in page_in.raw_dict["blocks"]:
-            elements_rect.append(block["bbox"])
+        elements_rect: list[Rectangle] = []
+        for block in page_in.page_info.blocks:
+            elements_rect.append(block.bbox)
         for draw in page_in.drawings:
             elements_rect.append(draw["rect"])
 
@@ -98,11 +109,11 @@ class ShotWorker(PageWorker):
                     if rectangle_relation(shot[0], r) != RectRelation.NOT_INTERSECT:
                         except_intersect_rects.append(r)
                 if except_intersect_rects:
-                    min_y0 = min([r[1] for r in except_intersect_rects])
-                    min_y0 = max(min_y0, shot[0][1])
-                    max_y1 = max([r[3] for r in except_intersect_rects])
-                    max_y1 = min(max_y1, shot[0][3])
-                    shot[0] = (shot[0][0], min_y0, shot[0][2], max_y1)
+                    min_y0 = min([r.y0 for r in except_intersect_rects])
+                    min_y0 = max(min_y0, shot[0].y0)
+                    max_y1 = max([r.y1 for r in except_intersect_rects])
+                    max_y1 = min(max_y1, shot[0].y1)
+                    shot[0] = Rectangle(shot[0].x0, min_y0, shot[0].x1, max_y1)
 
         # extend first rect in each column
         for shots in column_shots:
@@ -112,7 +123,7 @@ class ShotWorker(PageWorker):
             if len(first_shot) != 1:
                 raise Exception("len(first_shot) != 1")
 
-            intersect_rects = []  # elements intersect with rect
+            intersect_rects: list[Rectangle] = []  # elements intersect with rect
             for r in elements_rect:
                 if rectangle_relation(first_shot[0], r) == RectRelation.INTERSECT:
                     intersect_rects.append(r)
@@ -120,13 +131,13 @@ class ShotWorker(PageWorker):
             if not intersect_rects:
                 continue
 
-            min_y0 = min([r[1] for r in intersect_rects])
-            min_y0 = min(min_y0, first_shot[0][1])
-            first_shot[0] = (
-                first_shot[0][0],
+            min_y0 = min([r.y0 for r in intersect_rects])
+            min_y0 = min(min_y0, first_shot[0].y0)
+            first_shot[0] = Rectangle(
+                first_shot[0].x0,
                 min_y0,
-                first_shot[0][2],
-                first_shot[0][3],
+                first_shot[0].x1,
+                first_shot[0].y1,
             )
 
         # extend left
@@ -135,12 +146,12 @@ class ShotWorker(PageWorker):
             for i in range(len(column)):
                 if len(column[i]) != 1:
                     raise Exception("len(column[i]) != 1")
-                shot = column[i][0]
-                min_x0 = shot[0]
+                shot = column[i]
+                min_x0 = shot[0].x0
                 for r in elements_rect:
-                    if rectangle_relation(shot, r) == RectRelation.INTERSECT:
-                        min_x0 = min(min_x0, r[0])
-                column[i][0] = (min_x0, shot[1], shot[2], shot[3])
+                    if rectangle_relation(shot[0], r) == RectRelation.INTERSECT:
+                        min_x0 = min(min_x0, r.x0)
+                shot[0] = Rectangle(min_x0, shot[0].y0, shot[0].x1, shot[0].y1)
 
         # extend right
         if column_shots:
@@ -148,12 +159,12 @@ class ShotWorker(PageWorker):
             for i in range(len(column)):
                 if len(column[i]) != 1:
                     raise Exception("len(column[i]) != 1")
-                shot = column[i][0]
-                max_x1 = shot[2]
+                shot = column[i]
+                max_x1 = shot[0].x1
                 for r in elements_rect:
-                    if rectangle_relation(shot, r) == RectRelation.INTERSECT:
-                        max_x1 = max(max_x1, r[2])
-                column[i][0] = (shot[0], shot[1], max_x1, shot[3])
+                    if rectangle_relation(shot[0], r) == RectRelation.INTERSECT:
+                        max_x1 = max(max_x1, r.x1)
+                shot[0] = Rectangle(shot[0].x0, shot[0].y0, max_x1, shot[0].y1)
 
         # delete empty rects
         BORDER_WIDTH = 4
@@ -164,15 +175,15 @@ class ShotWorker(PageWorker):
                     raise Exception("len(shot) != 1")
 
                 # delete height too small
-                if shot[0][3] - shot[0][1] <= BORDER_WIDTH * 2:
+                if shot[0].y1 - shot[0].y0 <= BORDER_WIDTH * 2:
                     del shots[i]
                     continue
 
-                inner_rect = (
-                    shot[0][0] + BORDER_WIDTH,
-                    shot[0][1] + BORDER_WIDTH,
-                    shot[0][2] - BORDER_WIDTH,
-                    shot[0][3] - BORDER_WIDTH,
+                inner_rect = Rectangle(
+                    shot[0].x0 + BORDER_WIDTH,
+                    shot[0].y0 + BORDER_WIDTH,
+                    shot[0].x1 - BORDER_WIDTH,
+                    shot[0].y1 - BORDER_WIDTH,
                 )
                 is_found = False
                 for r in elements_rect:
@@ -184,7 +195,7 @@ class ShotWorker(PageWorker):
 
         # merge shot in different columns
 
-        def is_near(shot1, shot2):
+        def is_near(shot1: Shot, shot2: Shot):
             rect1 = get_min_bounding_rect(shot1)
             rect2 = get_min_bounding_rect(shot2)
             for r in elements_rect:

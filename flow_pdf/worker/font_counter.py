@@ -1,14 +1,17 @@
-from .common import PageWorker, Range
+from .common import PageWorker
 from .common import (
     DocInputParams,
     PageInputParams,
     DocOutputParams,
     PageOutputParams,
     LocalPageOutputParams,
+    frequent_sub_array,
 )
 
 
 from dataclasses import dataclass
+from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle, Range
+from htutil import file
 
 
 @dataclass
@@ -18,7 +21,7 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    raw_dict: dict
+    page_info: MPage
 
 
 @dataclass
@@ -45,20 +48,18 @@ class FontCounterWorker(PageWorker):
         font_counter: dict[str, int] = {}
         size_counter: dict[float, int] = {}
 
-        for block in page_in.raw_dict["blocks"]:
-            if block["type"] != 0:
-                continue
-            for line in block["lines"]:
-                for span in line["spans"]:
-                    font: str = span["font"]
+        for block in page_in.page_info.get_text_blocks():
+            for line in block.lines:
+                for span in line.spans:
+                    font = span.font
                     if font not in font_counter:
                         font_counter[font] = 0
-                    font_counter[font] += len(span["chars"])
+                    font_counter[font] += len(span.chars)
 
-                    size: float = span["size"]
+                    size = span.size
                     if size not in size_counter:
                         size_counter[size] = 0
-                    size_counter[size] += len(span["chars"])
+                    size_counter[size] += len(span.chars)
 
         return PageOutParams(), LocalPageOutParams(font_counter, size_counter)
 
@@ -88,8 +89,7 @@ class FontCounterWorker(PageWorker):
         most_common_font_radio = font_counter[most_common_font] / sum(
             font_counter.values()
         )
-        if most_common_font_radio < 0.3:
-            self.logger.warning(f"most common font radio is {most_common_font_radio}")
+        self.logger.info(f"most_common_font_radio is {most_common_font_radio}")
 
         most_common_size = sorted(
             size_counter.items(), key=lambda x: x[1], reverse=True
@@ -98,10 +98,10 @@ class FontCounterWorker(PageWorker):
         most_common_size_radio = size_counter[most_common_size] / sum(
             size_counter.values()
         )
-        if most_common_size_radio >= 0.3:
+        if most_common_size_radio >= 0.5:
             common_size_range = Range(most_common_size, most_common_size)
         else:
-            self.logger.info(f"most common font size is {most_common_size_radio}")
+            self.logger.info(f"most_common_size_radio is {most_common_size_radio}")
             most_common_size = 0
 
             size_list: list[float] = []
@@ -109,37 +109,12 @@ class FontCounterWorker(PageWorker):
                 for _ in range(c):
                     size_list.append(s)
 
-            def sub_array_range(arr: list[float], sub_arr_range: int) -> Range:
-                """
-                返回 arr 中包含最多元素的连续子数组，使得该子数组的最大值与最小值之差小于 sub_arr_range。
-                """
+            if not size_list:
+                raise ValueError("size_list is empty")
 
-                if len(arr) == 0:
-                    raise ValueError("arr is empty")
-
-                arr.sort()
-
-                start = end = max_start = max_end = 0
-                max_count = count = 1
-
-                for i in range(1, len(arr)):
-                    if arr[i] - arr[start] < sub_arr_range:
-                        end = i
-                        count += 1
-                    else:
-                        start = end = i
-                        count = 1
-
-                    if count > max_count:
-                        max_count = count
-                        max_start = start
-                        max_end = end
-
-                return Range(arr[max_start], arr[max_end])
-
-            if size_list:
-                common_size_range = sub_array_range(size_list, 2)
-            else:
-                common_size_range = Range(0, float("inf"))
+            frequent_size_list = frequent_sub_array(size_list, 3)
+            radio = len(frequent_size_list) / len(size_list)
+            self.logger.debug(f"frequent size list radio is {radio}")
+            common_size_range = Range(min(frequent_size_list), max(frequent_size_list))
 
         return DocOutParams(most_common_font, common_size_range)

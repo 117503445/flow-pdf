@@ -1,4 +1,4 @@
-from .common import PageWorker, Block
+from .common import PageWorker, add_annot
 from .common import (
     DocInputParams,
     PageInputParams,
@@ -6,10 +6,11 @@ from .common import (
     PageOutputParams,
     LocalPageOutputParams,
 )
+from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle
 
 
 import fitz
-from fitz import Page
+from fitz import Page  # type: ignore
 from dataclasses import dataclass
 
 
@@ -30,9 +31,9 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
-    raw_dict: dict
+    page_info: MPage
     drawings: list
-    blocks: list[Block]
+    blocks: list[MSimpleBlock]
     images: list
     width: int
     height: int
@@ -44,6 +45,11 @@ class LocalPageOutParams(LocalPageOutputParams):
 
 
 class ReadDocWorker(PageWorker):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.disable_cache = True
+
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
@@ -61,20 +67,50 @@ class ReadDocWorker(PageWorker):
             #     self.logger.info(f"p1 {page.cropbox}")
 
             raw_dict = page.get_text("rawdict")  # type: ignore
+            page_info = init_mpage_from_mupdf(raw_dict)
             try:
                 drawings = page.get_drawings()
             except Exception as e:
                 self.logger.warning(f"get_drawings failed: {e}")
                 drawings = []
-            blocks = [Block(b) for b in page.get_text("blocks")]  # type: ignore
+            blocks = [MSimpleBlock(b) for b in page.get_text("blocks")]  # type: ignore
             images = page.get_image_info()  # type: ignore
 
             width, height = page.mediabox_size
 
+            # block line
+            enable_block_line = True
+            for text_block in page_info.get_text_blocks():
+                rects: list[Rectangle] = []
+                for line in text_block.lines:
+                    rects.append(line.bbox)
+                add_annot(page, rects, "", "red")
+
+            # block
+            rects = []
+            for block in page_info.blocks:
+                delta = 0
+                if enable_block_line:
+                    delta = 3
+                b = Rectangle(
+                    block.bbox.x0 - delta,
+                    block.bbox.y0 - delta,
+                    block.bbox.x1 + delta,
+                    block.bbox.y1 + delta,
+                )
+                rects.append(b)
+            add_annot(page, rects, "", "blue")
+
+            page.get_pixmap(dpi=150).save(doc_in.dir_output / "pre-marked" / f"{page_index}.png")  # type: ignore
+
             return (
-                PageOutParams(raw_dict, drawings, blocks, images, width, height),
+                PageOutParams(page_info, drawings, blocks, images, width, height),
                 LocalPageOutParams(),
             )
+
+    def post_run_page(self, doc_in: DocInParams, page_in: list[PageInParams]):  # type: ignore[override]
+        for p in ["pre-marked"]:
+            (doc_in.dir_output / p).mkdir(parents=True, exist_ok=True)
 
     def after_run_page(  # type: ignore[override]
         self,

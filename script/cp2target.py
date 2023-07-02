@@ -41,5 +41,6 @@ if changed_list:
         f = changed_list[i]
         file_id = f / "big_blocks_id.json"
         dir_dest = dir_target / f.name / "big_blocks_id"
+        dir_dest.mkdir(parents=True, exist_ok=True)
         shutil.copy(file_id, dir_dest)
         file.append_text(dir_dest / "note.txt", f"accepted time: {current_time}\n")

@@ -69,6 +69,14 @@ files:
 poetry run python flow_pdf/main.py
 ```
 
+也可以挂载文件夹
+
+```sh
+# TODO update doc
+mkdir -p /tmp/flow-pdf/out
+ln -s /tmp/flow-pdf/out ./data/out
+```
+
 ### Web 端
 
 后端采用 FastAPI 调用核心解析逻辑，前端使用 React。

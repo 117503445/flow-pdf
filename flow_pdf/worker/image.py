@@ -7,6 +7,10 @@ from .common import (
     LocalPageOutputParams,
 )
 from dataclasses import dataclass
+from .flow_type import (
+    MPage,
+    MImageBlock,
+)
 
 
 @dataclass
@@ -16,7 +20,7 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    raw_dict: dict
+    page_info: MPage
 
 
 @dataclass
@@ -26,7 +30,7 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
-    image_blocks: list[dict]
+    image_blocks: list[MImageBlock]
 
 
 @dataclass
@@ -38,6 +42,6 @@ class ImageWorker(PageWorker):
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
-        image_blocks = [b for b in page_in.raw_dict["blocks"] if b["type"] == 1]
+        image_blocks = page_in.page_info.get_image_blocks()
 
         return PageOutParams(image_blocks), LocalPageOutParams()

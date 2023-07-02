@@ -36,19 +36,110 @@
 - [x] Shot 去除白边
 - [x] font size 范围优化
 - [x] 出错后前端显示
-- [ ] 大规模数据集
+- [x] 大规模数据集
+- [x] 前端上传文件后清除 input
+- [x] 基于位置进行 Block 合并
+- [ ] Shot 绝对大小
 - [ ] fc 挂载 OSS
 - [ ] fc-be 内网 endpoint / 挂载 OSS
 - [ ] fc 删除旧版本数据
 - [ ] Table of Contents
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] shot 可复制文字 alt-data
+- [ ] 斜体识别
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Docker CLI
+- [ ] Markdown output
 
 ## big-blocks
 
 - [x] dag 3
 - [x] metabolome 6
 - [x] metabolome 7
+
+lines relayout
+
+- /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/pre-marked/4.png
+- /root/project/flow-pdf/data/out/Majeed and Hong - 2019 - FLchain Federated learning via MEC-enabled blockc/marked/1.png
+
+Block 延展
+
+- /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/pre-marked/4.png
+- /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/marked/28.png
+- /root/project/flow-pdf/data/out/Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance/marked/6.png
+- /root/project/flow-pdf/data/out/Gai et al. - 2022 - Devouring the Leader Bottleneck in BFT Consensus/marked/15.png
+
+Code / Table big-block 漏报
+
+- /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/marked/14.png
+- /root/project/flow-pdf/data/out/Bankhamer et al. - 2022 - Population Protocols for Exact Plurality Consensus/marked/3.png
+- /root/project/flow-pdf/data/out/Bankhamer et al. - 2022 - Population Protocols for Exact Plurality Consensus/marked/5.png
+- /root/project/flow-pdf/data/out/Bankhamer et al. - 2022 - Population Protocols for Exact Plurality Consensus/marked/7.png
+- /root/project/flow-pdf/data/out/Beaver 等。 - 2010 - Finding a needle in haystack Facebook's photo sto/marked/5.png
+- /root/project/flow-pdf/data/out/Majeed and Hong - 2019 - FLchain Federated learning via MEC-enabled blockc/marked/2.png
+- /root/project/flow-pdf/data/out/Miller 等 - 2016 - The honey badger of BFT protocols/marked/5.png
+- /root/project/flow-pdf/data/out/Miller 等 - 2016 - The honey badger of BFT protocols/marked/6.png
+- /root/project/flow-pdf/data/out/Pancha et al. - 2022 - PinnerFormer Sequence Modeling for User Represent/marked/6.png
+- /root/project/flow-pdf/data/out/Sigelman et al. - 2010 - Dapper, a large-scale distributed systems tracing /marked/6.png
+- /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/6.png
+- /root/project/flow-pdf/data/out/Wang et al. - 2022 - Bft in blockchains From protocols to use cases/marked/7.png
+- /root/project/flow-pdf/data/out/Wang et al. - 2022 - Bft in blockchains From protocols to use cases/marked/24.png
+- /root/project/flow-pdf/data/out/Yakovenko - 2018 - Solana A new architecture for a high performance /marked/5.png
+- /root/project/flow-pdf/data/out/Yin 等。 - 2019 - Hotstuff Bft consensus with linearity and respons/marked/4.png
+
+其他原因 big-block 漏报
+
+- /root/project/flow-pdf/data/out/Buterin 等。 - 2020 - Combining GHOST and Casper/marked/24.png （公式）
+
+panic
+
+- Chang 等。 - 2008 - Bigtable A distributed storage system for structu
+- Fang et al. - 2021 - Dragoon a hybrid and efficient big trajectory man
+- Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult
+- Scales 等。 - 2010 - The design of a practical system for fault-toleran
+- Wang et al. - 2017 - Development and evaluation on a wireless multi-gas
+- Wang et al. - 2019 - A survey on consensus mechanisms and mining strate
+- Zhao 等 - 2021 - A learned sketch for subgraph counting
+- Zhu et al. - 2022 - Postharvest quality monitoring and cold chain mana
+
+- Kotla 和 Dahlin - 2004 - High throughput Byzantine fault tolerance
+
+split new block 误报
+
+- /root/project/flow-pdf/data/out/Danezis et al. - 2022 - Narwhal and Tusk a DAG-based mempool and efficien/pre-marked/0.png （0.6 -> 0.5）
+- /root/project/flow-pdf/data/out/DiemBFT v4 State Machine Replication in the Diem Blockchain/pre-marked/11.png
+- /root/project/flow-pdf/data/out/Lenzen and Loss - 2022 - Optimal Clock Synchronization with Signatures/marked/1.png
+- /root/project/flow-pdf/data/out/Neiheiser 等。 - 2021 - Kauri Scalable bft consensus with pipelined tree-/marked/4.png
+- /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/4.png
+
+split new block 漏报
+
+- /root/project/flow-pdf/data/out/Gilad 等。 - 2017 - Algorand Scaling byzantine agreements for cryptoc/marked/13.png
+- Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult
+- /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/0.png
+
+多余截图（？）
+
+- /root/project/flow-pdf/data/out/Duan et al. - 2018 - BEAT Asynchronous BFT made practical
+- /root/project/flow-pdf/data/out/practical byzantine fault tolerance/marked/10.png
+- /root/project/flow-pdf/data/out/practical byzantine fault tolerance and proactive recovery/marked/9.png
+- /root/project/flow-pdf/data/out/Wang et al. - 2018 - Improving quality control and transparency in hone/marked/1.png
+
+截图遗漏
+
+- /root/project/flow-pdf/data/out/Li 等。 - 2014 - Communication efficient distributed machine learni/marked/3.png
+
+shot 延伸过多
+
+- /root/project/flow-pdf/data/out/Low et al. - 2014 - Graphlab A new framework for parallel machine lea/marked/3.png
+- /root/project/flow-pdf/data/out/Low et al. - 2014 - Graphlab A new framework for parallel machine lea/marked/4.png
+
+column 漏报
+
+- /root/project/flow-pdf/data/out/Sankar 等。 - 2017 - Survey of consensus protocols on blockchain applic/marked/0.png
+
+shot 延展不足
+
+- /root/project/flow-pdf/data/out/Solutions to Scalability of Blockchain_A Survey/marked/2.png
+- /root/project/flow-pdf/data/out/Toshniwal 等。 - 2014 - Storm@ twitter/marked/4.png
