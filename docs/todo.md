@@ -38,7 +38,7 @@
 - [x] 出错后前端显示
 - [x] 大规模数据集
 - [x] 前端上传文件后清除 input
-- [ ] 基于位置进行 Block 合并
+- [x] 基于位置进行 Block 合并
 - [ ] Shot 绝对大小
 - [ ] fc 挂载 OSS
 - [ ] fc-be 内网 endpoint / 挂载 OSS
@@ -57,98 +57,89 @@
 - [x] dag 3
 - [x] metabolome 6
 - [x] metabolome 7
-- [ ] pbft 符号作为 block
-- [ ] gossip 每行一个 block
 
-Li et al. - 2020 - A decentralized blockchain with high throughput an
-    - [ ] 3 shot 延展不足
-    - [ ] big-block 判断过严格
+lines relayout
 
-Zhao et al. - 2021 - A learned sketch for subgraph counting
+- /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/pre-marked/4.png
+- /root/project/flow-pdf/data/out/Majeed and Hong - 2019 - FLchain Federated learning via MEC-enabled blockc/marked/1.png
 
-    - [ ] 3 8 big-block 判断过严格
-    - [ ] shot 空白延展过度（问题不大）
+Block 延展
 
-Lenzen and Sheikholeslami - 2022 - A Recursive Early-Stopping Phase King Protocol
+- /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/pre-marked/4.png
+- /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/marked/28.png
+- /root/project/flow-pdf/data/out/Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance/marked/6.png
+- /root/project/flow-pdf/data/out/Gai et al. - 2022 - Devouring the Leader Bottleneck in BFT Consensus/marked/15.png
 
-    - [] 7 big-block 漏报
+Code / Table big-block 漏报
 
-Wang et al. - 2019 - A survey on consensus mechanisms and mining strate
+- /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/marked/14.png
+- /root/project/flow-pdf/data/out/Bankhamer et al. - 2022 - Population Protocols for Exact Plurality Consensus/marked/3.png
+- /root/project/flow-pdf/data/out/Bankhamer et al. - 2022 - Population Protocols for Exact Plurality Consensus/marked/5.png
+- /root/project/flow-pdf/data/out/Bankhamer et al. - 2022 - Population Protocols for Exact Plurality Consensus/marked/7.png
+- /root/project/flow-pdf/data/out/Beaver 等。 - 2010 - Finding a needle in haystack Facebook's photo sto/marked/5.png
+- /root/project/flow-pdf/data/out/Majeed and Hong - 2019 - FLchain Federated learning via MEC-enabled blockc/marked/2.png
+- /root/project/flow-pdf/data/out/Miller 等 - 2016 - The honey badger of BFT protocols/marked/5.png
+- /root/project/flow-pdf/data/out/Miller 等 - 2016 - The honey badger of BFT protocols/marked/6.png
+- /root/project/flow-pdf/data/out/Pancha et al. - 2022 - PinnerFormer Sequence Modeling for User Represent/marked/6.png
+- /root/project/flow-pdf/data/out/Sigelman et al. - 2010 - Dapper, a large-scale distributed systems tracing /marked/6.png
+- /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/6.png
+- /root/project/flow-pdf/data/out/Wang et al. - 2022 - Bft in blockchains From protocols to use cases/marked/7.png
+- /root/project/flow-pdf/data/out/Wang et al. - 2022 - Bft in blockchains From protocols to use cases/marked/24.png
+- /root/project/flow-pdf/data/out/Yakovenko - 2018 - Solana A new architecture for a high performance /marked/5.png
+- /root/project/flow-pdf/data/out/Yin 等。 - 2019 - Hotstuff Bft consensus with linearity and respons/marked/4.png
 
-    - [] 8, 10, 13 shot 延展不足
+其他原因 big-block 漏报
 
-Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar
+- /root/project/flow-pdf/data/out/Buterin 等。 - 2020 - Combining GHOST and Casper/marked/24.png （公式）
 
-    - [] JSONGen 有问题
+panic
 
-Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance
+- Chang 等。 - 2008 - Bigtable A distributed storage system for structu
+- Fang et al. - 2021 - Dragoon a hybrid and efficient big trajectory man
+- Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult
+- Scales 等。 - 2010 - The design of a practical system for fault-toleran
+- Wang et al. - 2017 - Development and evaluation on a wireless multi-gas
+- Wang et al. - 2019 - A survey on consensus mechanisms and mining strate
+- Zhao 等 - 2021 - A learned sketch for subgraph counting
+- Zhu et al. - 2022 - Postharvest quality monitoring and cold chain mana
 
-    - [] no-common-span 提取
+- Kotla 和 Dahlin - 2004 - High throughput Byzantine fault tolerance
 
-Bankhamer et al. - 2022 - Population Protocols for Exact Plurality Consensus
+split new block 误报
 
-    - [] 3 big-block 误报，漏报
+- /root/project/flow-pdf/data/out/Danezis et al. - 2022 - Narwhal and Tusk a DAG-based mempool and efficien/pre-marked/0.png （0.6 -> 0.5）
+- /root/project/flow-pdf/data/out/DiemBFT v4 State Machine Replication in the Diem Blockchain/pre-marked/11.png
+- /root/project/flow-pdf/data/out/Lenzen and Loss - 2022 - Optimal Clock Synchronization with Signatures/marked/1.png
+- /root/project/flow-pdf/data/out/Neiheiser 等。 - 2021 - Kauri Scalable bft consensus with pipelined tree-/marked/4.png
+- /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/4.png
 
-Beaver 等。 - 2010 - Finding a needle in haystack Facebook's photo sto
+split new block 漏报
 
-    - [] 5 6 shot 空白延展过度
+- /root/project/flow-pdf/data/out/Gilad 等。 - 2017 - Algorand Scaling byzantine agreements for cryptoc/marked/13.png
+- Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult
+- /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/0.png
 
-Chang 等。 - 2008 - Bigtable A distributed storage system for structu
+多余截图（？）
 
-    - [] min() arg is an empty sequence
+- /root/project/flow-pdf/data/out/Duan et al. - 2018 - BEAT Asynchronous BFT made practical
+- /root/project/flow-pdf/data/out/practical byzantine fault tolerance/marked/10.png
+- /root/project/flow-pdf/data/out/practical byzantine fault tolerance and proactive recovery/marked/9.png
+- /root/project/flow-pdf/data/out/Wang et al. - 2018 - Improving quality control and transparency in hone/marked/1.png
 
-Data_Replication_Using_Read-One-Write-All_Monitori
+截图遗漏
 
-    - [] min() arg is an empty sequence
+- /root/project/flow-pdf/data/out/Li 等。 - 2014 - Communication efficient distributed machine learni/marked/3.png
 
-Dean and Ghemawat - 2008 - MapReduce simplified data processing on large clu
+shot 延伸过多
 
-    - [] 大量 big-block 漏报
+- /root/project/flow-pdf/data/out/Low et al. - 2014 - Graphlab A new framework for parallel machine lea/marked/3.png
+- /root/project/flow-pdf/data/out/Low et al. - 2014 - Graphlab A new framework for parallel machine lea/marked/4.png
 
-Gilad 等。 - 2017 - Algorand Scaling byzantine agreements for cryptoc
+column 漏报
 
-    - [] 大量 big-block 漏报
+- /root/project/flow-pdf/data/out/Sankar 等。 - 2017 - Survey of consensus protocols on blockchain applic/marked/0.png
 
-Guo 等 - 2020 - Dumbo Faster asynchronous bft protocols
+shot 延展不足
 
-    - [] Invalid bandwriter header dimensions/setup
-
-Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult
-
-    - [] min() arg is an empty sequence
-
-Kotla 和 Dahlin - 2004 - High throughput Byzantine fault tolerance
-
-    - [] Invalid bandwriter header dimensions/setup
-
-Li et al. - 2020 - A decentralized blockchain with high throughput an
-
-    - [] 大量 big-block 漏报
-
-Li et al. - 2020 - GHAST Breaking confirmation delay barrier in naka
-
-    - [] Invalid bandwriter header dimensions/setup
-
-Liu 等。 - 2018 - Scalable byzantine consensus via hardware-assisted
-
-    - [] Invalid bandwriter header dimensions/setup
-
-Miller 等 - 2016 - The honey badger of BFT protocols
-
-    - [] 大量 big-block 漏报
-
-practical byzantine fault tolerance
-
-    - [] big-block 排列不规则
-
-Sankar 等。 - 2017 - Survey of consensus protocols on blockchain applic
-
-    - [] min() arg is an empty sequence
-
-Scales 等。 - 2010 - The design of a practical system for fault-toleran
-
-    - [] min() arg is an empty sequence
-
-Zhu et al. - 2022 - Postharvest quality monitoring and cold chain mana
-
-    - [] min() arg is an empty sequence
+- /root/project/flow-pdf/data/out/Solutions to Scalability of Blockchain_A Survey/marked/2.png
+- /root/project/flow-pdf/data/out/Toshniwal 等。 - 2014 - Storm@ twitter/marked/4.png
