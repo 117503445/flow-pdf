@@ -55,6 +55,8 @@ class DocOutParams(DocOutputParams):
 class PageOutParams(PageOutputParams):
     big_blocks: list[list[MTextBlock]]  # column -> blocks
 
+    text_blocks_bbox: list[list[Rectangle]] # column -> bbox, for shot
+
 
 @dataclass
 class LocalPageOutParams(LocalPageOutputParams):
@@ -69,8 +71,12 @@ class BigBlockWorker(PageWorker):
             [] for _ in range(len(doc_in.big_text_columns))
         ]
 
+        text_blocks_bbox: list[list[Rectangle]] = [
+            [] for _ in range(len(doc_in.big_text_columns))
+        ]
+
         if page_index in doc_in.abnormal_size_pages:
-            return PageOutParams(big_blocks), LocalPageOutParams()
+            return PageOutParams(big_blocks, text_blocks_bbox), LocalPageOutParams()
 
         blocks = page_in.page_info.get_text_blocks()
 
@@ -209,6 +215,12 @@ class BigBlockWorker(PageWorker):
                     cur_block.bbox.x1 = max(cur_block.bbox.x1, next_block.bbox.x1)
                     del column_blocks[i + 1]
 
+        for i, column_blocks in enumerate(big_blocks):
+            for block in column_blocks:
+                text_blocks_bbox[i].append(block.bbox)
+            text_blocks_bbox[i].sort(key=lambda rect: rect.y0)
+
+
         # TODO Line
         # Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance
 
@@ -251,13 +263,6 @@ class BigBlockWorker(PageWorker):
                     max_intersection_spans: list[MSpan] = []
 
                     for spans in spans_list:
-                        # h = spans[0].bbox.height()
-                        # D = 0.2
-                        # if (
-                        #     spans[0].bbox.y0 - h * D <= span.bbox.y0
-                        #     and span.bbox.y1 <= spans[0].bbox.y1 + h * D
-                        # ):
-
                         intersection_start = max(span.bbox.y0, spans[0].bbox.y0)
                         intersection_end = min(span.bbox.y1, spans[0].bbox.y1)
                         radio = (
@@ -323,7 +328,7 @@ class BigBlockWorker(PageWorker):
 
             big_blocks[i] = new_column_blocks
 
-        return PageOutParams(big_blocks), LocalPageOutParams()
+        return PageOutParams(big_blocks, text_blocks_bbox), LocalPageOutParams()
 
     def after_run_page(  # type: ignore[override]
         self,

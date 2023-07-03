@@ -119,7 +119,7 @@ split new block 漏报
 - Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult
 - /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/0.png
 
-多余截图（？）
+多余截图 [x]
 
 - /root/project/flow-pdf/data/out/Duan et al. - 2018 - BEAT Asynchronous BFT made practical
 - /root/project/flow-pdf/data/out/practical byzantine fault tolerance/marked/10.png
