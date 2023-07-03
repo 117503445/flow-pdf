@@ -90,6 +90,8 @@ class FontCounterWorker(PageWorker):
             font_counter.values()
         )
         self.logger.info(f"most_common_font_radio is {most_common_font_radio}")
+        if most_common_font_radio <= 0.5:
+            most_common_font = ""
 
         most_common_size = sorted(
             size_counter.items(), key=lambda x: x[1], reverse=True

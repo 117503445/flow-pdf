@@ -73,9 +73,7 @@ class DumpWorker(PageWorker):
     ) -> tuple[PageOutParams, LocalPageOutParams]:
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)  # type: ignore
-            file.write_text(doc_in.dir_output / "rawjson" / f"{page_index}.json", page.get_text("rawjson"))  # type: ignore
 
-            file.write_text(doc_in.dir_output / "json" / f"{page_index}.json", page.get_text("json"))  # type: ignore
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
 
@@ -198,7 +196,7 @@ class DumpWorker(PageWorker):
         return PageOutParams(), LocalPageOutParams()
 
     def post_run_page(self, doc_in: DocInParams, page_in: list[PageInParams]):  # type: ignore[override]
-        for p in ["marked", "rawjson", "raw", "shot_rects", "json"]:
+        for p in ["marked", "raw", "shot_rects"]:
             (doc_in.dir_output / p).mkdir(parents=True, exist_ok=True)
 
     def after_run_page(  # type: ignore[override]

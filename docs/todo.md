@@ -94,14 +94,14 @@ Code / Table big-block 漏报
 
 panic
 
-- Chang 等。 - 2008 - Bigtable A distributed storage system for structu (is_common_text_too_little)
+- Chang 等。 - 2008 - Bigtable A distributed storage system for structu (is_common_text_too_little, 被 drawing 包围正文)
 - [x] Fang et al. - 2021 - Dragoon a hybrid and efficient big trajectory man (width 判断错误)
-- Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult (is_common_text_too_little)
-- Scales 等。 - 2010 - The design of a practical system for fault-toleran (is_not_be_contained)
+- Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult (is_common_text_too_little, 被 drawing 包围正文)
+- Scales 等。 - 2010 - The design of a practical system for fault-toleran (is_not_be_contained, 被 drawing 包围正文)
 - Wang et al. - 2017 - Development and evaluation on a wireless multi-gas (每行 1 block, width 判断错误)
 - [x] Wang et al. - 2019 - A survey on consensus mechanisms and mining strate (width 判断错误)
-- Zhao 等 - 2021 - A learned sketch for subgraph counting (width 判断错误)
-- [x] Zhu et al. - 2022 - Postharvest quality monitoring and cold chain mana (每行 1 block, width 判断错误)
+- [x] Zhao 等 - 2021 - A learned sketch for subgraph counting (width 判断错误)
+- Zhu et al. - 2022 - Postharvest quality monitoring and cold chain mana (每行 1 block, width 判断错误)
 
 - Kotla 和 Dahlin - 2004 - High throughput Byzantine fault tolerance
 

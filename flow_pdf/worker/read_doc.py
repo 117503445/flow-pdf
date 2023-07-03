@@ -12,6 +12,7 @@ from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle
 import fitz
 from fitz import Page  # type: ignore
 from dataclasses import dataclass
+from htutil import file
 
 
 @dataclass
@@ -56,6 +57,10 @@ class ReadDocWorker(PageWorker):
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)
 
+            file.write_text(doc_in.dir_output / "rawjson" / f"{page_index}.json", page.get_text("rawjson"))  # type: ignore
+
+            file.write_text(doc_in.dir_output / "json" / f"{page_index}.json", page.get_text("json"))  # type: ignore
+
             # if page_index == 0:
             #     self.logger.info(f"p0 {page.mediabox}")
             #     self.logger.info(f"p0 {page.rect}")
@@ -99,7 +104,13 @@ class ReadDocWorker(PageWorker):
                     block.bbox.y1 + delta,
                 )
                 rects.append(b)
-            add_annot(page, rects, "", "blue")
+            add_annot(page, rects, "block", "blue")
+
+            # drawings
+            rects = []
+            for drawing in drawings:
+                rects.append(drawing['rect'])
+            add_annot(page, rects, 'drawing', 'red')
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "pre-marked" / f"{page_index}.png")  # type: ignore
 
@@ -109,7 +120,7 @@ class ReadDocWorker(PageWorker):
             )
 
     def post_run_page(self, doc_in: DocInParams, page_in: list[PageInParams]):  # type: ignore[override]
-        for p in ["pre-marked"]:
+        for p in ["pre-marked", "json", "rawjson"]:
             (doc_in.dir_output / p).mkdir(parents=True, exist_ok=True)
 
     def after_run_page(  # type: ignore[override]
