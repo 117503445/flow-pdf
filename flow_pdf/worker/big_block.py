@@ -173,6 +173,7 @@ class BigBlockWorker(PageWorker):
             ]
             for judger, enabled in judgers:
                 if enabled and not judger(block):
+                    self.logger.debug(f"page[{page_index}], block[{block.number}] judger {judger.__name__} failed")
                     return False
             return True
 
