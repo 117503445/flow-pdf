@@ -91,6 +91,7 @@ class WidthCounterWorker(PageWorker):
             raise Exception("no big text found")
 
         most_common_widths = frequent_sub_array(widths, 3)
+        # self.logger.debug(f"widths: {widths}, most_common_widths: {most_common_widths}")
 
         width_range = Range(min(most_common_widths), max(most_common_widths))
         self.logger.debug(f"width_range: {width_range}")
@@ -100,7 +101,7 @@ class WidthCounterWorker(PageWorker):
             b
             for b in blocks
             if width_range.min - delta * 0.1
-            < b.bbox.x1 - b.bbox.x0
+            < b.bbox.width()
             < width_range.max + delta * 0.1
         ]
         if not big_text_block:
@@ -140,6 +141,10 @@ class WidthCounterWorker(PageWorker):
             )
             big_text_columns.append(column)
 
+        # self.logger.debug(f"big_text_columns: {big_text_columns}")
+
+        big_text_columns.sort(key=lambda r: (r.min, r.max))
+
         # Bano - 2022 - Twins Bft systems made robust
         # merge columns
         if len(big_text_columns) > 1:
@@ -150,6 +155,8 @@ class WidthCounterWorker(PageWorker):
                 if cur.max - next.min > (width_range.max - width_range.min) * 0.1:
                     big_text_columns[i] = Range(cur.min, next.max)
                     del big_text_columns[i + 1]
+
+        # self.logger.debug(f"merged big_text_columns: {big_text_columns}")
 
         lines: list[MLine] = []
         for b in big_text_block:
