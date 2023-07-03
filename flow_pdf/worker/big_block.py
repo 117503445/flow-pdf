@@ -4,7 +4,7 @@ from .common import (
     rectangle_relation,
     RectRelation,
     get_min_bounding_rect,
-    frequent_sub_array
+    frequent_sub_array,
 )
 from .common import (
     DocInputParams,
@@ -55,7 +55,7 @@ class DocOutParams(DocOutputParams):
 class PageOutParams(PageOutputParams):
     big_blocks: list[list[MTextBlock]]  # column -> blocks
 
-    text_blocks_bbox: list[list[Rectangle]] # column -> bbox, for shot
+    text_blocks_bbox: list[list[Rectangle]]  # column -> bbox, for shot
 
 
 @dataclass
@@ -220,7 +220,6 @@ class BigBlockWorker(PageWorker):
                 text_blocks_bbox[i].append(block.bbox)
             text_blocks_bbox[i].sort(key=lambda rect: rect.y0)
 
-
         # TODO Line
         # Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance
 
@@ -295,15 +294,19 @@ class BigBlockWorker(PageWorker):
         # split
         for i, column_blocks in enumerate(big_blocks):
             new_column_blocks: list[MTextBlock] = []
-            for b in column_blocks:
-
+            for j, b in enumerate(column_blocks):
                 MIN_DELTA = 5.0
                 deltas = []
                 for line in b.lines:
                     deltas.append(b.bbox.x1 - line.bbox.x1)
-                sub_d = frequent_sub_array(deltas, 1)
-                if len(sub_d) / len(deltas) > 0.6:
+                sub_d = frequent_sub_array(deltas, 2)
+
+                RIGHT_DISTANCE_THRESHOLD = 0.5
+                radio = len(sub_d) / len(deltas)
+                if radio > RIGHT_DISTANCE_THRESHOLD:
                     MIN_DELTA += sub_d[-1]
+
+                # self.logger.debug(f'page[{page_index}] column[{i}] j[{j}] radio: {radio}, MIN_DELTA: {MIN_DELTA}, deltas: {deltas}, sub_d: {sub_d}')
 
                 p_lines_list: list[list[MLine]] = [[]]
                 for j in range(len(b.lines)):
@@ -312,7 +315,7 @@ class BigBlockWorker(PageWorker):
 
                     # TODO
                     # Danezis et al. - 2022 - Narwhal and Tusk a DAG-based mempool and efficien 8
-                    
+
                     if b.bbox.x1 - line.bbox.x1 > MIN_DELTA:
                         p_lines_list.append([])
 

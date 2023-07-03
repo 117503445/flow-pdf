@@ -105,13 +105,13 @@ panic
 
 - Kotla 和 Dahlin - 2004 - High throughput Byzantine fault tolerance
 
-split new block 误报
+split new block 误报 [x]
 
-- /root/project/flow-pdf/data/out/Danezis et al. - 2022 - Narwhal and Tusk a DAG-based mempool and efficien/pre-marked/0.png （0.6 -> 0.5）
-- /root/project/flow-pdf/data/out/DiemBFT v4 State Machine Replication in the Diem Blockchain/pre-marked/11.png
-- /root/project/flow-pdf/data/out/Lenzen and Loss - 2022 - Optimal Clock Synchronization with Signatures/marked/1.png
-- /root/project/flow-pdf/data/out/Neiheiser 等。 - 2021 - Kauri Scalable bft consensus with pipelined tree-/marked/4.png
-- /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/4.png
+- [x] /root/project/flow-pdf/data/out/Danezis et al. - 2022 - Narwhal and Tusk a DAG-based mempool and efficien/pre-marked/0.png （0.6 -> 0.5）
+- [x] /root/project/flow-pdf/data/out/DiemBFT v4 State Machine Replication in the Diem Blockchain/pre-marked/11.png
+- [x] /root/project/flow-pdf/data/out/Lenzen and Loss - 2022 - Optimal Clock Synchronization with Signatures/marked/1.png
+- [x] /root/project/flow-pdf/data/out/Neiheiser 等。 - 2021 - Kauri Scalable bft consensus with pipelined tree-/marked/4.png
+- [x] /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/4.png
 
 split new block 漏报
 
@@ -121,10 +121,10 @@ split new block 漏报
 
 多余截图 [x]
 
-- /root/project/flow-pdf/data/out/Duan et al. - 2018 - BEAT Asynchronous BFT made practical
-- /root/project/flow-pdf/data/out/practical byzantine fault tolerance/marked/10.png
-- /root/project/flow-pdf/data/out/practical byzantine fault tolerance and proactive recovery/marked/9.png
-- /root/project/flow-pdf/data/out/Wang et al. - 2018 - Improving quality control and transparency in hone/marked/1.png
+- [x] /root/project/flow-pdf/data/out/Duan et al. - 2018 - BEAT Asynchronous BFT made practical
+- [x] /root/project/flow-pdf/data/out/practical byzantine fault tolerance/marked/10.png
+- [x] /root/project/flow-pdf/data/out/practical byzantine fault tolerance and proactive recovery/marked/9.png
+- [x] /root/project/flow-pdf/data/out/Wang et al. - 2018 - Improving quality control and transparency in hone/marked/1.png
 
 截图遗漏
 
