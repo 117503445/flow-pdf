@@ -117,6 +117,7 @@ class JSONGenWorker(PageWorker):
 
                 column_block_elements = []
                 for b in blocks:
+
                     def get_span_type(span):
                         if is_common_span(
                             span, doc_in.most_common_font, doc_in.common_size_range
@@ -156,10 +157,7 @@ class JSONGenWorker(PageWorker):
                                     for char in span.chars:
                                         t += char.c
 
-                                if (
-                                    len(chidren) > 0
-                                    and chidren[-1]["type"] == "text"
-                                ):
+                                if len(chidren) > 0 and chidren[-1]["type"] == "text":
                                     # TODO
                                     chidren[-1]["text"] += f" {t}"
                                 else:
@@ -190,11 +188,23 @@ class JSONGenWorker(PageWorker):
                                     if j != len(result) - 1:
                                         x1 = max(x0, result[j + 1][0].bbox.x0)
 
-                                    r = Rectangle(
-                                        x0, line.bbox.y0, x1, line.bbox.y1
+                                    r = Rectangle(x0, line.bbox.y0, x1, line.bbox.y1)
+                                    t_float = r.to_tuple()
+                                    # to int
+                                    t_int = (
+                                        int(t_float[0]),
+                                        int(t_float[1]),
+                                        int(t_float[2]),
+                                        int(t_float[3]),
                                     )
-                                    page.get_pixmap(clip=r.to_tuple(), dpi=576).save(file_shot) # type: ignore
-                                    
+
+                                    if t_int[0] >= t_int[2] or t_int[1] >= t_int[3]:
+                                        self.logger.warning(
+                                            f"page[{page_index}] Shot rect invalid: {r}"
+                                        )
+                                    else:
+                                        page.get_pixmap(clip=t_int, dpi=576).save(file_shot)  # type: ignore
+
                                     chidren.append(
                                         {
                                             "type": "shot",
