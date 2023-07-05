@@ -32,6 +32,7 @@ from dataclasses import dataclass
 @dataclass
 class DocInParams(DocInputParams):
     big_text_width_range: Range
+    big_text_line_height_range: Range
     big_text_columns: list[Range]
 
     most_common_font: str
@@ -96,6 +97,12 @@ class BigBlockWorker(PageWorker):
                     # if (near_lines_count / len(b.lines)) > 0.8 or (near_lines_count == 1 and len(b.lines) != 1):
                     #     big_blocks[i].append(b)
                     break
+
+        bbox_list = []
+        for drawing in page_in.drawings:
+            bbox_list.append(drawing["rect"])
+        for b in page_in.page_info.get_text_blocks():
+            bbox_list.append(b.bbox)
 
         def is_big_block(block: MTextBlock):
             def is_in_width_range(block: MTextBlock):
@@ -163,6 +170,21 @@ class BigBlockWorker(PageWorker):
                         return False
                 return True
 
+            # For less large blocks, a more rigorous examination is required
+            def is_middle_block_ok(block: MTextBlock):
+                if block.bbox.height() >= doc_in.big_text_line_height_range.max * 3.5:
+                    return True
+
+                counter = 0
+
+                for b in bbox_list:
+                    if rectangle_relation(block.bbox, b) != RectRelation.NOT_INTERSECT:
+                        counter += 1
+                        if counter >= 2:
+                            return False
+
+                return True
+
             judgers = [
                 (is_in_width_range, False),
                 (is_line_y_increase, False),  # lines maybe in same y
@@ -170,10 +192,13 @@ class BigBlockWorker(PageWorker):
                 (is_not_be_contained, True),
                 (is_enough_lower, True),
                 (is_single_line_has_end, False),  # like bitcoin
+                (is_middle_block_ok, True),
             ]
             for judger, enabled in judgers:
                 if enabled and not judger(block):
-                    self.logger.debug(f"page[{page_index}], block[{block.number}] judger {judger.__name__} failed")
+                    self.logger.debug(
+                        f"page[{page_index}], block[{block.number}] judger {judger.__name__} failed"
+                    )
                     return False
             return True
 

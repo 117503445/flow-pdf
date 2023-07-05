@@ -106,7 +106,7 @@ panic
 - [x] Zhao 等 - 2021 - A learned sketch for subgraph counting (width 判断错误)
 - Zhu et al. - 2022 - Postharvest quality monitoring and cold chain mana (每行 1 block, width 判断错误)
 
-- Kotla 和 Dahlin - 2004 - High throughput Byzantine fault tolerance
+- Kotla 和 Dahlin - 2004 - High throughput Byzantine fault tolerance （PDF 格式有问题）
 
 split new block 误报 [x]
 
