@@ -26,7 +26,7 @@
 
 然后在拓展设置中点击翻译按钮，或配置自动开启翻译
 
-![entry](./docs/entry.png | width=300)
+<img src="./docs/entry.png" width="300">
 
 （值得一提的是，这个拓展真的好用！
 
