@@ -100,3 +100,11 @@ pnpm install
 ```sh
 pnpm run dev
 ```
+
+### 镜像构建
+
+```sh
+docker build -t 117503445/flow-pdf .
+docker tag 117503445/flow-pdf registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf
+docker push registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf
+```
