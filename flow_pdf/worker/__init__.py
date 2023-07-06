@@ -1,6 +1,7 @@
 from .common import Worker, Executer, ExecuterConfig
 
 from .read_doc import ReadDocWorker
+from .pre_dump import PreDumpWorker
 from .dump import DumpWorker
 from .image import ImageWorker
 from .font_counter import FontCounterWorker
@@ -22,4 +23,5 @@ workers_prod = [
 ]
 
 workers_dev = workers_prod.copy()
+workers_dev.insert(workers_dev.index(ReadDocWorker) + 1, PreDumpWorker)
 workers_dev.append(DumpWorker)
