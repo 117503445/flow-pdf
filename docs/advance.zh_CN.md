@@ -4,7 +4,7 @@
 
 通过自己部署 Docker 镜像，可以解除文件大小的限制。
 
-[可选] 下载镜像
+[可选] 从国内镜像站下载镜像
 
 ```sh
 docker pull registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf && docker tag registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf 117503445/flow-pdf
@@ -56,8 +56,8 @@ poetry install
 
 ```yaml
 path:
-  input: ./data
-  output: /tmp/flow-pdf/out
+  input: ./data/in
+  output: /tmp/flow-pdf/out # 使用 tmp 文件夹，避免硬盘读写，增加性能
 
 files:
   - bitcoin
@@ -69,12 +69,22 @@ files:
 poetry run python flow_pdf/main.py
 ```
 
-也可以挂载文件夹
+也可以挂载 tmp 文件夹
 
 ```sh
-# TODO update doc
 mkdir -p /tmp/flow-pdf/out
 ln -s /tmp/flow-pdf/out ./data/out
+```
+
+然后更新配置文件
+
+```yaml
+path:
+  input: ./data/in
+  output: ./data/out # <--- updated
+
+files:
+  - bitcoin
 ```
 
 ### Web 端
@@ -101,7 +111,7 @@ pnpm install
 pnpm run dev
 ```
 
-### 镜像构建
+### 镜像构建推送
 
 ```sh
 docker build -t 117503445/flow-pdf .

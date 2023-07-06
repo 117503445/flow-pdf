@@ -1,15 +1,22 @@
 # flow-pdf
 
-<https://flow-pdf.117503445.top>
+flow-pdf 是一个强大的 PDF to HTML 转换器，具有以下特点：
 
-现代化的 PDF 阅读体验！
+- 全文自动翻译：flow-pdf 适配全文自动翻译功能，支持中英文对照，让您在阅读英文文献时不再需要翻译软件。
 
-- 保留公式位置的正确翻译
-- 自定义文字样式（字体，大小 ...
+- 行内公式位置正确：flow-pdf 能够正确处理行内公式的位置，确保转换后的 HTML 文档中的公式显示准确无误，甚至翻译结果中公式也处于正确的位置。
 
-![demo](./docs/demo.png)
+- 图表显示正常：flow-pdf 能够正确识别 PDF 文档中的图表，并将其嵌入到转换后的 HTML 文档中，确保图表正常显示。
 
-## 翻译
+- 自定义样式：flow-pdf 支持自定义样式，您可以使用自己喜欢的字体进行文档阅读。
+
+<img src="./docs/demo.png" alt="demo" max-width="800px">
+
+## 使用方法
+
+前往测试网站 <https://flow-pdf.117503445.top>
+
+### 翻译
 
 目前翻译功能基于 [沉浸式翻译](https://immersive-translate.owenyoung.com) 拓展
 
@@ -17,11 +24,11 @@
 
 然后在拓展设置中点击翻译按钮，或配置自动开启翻译
 
-![entry](./docs/entry.png)
+<img src="./docs/entry.png" alt="entry" max-width="200px">
 
 （值得一提的是，这个拓展真的好用！
 
-## 注意事项
+### 注意事项
 
 - 现在还处于内测阶段，在解析某些 PDF 时可能会出现错误，请把错误的 PDF 发送给开发者。
-- 目前只处理 20MB 内的 PDF，且处理结果在 7 天后会自动删除。如果需要长期使用，可以根据 [进阶技巧](./docs/advance.zh_CN.md) 自建实例。
+- 目前只处理 20MB 内的 PDF，且处理结果在 7 天后会自动删除。如果需要长期使用，可以根据 [进阶使用技巧](./docs/advance.zh_CN.md) 自建实例。
