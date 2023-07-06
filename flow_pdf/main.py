@@ -57,8 +57,12 @@ if __name__ == "__main__":
         for d in dir_output.glob("*"):
             if not d.is_file():
                 shutil.rmtree(d)
+            elif d.name == "log.txt":
+                file.write_text(d, "")  
             else:
                 d.unlink()
+    else:
+        dir_output.mkdir(parents=True)
 
     logger.info(f"version: {version}")
 

@@ -106,13 +106,15 @@ class ReadDocWorker(PageWorker):
                 rects.append(b)
             add_annot(page, rects, "block", "blue")
 
-            # drawings
-            rects = []
-            for drawing in drawings:
-                rects.append(drawing['rect'])
-            add_annot(page, rects, 'drawing', 'red')
+            # # drawings
+            # rects = []
+            # for drawing in drawings:
+            #     rects.append(drawing['rect'])
+            # add_annot(page, rects, 'drawing', 'red')
 
             page.get_pixmap(dpi=150).save(doc_in.dir_output / "pre-marked" / f"{page_index}.png")  # type: ignore
+
+            # self.logger.debug(f'page[{page_index}] finished')
 
             return (
                 PageOutParams(page_info, drawings, blocks, images, width, height),
