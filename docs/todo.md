@@ -65,7 +65,7 @@ lines relayout
 
 Block 延展
 
-- /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/pre-marked/4.png
+- [x] /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/pre-marked/4.png
 - /root/project/flow-pdf/data/out/Abraham et al. - 2022 - Efficient and Adaptively Secure Asynchronous Binar/marked/28.png
 - /root/project/flow-pdf/data/out/Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance/marked/6.png
 - /root/project/flow-pdf/data/out/Gai et al. - 2022 - Devouring the Leader Bottleneck in BFT Consensus/marked/15.png
@@ -140,9 +140,9 @@ shot 延伸过多
 
 column 漏报
 
-- /root/project/flow-pdf/data/out/Sankar 等。 - 2017 - Survey of consensus protocols on blockchain applic/marked/0.png
+- /root/project/flow-pdf/data/out/Sankar 等。 - 2017 - Survey of consensus protocols on blockchain applic/marked/0.png(文档结构有问题)
 
-shot 延展不足
+shot 延展不足 [x]
 
-- /root/project/flow-pdf/data/out/Solutions to Scalability of Blockchain_A Survey/marked/2.png
-- /root/project/flow-pdf/data/out/Toshniwal 等。 - 2014 - Storm@ twitter/marked/4.png
+- [x] /root/project/flow-pdf/data/out/Solutions to Scalability of Blockchain_A Survey/marked/2.png
+- [x] /root/project/flow-pdf/data/out/Toshniwal 等。 - 2014 - Storm@ twitter/marked/4.png
