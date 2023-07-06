@@ -12,7 +12,7 @@
 
 - 简洁 HTML：生成的 HTML 文档非常简洁，不会包含任何无用的标签。可以便捷转换为 Markdown 等格式。
 
-![demo](./docs/demo.png | width=600)
+<img src="./docs/demo.png" width="600">
 
 ## 使用方法
 
