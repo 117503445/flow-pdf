@@ -29,14 +29,11 @@ def get_files_from_dir():
         yield (file, Path("./data") / file.stem)
 
 
-logger = common.create_main_logger()
-logger.info(f"version: {version}")
+logger = common.create_file_logger(dir_output)
 
 
 def create_task(file_input: Path, dir_output: Path):
-    # TODO when enable pbar, just write to file
-    if disable_pbar:
-        logger.info(f"start {file_input.name}")
+    logger.info(f"start {file_input.name}")
     t = time.perf_counter()
     # if dir_output.exists():
     #     shutil.rmtree(dir_output)
@@ -48,11 +45,9 @@ def create_task(file_input: Path, dir_output: Path):
     try:
         e.execute()
     except Exception as e:
-        if disable_pbar:
-            logger.error(f"{file_input.name} failed")
+        logger.error(f"{file_input.name} failed")
         file.write_text(dir_output / "error.txt", traceback.format_exc())
-    if disable_pbar:
-        logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")
+    logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")
 
 
 if __name__ == "__main__":
@@ -60,7 +55,16 @@ if __name__ == "__main__":
 
     if dir_output.exists():
         for d in dir_output.glob("*"):
-            shutil.rmtree(d)
+            if not d.is_file():
+                shutil.rmtree(d)
+            elif d.name == "log.txt":
+                file.write_text(d, "")  
+            else:
+                d.unlink()
+    else:
+        dir_output.mkdir(parents=True)
+
+    logger.info(f"version: {version}")
 
     with tqdm(total=len(files), disable=disable_pbar) as progress:
         with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:

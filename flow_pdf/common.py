@@ -19,4 +19,23 @@ def create_main_logger():
     return logger
 
 
+def create_file_logger(dir_output: Path):
+    logger = logging.getLogger("main")
+    logger.setLevel(logging.DEBUG)
+
+    if not dir_output.exists():
+        dir_output.mkdir(parents=True)
+
+    file_handler = logging.FileHandler(dir_output / "log.txt")
+
+    formatter = logging.Formatter(
+        "%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
+        datefmt="%Y-%m-%d:%H:%M:%S",
+    )
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    return logger
+
+
 version = file.read_text(Path(__file__).parent / "git.txt")

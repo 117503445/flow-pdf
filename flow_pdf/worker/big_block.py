@@ -4,7 +4,7 @@ from .common import (
     rectangle_relation,
     RectRelation,
     get_min_bounding_rect,
-    frequent_sub_array
+    frequent_sub_array,
 )
 from .common import (
     DocInputParams,
@@ -32,6 +32,7 @@ from dataclasses import dataclass
 @dataclass
 class DocInParams(DocInputParams):
     big_text_width_range: Range
+    big_text_line_height_range: Range
     big_text_columns: list[Range]
 
     most_common_font: str
@@ -55,6 +56,8 @@ class DocOutParams(DocOutputParams):
 class PageOutParams(PageOutputParams):
     big_blocks: list[list[MTextBlock]]  # column -> blocks
 
+    text_blocks_bbox: list[list[Rectangle]]  # column -> bbox, for shot
+
 
 @dataclass
 class LocalPageOutParams(LocalPageOutputParams):
@@ -69,8 +72,12 @@ class BigBlockWorker(PageWorker):
             [] for _ in range(len(doc_in.big_text_columns))
         ]
 
+        text_blocks_bbox: list[list[Rectangle]] = [
+            [] for _ in range(len(doc_in.big_text_columns))
+        ]
+
         if page_index in doc_in.abnormal_size_pages:
-            return PageOutParams(big_blocks), LocalPageOutParams()
+            return PageOutParams(big_blocks, text_blocks_bbox), LocalPageOutParams()
 
         blocks = page_in.page_info.get_text_blocks()
 
@@ -90,6 +97,12 @@ class BigBlockWorker(PageWorker):
                     # if (near_lines_count / len(b.lines)) > 0.8 or (near_lines_count == 1 and len(b.lines) != 1):
                     #     big_blocks[i].append(b)
                     break
+
+        bbox_list = []
+        for drawing in page_in.drawings:
+            bbox_list.append(drawing["rect"])
+        for b in page_in.page_info.get_text_blocks():
+            bbox_list.append(b.bbox)
 
         def is_big_block(block: MTextBlock):
             def is_in_width_range(block: MTextBlock):
@@ -157,6 +170,21 @@ class BigBlockWorker(PageWorker):
                         return False
                 return True
 
+            # For less large blocks, a more rigorous examination is required
+            def is_middle_block_ok(block: MTextBlock):
+                if block.bbox.height() >= doc_in.big_text_line_height_range.max * 3.5:
+                    return True
+
+                counter = 0
+
+                for b in bbox_list:
+                    if rectangle_relation(block.bbox, b) != RectRelation.NOT_INTERSECT:
+                        counter += 1
+                        if counter >= 2:
+                            return False
+
+                return True
+
             judgers = [
                 (is_in_width_range, False),
                 (is_line_y_increase, False),  # lines maybe in same y
@@ -164,9 +192,13 @@ class BigBlockWorker(PageWorker):
                 (is_not_be_contained, True),
                 (is_enough_lower, True),
                 (is_single_line_has_end, False),  # like bitcoin
+                (is_middle_block_ok, True),
             ]
             for judger, enabled in judgers:
                 if enabled and not judger(block):
+                    self.logger.debug(
+                        f"page[{page_index}], block[{block.number}] judger {judger.__name__} failed"
+                    )
                     return False
             return True
 
@@ -208,6 +240,11 @@ class BigBlockWorker(PageWorker):
                     cur_block.bbox.y1 = max(cur_block.bbox.y1, next_block.bbox.y1)
                     cur_block.bbox.x1 = max(cur_block.bbox.x1, next_block.bbox.x1)
                     del column_blocks[i + 1]
+
+        for i, column_blocks in enumerate(big_blocks):
+            for block in column_blocks:
+                text_blocks_bbox[i].append(block.bbox)
+            text_blocks_bbox[i].sort(key=lambda rect: rect.y0)
 
         # TODO Line
         # Aublin et al. - 2013 - Rbft Redundant byzantine fault tolerance
@@ -251,13 +288,6 @@ class BigBlockWorker(PageWorker):
                     max_intersection_spans: list[MSpan] = []
 
                     for spans in spans_list:
-                        # h = spans[0].bbox.height()
-                        # D = 0.2
-                        # if (
-                        #     spans[0].bbox.y0 - h * D <= span.bbox.y0
-                        #     and span.bbox.y1 <= spans[0].bbox.y1 + h * D
-                        # ):
-
                         intersection_start = max(span.bbox.y0, spans[0].bbox.y0)
                         intersection_end = min(span.bbox.y1, spans[0].bbox.y1)
                         radio = (
@@ -290,15 +320,19 @@ class BigBlockWorker(PageWorker):
         # split
         for i, column_blocks in enumerate(big_blocks):
             new_column_blocks: list[MTextBlock] = []
-            for b in column_blocks:
-
+            for j, b in enumerate(column_blocks):
                 MIN_DELTA = 5.0
                 deltas = []
                 for line in b.lines:
                     deltas.append(b.bbox.x1 - line.bbox.x1)
-                sub_d = frequent_sub_array(deltas, 1)
-                if len(sub_d) / len(deltas) > 0.6:
+                sub_d = frequent_sub_array(deltas, 2)
+
+                RIGHT_DISTANCE_THRESHOLD = 0.5
+                radio = len(sub_d) / len(deltas)
+                if radio > RIGHT_DISTANCE_THRESHOLD:
                     MIN_DELTA += sub_d[-1]
+
+                # self.logger.debug(f'page[{page_index}] column[{i}] j[{j}] radio: {radio}, MIN_DELTA: {MIN_DELTA}, deltas: {deltas}, sub_d: {sub_d}')
 
                 p_lines_list: list[list[MLine]] = [[]]
                 for j in range(len(b.lines)):
@@ -307,7 +341,7 @@ class BigBlockWorker(PageWorker):
 
                     # TODO
                     # Danezis et al. - 2022 - Narwhal and Tusk a DAG-based mempool and efficien 8
-                    
+
                     if b.bbox.x1 - line.bbox.x1 > MIN_DELTA:
                         p_lines_list.append([])
 
@@ -323,7 +357,7 @@ class BigBlockWorker(PageWorker):
 
             big_blocks[i] = new_column_blocks
 
-        return PageOutParams(big_blocks), LocalPageOutParams()
+        return PageOutParams(big_blocks, text_blocks_bbox), LocalPageOutParams()
 
     def after_run_page(  # type: ignore[override]
         self,

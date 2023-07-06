@@ -37,12 +37,14 @@ class DocInParams(DocInputParams):
 
 @dataclass
 class PageInParams(PageInputParams):
-    big_blocks: list[list[MTextBlock]]  # column -> blocks
+    # big_blocks: list[list[MTextBlock]]  # column -> blocks
     page_info: MPage
     drawings: list
 
     width: int
     height: int
+
+    text_blocks_bbox: list[list[Rectangle]] # column -> bbox, for shot
 
 
 @dataclass
@@ -67,11 +69,11 @@ def shot_between_blocks(
         shots: list[Shot] = []
 
         last_y = doc_in.core_y.min
-        for block in page_in.big_blocks[i]:
-            r = (column.min, last_y, column.max, block.bbox.y0)
+        for bbox in page_in.text_blocks_bbox[i]:
+            r = (column.min, last_y, column.max, bbox.y0)
             if r[3] - r[1] > 0:
                 shots.append([Rectangle(r[0], r[1], r[2], r[3])])
-            last_y = block.bbox.y1
+            last_y = bbox.y1
         shots.append([Rectangle(column.min, last_y, column.max, doc_in.core_y.max)])
 
         column_shots[i] = shots

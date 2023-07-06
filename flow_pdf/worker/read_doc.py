@@ -12,6 +12,7 @@ from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle
 import fitz
 from fitz import Page  # type: ignore
 from dataclasses import dataclass
+from htutil import file
 
 
 @dataclass
@@ -45,26 +46,11 @@ class LocalPageOutParams(LocalPageOutputParams):
 
 
 class ReadDocWorker(PageWorker):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.disable_cache = True
-
     def run_page(  # type: ignore[override]
         self, page_index: int, doc_in: DocInParams, page_in: PageInParams
     ) -> tuple[PageOutParams, LocalPageOutParams]:
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)
-
-            # if page_index == 0:
-            #     self.logger.info(f"p0 {page.mediabox}")
-            #     self.logger.info(f"p0 {page.rect}")
-            #     self.logger.info(f"p0 {page.cropbox}")
-
-            # if page_index == 1:
-            #     self.logger.info(f"p1 {page.mediabox}")
-            #     self.logger.info(f"p1 {page.rect}")
-            #     self.logger.info(f"p1 {page.cropbox}")
 
             raw_dict = page.get_text("rawdict")  # type: ignore
             page_info = init_mpage_from_mupdf(raw_dict)
@@ -78,39 +64,10 @@ class ReadDocWorker(PageWorker):
 
             width, height = page.mediabox_size
 
-            # block line
-            enable_block_line = True
-            for text_block in page_info.get_text_blocks():
-                rects: list[Rectangle] = []
-                for line in text_block.lines:
-                    rects.append(line.bbox)
-                add_annot(page, rects, "", "red")
-
-            # block
-            rects = []
-            for block in page_info.blocks:
-                delta = 0
-                if enable_block_line:
-                    delta = 3
-                b = Rectangle(
-                    block.bbox.x0 - delta,
-                    block.bbox.y0 - delta,
-                    block.bbox.x1 + delta,
-                    block.bbox.y1 + delta,
-                )
-                rects.append(b)
-            add_annot(page, rects, "", "blue")
-
-            page.get_pixmap(dpi=150).save(doc_in.dir_output / "pre-marked" / f"{page_index}.png")  # type: ignore
-
             return (
                 PageOutParams(page_info, drawings, blocks, images, width, height),
                 LocalPageOutParams(),
             )
-
-    def post_run_page(self, doc_in: DocInParams, page_in: list[PageInParams]):  # type: ignore[override]
-        for p in ["pre-marked"]:
-            (doc_in.dir_output / p).mkdir(parents=True, exist_ok=True)
 
     def after_run_page(  # type: ignore[override]
         self,

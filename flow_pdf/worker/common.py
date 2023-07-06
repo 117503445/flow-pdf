@@ -283,7 +283,9 @@ class ParamsStore:
         self.page_params[page_index][name] = value
 
 
-def is_common_span(span: MSpan, most_common_font: str, common_size_range: Range) -> bool:
+def is_common_span(
+    span: MSpan, most_common_font: str, common_size_range: Range
+) -> bool:
     if most_common_font and span.font != most_common_font:
         return False
     if common_size_range:
@@ -292,9 +294,7 @@ def is_common_span(span: MSpan, most_common_font: str, common_size_range: Range)
     return True
 
 
-def get_min_bounding_rect(
-    rects: list[Rectangle]
-) -> Rectangle:
+def get_min_bounding_rect(rects: list[Rectangle]) -> Rectangle:
     x0 = min(rects, key=lambda r: r.x0).x0
     y0 = min(rects, key=lambda r: r.y0).y0
     x1 = max(rects, key=lambda r: r.x1).x1
@@ -309,9 +309,7 @@ class RectRelation(Enum):
     INTERSECT = 3  # 相交
 
 
-def rectangle_relation(
-    rect1: Rectangle, rect2: Rectangle
-) -> RectRelation:
+def rectangle_relation(rect1: Rectangle, rect2: Rectangle) -> RectRelation:
     # 解析矩形参数
     x1_1, y1_1, x2_1, y2_1 = rect1.x0, rect1.y0, rect1.x1, rect1.y1
     x1_2, y1_2, x2_2, y2_2 = rect2.x0, rect2.y0, rect2.x1, rect2.y1
@@ -345,7 +343,7 @@ def add_annot(page: Page, rects: list[Rectangle], annot: str, color: str):
                 border_color=fitz.utils.getColor("black"),
             )
 
-        r = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y1) # type: ignore
+        r = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y1)  # type: ignore
         page.draw_rect(r, color=fitz.utils.getColor(color))  # type: ignore
 
 
