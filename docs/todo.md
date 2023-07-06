@@ -39,8 +39,8 @@
 - [x] 大规模数据集
 - [x] 前端上传文件后清除 input
 - [x] 基于位置进行 Block 合并
+- [x] fc 挂载 OSS
 - [ ] Shot 绝对大小
-- [ ] fc 挂载 OSS
 - [ ] fc-be 内网 endpoint / 挂载 OSS
 - [ ] fc 删除旧版本数据
 - [ ] Table of Contents
