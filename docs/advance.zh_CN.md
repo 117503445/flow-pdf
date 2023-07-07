@@ -2,7 +2,7 @@
 
 ## Docker 自部署
 
-通过自己部署 Docker 镜像，可以解除文件大小的限制。
+通过自己部署 Docker 镜像，可以解除文件大小、保存时间的限制。
 
 [可选] 从国内镜像站下载镜像
 
@@ -42,9 +42,9 @@ docker-compose up -d
 
 ### 核心解析逻辑
 
-相关代码位于 `flow_pdf/worker` 目录下，本地开发时使用 `flow_pdf/main.py` 进行调用。
+核心代码位于 `flow_pdf/worker` 目录下，本地开发时使用 `flow_pdf/main.py` 进行调用。
 
-安装环境
+安装依赖
 
 ```sh
 poetry install
@@ -60,7 +60,7 @@ path:
   output: /tmp/flow-pdf/out # 使用 tmp 文件夹，避免硬盘读写，增加性能
 
 files:
-  - bitcoin
+  - bitcoin # 不需要 .pdf 后缀
 ```
 
 运行
