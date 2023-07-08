@@ -81,6 +81,8 @@ Code big-block 漏报
 - /root/project/flow-pdf/data/out/Miller 等 - 2016 - The honey badger of BFT protocols/marked/6.png
 - /root/project/flow-pdf/data/out/Yin 等。 - 2019 - Hotstuff Bft consensus with linearity and respons/marked/4.png
 
+- data/out/Accelerating Blockchain Search of Full Nodes Using/marked/2.png
+
 Table big-block 漏报
 
 - /root/project/flow-pdf/data/out/Beaver 等。 - 2010 - Finding a needle in haystack Facebook's photo sto/marked/5.png
@@ -94,6 +96,14 @@ Table big-block 漏报
 其他原因 big-block 漏报
 
 - /root/project/flow-pdf/data/out/Buterin 等。 - 2020 - Combining GHOST and Casper/marked/24.png （公式）
+
+- data/out/DPF-ECC_A_Framework_for_Efficient_ECC_With_Double_Precision_Floating-Point_Computing_Power/marked/4.png
+- data/out/Scalable_Anomaly_Detection_Method_for_Blockchain_Transactions_using_GPU/marked/0.png
+- data/out/Scalable_Anomaly_Detection_Method_for_Blockchain_Transactions_using_GPU/marked/1.png
+- data/out/sDPF-RSA_Utilizing_Floating-point_Computing_Power_of_GPUs_for_Massive_Digital_Signature_Computations/marked/2.png
+- data/out/sDPF-RSA_Utilizing_Floating-point_Computing_Power_of_GPUs_for_Massive_Digital_Signature_Computations/marked/7.png
+- data/out/sDPF-RSA_Utilizing_Floating-point_Computing_Power_of_GPUs_for_Massive_Digital_Signature_Computations/marked/8.png
+- data/out/Towards_High-performance_X25519_448_Key_Agreement_in_General_Purpose_GPUs/marked/5.png
 
 panic
 
@@ -109,6 +119,7 @@ panic
 
 - Kotla 和 Dahlin - 2004 - High throughput Byzantine fault tolerance （PDF 格式有问题）
 
+- CPU-GPU_Collaborative_Acceleration_of_Bulletproofs_-_A_Zero-Knowledge_Proof_Algorithm
 split new block 误报 [x]
 
 - [x] /root/project/flow-pdf/data/out/Danezis et al. - 2022 - Narwhal and Tusk a DAG-based mempool and efficien/pre-marked/0.png （0.6 -> 0.5）
@@ -117,11 +128,15 @@ split new block 误报 [x]
 - [x] /root/project/flow-pdf/data/out/Neiheiser 等。 - 2021 - Kauri Scalable bft consensus with pipelined tree-/marked/4.png
 - [x] /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/4.png
 
+- Applied Cryptography, 2nd Edition
+
 split new block 漏报
 
 - /root/project/flow-pdf/data/out/Gilad 等。 - 2017 - Algorand Scaling byzantine agreements for cryptoc/marked/13.png
 - Kapritsos et al. - 2012 - All about eve Execute-verify replication for mult
 - /root/project/flow-pdf/data/out/Van Der Sar 等。 - 2019 - Yardstick A benchmark for minecraft-like services/marked/0.png
+
+- data/out/A survey of breakthrough in blockchain technology_Adoptions, applications, challenges and future research/marked/1.png
 
 多余截图 [x]
 
