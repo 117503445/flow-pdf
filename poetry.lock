@@ -829,6 +829,21 @@ files = [
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "python-markdown-generator"
+version = "0.1.0"
+description = "Python library for dynamically generating HTML sanitized Markdown syntax."
+optional = false
+python-versions = "^3.7"
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/Nicceboy/python-markdown-generator"
+reference = "HEAD"
+resolved_reference = "8b8801f39a34d053f53e3a2eb76a8553e6bee7eb"
+
+[[package]]
 name = "python-multipart"
 version = "0.0.6"
 description = "A streaming multipart parser for Python"
@@ -1344,4 +1359,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8cacb8ebf45544ad190898018ee4538a940681d68f1c9d85626484f0cbf8e5d4"
+content-hash = "f1bc880633cfa73695e74bdd9587b74ae3b255b92ae3e9a83208cd3e29269349"

@@ -40,9 +40,10 @@
 - [x] 前端上传文件后清除 input
 - [x] 基于位置进行 Block 合并
 - [x] fc 挂载 OSS
+- [x] fc 删除旧版本数据
+- [x] Markdown output
 - [ ] Shot 绝对大小
 - [ ] fc-be 内网 endpoint / 挂载 OSS
-- [ ] fc 删除旧版本数据
 - [ ] Table of Contents
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] shot 可复制文字 alt-data
@@ -50,7 +51,6 @@
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Docker CLI
-- [ ] Markdown output
 
 ## big-blocks
 
