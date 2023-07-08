@@ -1,5 +1,5 @@
 from .common import (
-    PageWorker,
+    Worker,
     is_common_span,
     rectangle_relation,
     RectRelation,
@@ -25,7 +25,7 @@ from .flow_type import (
     Point,
 )
 
-
+import concurrent.futures
 from dataclasses import dataclass
 
 
@@ -59,15 +59,50 @@ class PageOutParams(PageOutputParams):
     text_blocks_bbox: list[list[Rectangle]]  # column -> bbox, for shot
 
 
-@dataclass
-class LocalPageOutParams(LocalPageOutputParams):
-    pass
+class BigBlockWorker(Worker):
+    def run(  # type: ignore[override]
+        self, doc_in: DocInParams, page_in: list[PageInParams]
+    ) -> tuple[DocOutParams, list[PageOutParams]]:
+        try_times = 1
+        page_result = self.run_page_parallel(doc_in, page_in, try_times)
+        try:
+            doc_result = self.after_run_page(doc_in, page_in, page_result)
+            return doc_result, page_result
+        except Exception as e:
+            self.logger.warning(f"try_times = 1, error: {e}")
+            try_times += 1
+            page_result = self.run_page_parallel(doc_in, page_in, try_times)
+            doc_result = self.after_run_page(doc_in, page_in, page_result)
+            return doc_result, page_result
 
+    def run_page_parallel(
+        self, doc_in: DocInParams, page_in: list[PageInParams], try_times: int
+    ) -> list[PageOutParams]:
+        page_out = []
 
-class BigBlockWorker(PageWorker):
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = [
+                executor.submit(
+                    self.run_page, page_index, doc_in, page_in[page_index], try_times
+                )
+                for page_index in range(doc_in.page_count)
+            ]
+            for future in futures:
+                p_out = future.result()
+                page_out.append(p_out)
+            return page_out
+
     def run_page(  # type: ignore[override]
-        self, page_index: int, doc_in: DocInParams, page_in: PageInParams
-    ) -> tuple[PageOutParams, LocalPageOutParams]:
+        self,
+        page_index: int,
+        doc_in: DocInParams,
+        page_in: PageInParams,
+        try_times: int,
+    ) -> PageOutParams:
+        """
+        try_times: 1, 2 ...
+        """
+
         big_blocks: list[list[MTextBlock]] = [
             [] for _ in range(len(doc_in.big_text_columns))
         ]
@@ -77,7 +112,7 @@ class BigBlockWorker(PageWorker):
         ]
 
         if page_index in doc_in.abnormal_size_pages:
-            return PageOutParams(big_blocks, text_blocks_bbox), LocalPageOutParams()
+            return PageOutParams(big_blocks, text_blocks_bbox)
 
         blocks = page_in.page_info.get_text_blocks()
 
@@ -135,6 +170,15 @@ class BigBlockWorker(PageWorker):
             def is_not_be_contained(block: MTextBlock):
                 # deep_root 0
                 for drawing in page_in.drawings:
+                    if try_times >= 2:
+                        r = drawing["rect"]
+                        if (
+                            r.x1 - r.x0 >= page_in.page_info.width * 0.5
+                            and r.y1 - r.y0 >= page_in.page_info.height * 0.5
+                        ):
+                            # like Bigtable A distributed storage system for structu
+                            # big drawing cover all block
+                            continue
                     if (
                         rectangle_relation(block.bbox, drawing["rect"])
                         == RectRelation.CONTAINED_BY
@@ -357,14 +401,13 @@ class BigBlockWorker(PageWorker):
 
             big_blocks[i] = new_column_blocks
 
-        return PageOutParams(big_blocks, text_blocks_bbox), LocalPageOutParams()
+        return PageOutParams(big_blocks, text_blocks_bbox)
 
     def after_run_page(  # type: ignore[override]
         self,
         doc_in: DocInParams,
         page_in: list[PageInParams],
         page_out: list[PageOutParams],
-        local_page_out: list[LocalPageOutParams],
     ) -> DocOutParams:
         block_list = [b for page in page_out for bs in page.big_blocks for b in bs]
         if not block_list:
