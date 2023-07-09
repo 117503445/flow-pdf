@@ -24,7 +24,7 @@ types-pillow = "^9.5.0.4"
 oss2 = "^2.18.0"
 tqdm = "^4.65.0"
 types-tqdm = "^4.65.0.1"
-python-markdown-generator = {git = "https://github.com/117503445/python-markdown-generator"}
+python-markdown-generator = "^0.1.0"
 
 [build-system]
 requires = ["poetry-core"]
