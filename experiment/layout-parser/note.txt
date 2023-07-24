@@ -1,0 +1,11 @@
+
+https://layout-parser.github.io/tutorials/installation
+https://github.com/facebookresearch/detectron2/blob/v0.4/INSTALL.md
+
+
+docker pull pytorch/pytorch:1.8.1-cuda11.1-cudnn8-runtime
+
+docker build -t layout-parser .
+
+docker run --name layout-parser --gpus=all --rm -it -v $PWD:/workspace layout-parser bash
+
