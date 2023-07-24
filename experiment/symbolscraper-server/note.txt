@@ -1,4 +1,4 @@
-docker run -p 7002:7002 dprl/symbolscraper-server:latest
+docker run --rm -p 7002:7002 dprl/symbolscraper-server:latest
 
 micromamba create -n asyncreq python=3.9
 micromamba activate asyncreq
