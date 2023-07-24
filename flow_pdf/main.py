@@ -14,14 +14,14 @@ from common import version
 cfg = yaml.load(Path("./config.yaml").read_text(), Loader=yaml.FullLoader)
 disable_pbar = not cfg["processbar"]["enabled"]
 
-dir_output = Path(cfg["path"]["output"])
+dir_output = Path(cfg["files"]["output"])
 
 
 def get_files_from_cfg():
-    dir_input = Path(cfg["path"]["input"])
+    dir_input = Path(cfg["files"]["input"])
 
-    for file in cfg["files"]:
-        yield (dir_input / f"{file}.pdf"), (dir_output / file)
+    for file in dir_input.glob("*.pdf"):
+        yield file, (dir_output / file.stem)
 
 
 def get_files_from_dir():

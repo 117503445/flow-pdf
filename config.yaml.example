@@ -1,4 +1,4 @@
-path:
+files:
   input: ./data/in
   output: /tmp/flow-pdf/out
 
@@ -8,7 +8,3 @@ processbar:
 compare:
   enabled: False
   target: ./data/target
-
-files:
-  - hotstuff
-  - bitcoin

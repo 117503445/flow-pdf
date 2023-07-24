@@ -38,4 +38,8 @@ def create_file_logger(dir_output: Path):
     return logger
 
 
-version = file.read_text(Path(__file__).parent / "git.txt")
+file_git = Path(__file__).parent / "git.txt"
+if file_git.exists():
+    version = file.read_text(file_git)
+else:
+    version = 'dev'
