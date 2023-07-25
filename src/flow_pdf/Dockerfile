@@ -28,7 +28,6 @@ COPY --from=be-build /root/app/.venv /root/app/.venv
 COPY --from=fe-build /root/fe/dist /root/app/fe/dist
 
 COPY flow_pdf flow_pdf
-COPY script script
 
 WORKDIR /root/app/flow_pdf
 EXPOSE 8080
