@@ -17,3 +17,17 @@ services:
       - '8080:8080'
     stdin_open: true
     tty: true
+  flow-pdf-fe-dev:
+    build:
+      context: ./src/fe
+      dockerfile: Dockerfile_dev
+    container_name: flow-pdf-fe-dev
+
+    volumes:
+      - './src/fe:/workspace/fe'
+
+      - './vsc_extensions/fe:/root/.vscode-server/extensions'
+    ports:
+      - '5173:5173'
+    stdin_open: true
+    tty: true

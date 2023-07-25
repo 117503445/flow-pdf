@@ -9,3 +9,4 @@ config.yaml.new
 docker-compose-dev.yml
 .env
 vsc_extensions
+.pnpm-store
