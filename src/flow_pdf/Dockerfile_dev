@@ -1,0 +1,7 @@
+FROM registry.cn-hangzhou.aliyuncs.com/117503445-mirror/dev-python
+
+WORKDIR /workspace/flow_pdf
+# RUN code --install-extension ms-python.python humao.rest-client github.copilot
+# RUN pacman -Syu mypy --noconfirm
+# RUN conda deactivate
+SHELL [ "/bin/zsh" ]

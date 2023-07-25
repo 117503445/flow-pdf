@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  flow-pdf-dev:
+    build:
+      context: ./src/flow_pdf
+      dockerfile: Dockerfile_dev
+
+    container_name: flow-pdf-dev
+    # restart: unless-stopped
+    volumes:
+        - '${INPUT_PATH}:/workspace/flow_pdf/data/input'
+        - '${FLOWPDF_OUTPUT_PATH}:/workspace/flow_pdf/data/flow_pdf_out'
+
+        - './src/flow_pdf:/workspace/flow_pdf'
+        - './vsc_extensions/flow_pdf:/root/.vscode-server/extensions'
+    ports:
+      - '8080:8080'
+    stdin_open: true
+    tty: true
