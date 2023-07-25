@@ -10,7 +10,7 @@ WORKDIR /root
 
 FROM be-base as be-poetry
 RUN pip install poetry==1.4.2
-COPY poetry.lock pyproject.toml /root/
+COPY flow_pdf/poetry.lock flow_pdf/pyproject.toml /root/
 RUN poetry export -o requirements.txt
 
 FROM be-base as be-build
