@@ -9,6 +9,8 @@ services:
     # restart: unless-stopped
     volumes:
         - '${INPUT_PATH}:/workspace/flow_pdf/data/input'
+        - '${LAYOUT_PARSER_OUTPUT_PATH}:/workspace/flow_pdf/data/layout-parser-output'
+
         - '${FLOWPDF_OUTPUT_PATH}:/workspace/flow_pdf/data/flow_pdf_out'
 
         - './src/flow_pdf:/workspace/flow_pdf'
@@ -29,5 +31,28 @@ services:
       - './vsc_extensions/fe:/root/.vscode-server/extensions'
     ports:
       - '5173:5173'
+    stdin_open: true
+    tty: true
+  layout-parser-dev:
+    build:
+      context: ./src/layout-parser
+      dockerfile: Dockerfile
+
+    container_name: layout-parser-dev
+    # restart: unless-stopped
+    volumes:
+        - '${INPUT_PATH}:/workspace/layout-parser/data/input'
+        - '${LAYOUT_PARSER_OUTPUT_PATH}:/workspace/layout-parser/data/layout-parser-output'
+
+        - './src/layout-parser:/workspace/layout-parser'
+        - './vsc_extensions/layout-parser:/root/.vscode-server/extensions'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
     stdin_open: true
     tty: true
