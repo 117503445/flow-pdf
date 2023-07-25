@@ -20,7 +20,7 @@ dir_output = Path(cfg["files"]["output"])
 def get_files_from_cfg():
     dir_input = Path(cfg["files"]["input"])
 
-    for file in dir_input.glob("*.pdf"):
+    for file in dir_input.glob("**/*.pdf"):
         yield file, (dir_output / file.stem)
 
 

@@ -1,6 +1,6 @@
 files:
-  input: ./data/in
-  output: /tmp/flow-pdf/out
+  input: ./data/input
+  output: ./data/flow_pdf_out
 
 processbar:
   enabled: True

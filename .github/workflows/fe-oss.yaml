@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/fe-oss.yaml"
-      - "fe/**"
+      - "src/fe/**"
 
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
 
       - name: build dist
         run: |
-          cd ./fe
+          cd ./src/fe
           pnpm install
           pnpm build-cloud
 
@@ -40,4 +40,4 @@ jobs:
           accessKeySecret: ${{ secrets.ACCESS_KEY_SECRET }}
           bucket: flow-pdf-fe
           endpoint: https://oss-cn-hangzhou.aliyuncs.com
-          folder: ./fe/dist
+          folder: ./src/fe/dist

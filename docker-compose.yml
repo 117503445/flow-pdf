@@ -1,15 +1,33 @@
 version: '3.9'
 services:
-  flow-pdf:
-    image: '117503445/flow-pdf'
-    container_name: flow-pdf
-    restart: unless-stopped
+  flow-pdf-dev:
+    build:
+      context: ./src/flow_pdf
+      dockerfile: Dockerfile_dev
+
+    container_name: flow-pdf-dev
+    # restart: unless-stopped
     volumes:
-        - './web-data:/root/app/flow_pdf/web-data'
+        - '${INPUT_PATH}:/workspace/flow_pdf/data/input'
+        - '${FLOWPDF_OUTPUT_PATH}:/workspace/flow_pdf/data/flow_pdf_out'
+
+        - './src/flow_pdf:/workspace/flow_pdf'
+        - './vsc_extensions/flow_pdf:/root/.vscode-server/extensions'
     ports:
       - '8080:8080'
-    deploy:
-      resources:
-        limits:
-          cpus: '16'
-          memory: '8G'
+    stdin_open: true
+    tty: true
+  flow-pdf-fe-dev:
+    build:
+      context: ./src/fe
+      dockerfile: Dockerfile_dev
+    container_name: flow-pdf-fe-dev
+
+    volumes:
+      - './src/fe:/workspace/fe'
+
+      - './vsc_extensions/fe:/root/.vscode-server/extensions'
+    ports:
+      - '5173:5173'
+    stdin_open: true
+    tty: true

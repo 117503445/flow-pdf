@@ -1,0 +1,7 @@
+FROM 117503445/dev-front
+
+WORKDIR /workspace/fe
+# RUN code --install-extension ms-python.python humao.rest-client github.copilot
+# RUN pacman -Syu mypy --noconfirm
+# RUN conda deactivate
+SHELL [ "/bin/zsh" ]
