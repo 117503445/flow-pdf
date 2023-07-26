@@ -1,15 +1,15 @@
 files:
-  input: ./data/input
-  output: ./data/flow_pdf_out
-
-processbar:
-  enabled: True
-
+  path: ./data
+  
   tags:
     include:
       - main
     exclude:
       - long
+      
+processbar:
+  enabled: True
+
 
 compare:
   enabled: False

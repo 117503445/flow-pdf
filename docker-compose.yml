@@ -47,6 +47,7 @@ services:
         - './src/layout-parser:/workspace/layout-parser'
         - './vsc_extensions/layout-parser:/root/.vscode-server/extensions'
     deploy:
+      replicas: ${ENABLE_LAYOUT_PARSER}
       resources:
         reservations:
           devices:
