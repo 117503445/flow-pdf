@@ -11,7 +11,7 @@ services:
         - '${INPUT_PATH}:/workspace/flow_pdf/data/input'
         - '${LAYOUT_PARSER_OUTPUT_PATH}:/workspace/flow_pdf/data/layout-parser-output'
 
-        - '${FLOWPDF_OUTPUT_PATH}:/workspace/flow_pdf/data/flow_pdf_out'
+        - '${FLOWPDF_OUTPUT_PATH}:/workspace/flow_pdf/data/flow_pdf_output'
 
         - './src/flow_pdf:/workspace/flow_pdf'
         - './vsc_extensions/flow_pdf:/root/.vscode-server/extensions'
@@ -33,6 +33,8 @@ services:
       - '5173:5173'
     stdin_open: true
     tty: true
+    deploy:
+      replicas: ${ENABLE_FE}
   layout-parser-dev:
     build:
       context: ./src/layout-parser

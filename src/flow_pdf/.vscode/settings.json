@@ -8,7 +8,17 @@
         }
     },
     "python.formatting.provider": "black",
-    "mypy.enabled": true,
     "python.defaultInterpreterPath": "/workspace/flow_pdf/.venv/bin",
-    "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy"
+    "mypy.enabled": true,
+    "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy",
+
+    "code-runner.clearPreviousOutput": true,
+    "code-runner.runInTerminal": true,
+    "code-runner.defaultLanguage": "python",
+    "code-runner.ignoreSelection": true,
+    // "code-runner.executorMapByGlob": {
+    //     "*": "poetry run python flow_pdf/main.py #"
+    // },
+    "code-runner.enableAppInsights": false,
+    "code-runner.customCommand": "poetry run python flow_pdf/main.py"
 }
