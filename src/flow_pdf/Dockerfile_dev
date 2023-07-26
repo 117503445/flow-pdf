@@ -1,7 +1,9 @@
 FROM 117503445/dev-python
 
 WORKDIR /workspace/flow_pdf
-# RUN code --install-extension ms-python.python humao.rest-client github.copilot
-# RUN pacman -Syu mypy --noconfirm
-# RUN conda deactivate
+
+COPY .devcontainer/init.sh /scripts/init.sh
+
+RUN /scripts/init.sh
+
 SHELL [ "/bin/zsh" ]
