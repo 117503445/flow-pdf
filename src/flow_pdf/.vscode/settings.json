@@ -8,5 +8,7 @@
         }
     },
     "python.formatting.provider": "black",
-    "mypy.enabled": true
+    "mypy.enabled": true,
+    "python.defaultInterpreterPath": "/workspace/flow_pdf/.venv/bin",
+    "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy"
 }

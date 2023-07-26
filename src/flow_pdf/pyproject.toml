@@ -26,6 +26,9 @@ tqdm = "^4.65.0"
 types-tqdm = "^4.65.0.1"
 python-markdown-generator = "^0.1.0"
 
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.4.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

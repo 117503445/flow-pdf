@@ -20,7 +20,7 @@ dir_data = Path(cfg["files"]["path"])
 dir_output = dir_data / "flow_pdf_output"
 
 
-def get_files_from_cfg():
+def get_files_from_cfg() -> list[tuple[Path, Path]]:
     dir_input = dir_data / 'input'
 
     tags_include = set(cfg["files"]["tags"]['include'])

@@ -42,12 +42,13 @@
 - [x] fc 挂载 OSS
 - [x] fc 删除旧版本数据
 - [x] Markdown output
+- [x] fc-be 内网 endpoint / 挂载 OSS
+- [ ] 行末连字符处理
+- [ ] 行内斜体识别
 - [ ] Shot 绝对大小
-- [ ] fc-be 内网 endpoint / 挂载 OSS
 - [ ] Table of Contents
 - [ ] Ligature 连字识别 (Hotstuff)
 - [ ] shot 可复制文字 alt-data
-- [ ] 斜体识别
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Docker CLI

@@ -1,13 +1,12 @@
 import os
 import json
-import common  # type: ignore
-from common import version
+from common import version, create_main_logger
 from worker import Executer, ExecuterConfig, workers_prod  # type: ignore
 from pathlib import Path
 from htutil import file
 import shutil
 
-logger = common.create_main_logger()
+logger = create_main_logger()
 logger.info(f"version: {version}")
 
 eventsStr = os.getenv("FC_CUSTOM_CONTAINER_EVENT")
