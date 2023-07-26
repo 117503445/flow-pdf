@@ -158,8 +158,10 @@ class JSONGenWorker(PageWorker):
                                         t += char.c
 
                                 if len(chidren) > 0 and chidren[-1]["type"] == "text":
-                                    # TODO
-                                    chidren[-1]["text"] += f" {t}"
+                                    # when line end with '-', no need to add extra space
+                                    if chidren[-1]["text"][-1] != "-":
+                                        t = ' '+ t
+                                    chidren[-1]["text"] += t
                                 else:
                                     chidren.append(
                                         {
