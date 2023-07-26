@@ -5,6 +5,12 @@ files:
 processbar:
   enabled: True
 
+  tags:
+    include:
+      - main
+    exclude:
+      - long
+
 compare:
   enabled: False
   target: ./data/target

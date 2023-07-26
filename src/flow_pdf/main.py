@@ -20,8 +20,20 @@ dir_output = Path(cfg["files"]["output"])
 def get_files_from_cfg():
     dir_input = Path(cfg["files"]["input"])
 
-    for file in dir_input.glob("**/*.pdf"):
-        yield file, (dir_output / file.stem)
+    tags_include = set(cfg["files"]["tags"]['include'])
+    tags_exclude = set(cfg["files"]["tags"]['exclude'])
+
+    files = []
+
+    for f in dir_input.glob("**/*.pdf"):
+        file_meta = f.parent / (f.stem + ".json")
+        if file_meta.exists():
+            meta = file.read_json(file_meta)
+            tags = set(meta["tags"])
+            if tags_include & tags and not tags_exclude & tags:
+                files.append((f, (dir_output / f.stem)))
+
+    return files
 
 
 def get_files_from_dir():
