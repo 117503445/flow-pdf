@@ -71,7 +71,7 @@ if __name__ == "__main__":
             else:
                 d.unlink()
 
-    dir_view = dir_data / "flow_pdf_view"
+    dir_view = dir_data.parent / "flow_pdf_view"
     if dir_view.exists():
         shutil.rmtree(dir_view)
       

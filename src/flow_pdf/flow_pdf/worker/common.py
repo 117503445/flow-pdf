@@ -343,7 +343,9 @@ def add_annot(page: Page, rects: list[Rectangle], annot: str, color: str):
                 border_color=fitz.utils.getColor("black"),
             )
 
-        r = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y1)  # type: ignore
+        r = fitz.Rect(*rect.to_tuple())
+
+        # r = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y1)  # type: ignore
         page.draw_rect(r, color=fitz.utils.getColor(color))  # type: ignore
 
 

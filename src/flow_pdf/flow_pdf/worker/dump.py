@@ -45,6 +45,7 @@ class PageInParams(PageInputParams):
     image_blocks: list[dict]
     images: list
     drawings: list
+    inline_shots: list[ShotR]
 
 
 @dataclass
@@ -75,7 +76,7 @@ class DumpWorker(PageWorker):
             page: Page = doc.load_page(page_index)  # type: ignore
 
 
-            page.get_pixmap(dpi=150).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
+            page.get_pixmap(dpi=144).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
 
             # block line
             # for block in page_in.page_info.get_text_blocks():
@@ -94,24 +95,27 @@ class DumpWorker(PageWorker):
             #     add_annot(page, rects, "", "purple")
 
             # block common span
-            # for block in page_in.raw_dict["blocks"]:
-            #     rects = []
-            #     if block["type"] == 0:
-            #         for line in block.lines:
-            #             for span in line.spans:
-            #                 if is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
-            #                     rects.append(span.bbox)
-            #     add_annot(page, rects, "", "purple")
+            rects = []
+            for blocks in page_in.big_blocks:
+                for block in blocks:
+                    for line in block.lines:
+                        for span in line.spans:
+                            if is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
+                                rects.append(span.bbox)
+            add_annot(page, rects, "", "purple")
 
             # block not common span
-            # rects = []
-            # for blocks in page_in.big_blocks:
-            #     for block in blocks:
-            #             for line in block.lines:
-            #                 for span in line.spans:
-            #                     if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
-            #                         rects.append(span.bbox)
-            # add_annot(page, rects, "", "red")
+            rects = []
+            for blocks in page_in.big_blocks:
+                for block in blocks:
+                    for line in block.lines:
+                        for span in line.spans:
+                            if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
+                                rects.append(span.bbox)
+            add_annot(page, rects, "", "red")
+
+            # inline shots
+            add_annot(page, page_in.inline_shots, "", "blue")
 
             # new line
             # rects = []
@@ -149,30 +153,30 @@ class DumpWorker(PageWorker):
             #         add_annot(page, shot, "shot-r", "green")
 
             # big block
-            for c in page_in.big_blocks:
-                rects = []
-                for block in c:
-                    rects.append(block.bbox)
-                add_annot(page, rects, "big-block", "blue")
+            # for c in page_in.big_blocks:
+            #     rects = []
+            #     for block in c:
+            #         rects.append(block.bbox)
+            #     add_annot(page, rects, "big-block", "blue")
 
             # big block line
-            for c in page_in.big_blocks:
-                rects = []
-                for block in c:
-                    for line in block.lines:
-                        rects.append(line.bbox)
-                add_annot(page, rects, "", "purple")
+            # for c in page_in.big_blocks:
+            #     rects = []
+            #     for block in c:
+            #         for line in block.lines:
+            #             rects.append(line.bbox)
+            #     add_annot(page, rects, "", "purple")
 
             # shot in column view
-            if page_index in doc_in.abnormal_size_pages:
-                rects = page_in.shot_rects[0][0]
-                add_annot(page, rects, "shot-abnormal-page", "green")
-            else:
-                for shots in page_in.shot_rects:
-                    rects = []
-                    for shot in shots:
-                        rects.append(get_min_bounding_rect(shot))
-                    add_annot(page, rects, "shot", "green")
+            # if page_index in doc_in.abnormal_size_pages:
+            #     rects = page_in.shot_rects[0][0]
+            #     add_annot(page, rects, "shot-abnormal-page", "green")
+            # else:
+            #     for shots in page_in.shot_rects:
+            #         rects = []
+            #         for shot in shots:
+            #             rects.append(get_min_bounding_rect(shot))
+            #         add_annot(page, rects, "shot", "green")
 
             file.write_json(
                 doc_in.dir_output / "shot_rects" / f"{page_index}.json",
@@ -191,7 +195,7 @@ class DumpWorker(PageWorker):
                 rects.append(r)
             add_annot(page, rects, "", "pink")
 
-            page.get_pixmap(dpi=150).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
+            page.get_pixmap(dpi=144).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
 
         return PageOutParams(), LocalPageOutParams()
 

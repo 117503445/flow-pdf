@@ -1,21 +1,14 @@
+import json
 from pathlib import Path
-from htutil import file
 
 meta_version = '0.0.1'
 
-dir_input = Path('data') / 'in'
+tags = input('tags: ').split(' ')
+
+dir_input = Path(__file__) .parent / 'input'
 for f in dir_input.glob('*.pdf'):
     f_dest = dir_input / f'{f.stem}.json'
-    file.write_json(f_dest, {
+    f_dest.write_text(json.dumps({
         'version': meta_version,
-        'tags': ['cc'],
-    })
-
-
-dir_input = Path('data') / 'in_qht'
-for f in dir_input.glob('*.pdf'):
-    f_dest = dir_input / f'{f.stem}.json'
-    file.write_json(f_dest, {
-        'version': meta_version,
-        'tags': ['qht'],
-    })
+        'tags': tags,
+    }, ensure_ascii=False, indent=4))

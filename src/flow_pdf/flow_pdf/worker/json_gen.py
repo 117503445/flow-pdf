@@ -54,7 +54,7 @@ class DocOutParams(DocOutputParams):
 
 @dataclass
 class PageOutParams(PageOutputParams):
-    pass
+    inline_shots: list[ShotR]
 
 
 @dataclass
@@ -107,26 +107,50 @@ class JSONGenWorker(PageWorker):
                         page_shot.draw_rect((r.x0, r.y1, r.x1, max_y), color=color, fill=color)  # type: ignore
                 page_shot.get_pixmap(clip=get_min_bounding_rect(shot).to_tuple(), dpi=288).save(file_dest)  # type: ignore
 
+            def get_span_type(span: MSpan):
+                if is_common_span(
+                    span, doc_in.most_common_font, doc_in.common_size_range
+                ):
+                    span_type = "text"
+                else:
+                    span_type = "shot"
+                return span_type
+
+            inline_shots: list[ShotR] = []
+
+            SpanGroup = list[MSpan]
+
+            def make_groups(line: MLine) -> list[SpanGroup]:
+                """
+                group spans by type
+                """
+
+                spans = line.spans
+
+                groups: list[SpanGroup] = []
+                current_type = None
+                current_group: SpanGroup = []
+
+                for span in spans:
+                    if get_span_type(span) != current_type:
+                        if current_type is not None:
+                            groups.append(current_group)
+                        current_type = get_span_type(span)
+                        current_group = []
+                    current_group.append(span)
+
+                groups.append(current_group)
+                return groups
+
             shot_counter = 0
 
             block_elements = []
 
-            for c_i in range(len(doc_in.big_text_columns)):
-                blocks = page_in.big_blocks[c_i]
-                shots = page_in.shot_rects[c_i]
+            for column_index in range(len(doc_in.big_text_columns)):
+                blocks = page_in.big_blocks[column_index]
 
                 column_block_elements = []
                 for b in blocks:
-
-                    def get_span_type(span):
-                        if is_common_span(
-                            span, doc_in.most_common_font, doc_in.common_size_range
-                        ):
-                            span_type = "text"
-                        else:
-                            span_type = "shot"
-                        return span_type
-
                     p = {
                         "type": "paragraph",
                         "children": [],
@@ -134,23 +158,9 @@ class JSONGenWorker(PageWorker):
                     }
                     chidren: list = p["children"]  # type: ignore
                     for line in b.lines:
-                        spans = line.spans
+                        groups = make_groups(line)
 
-                        result: list[list[MSpan]] = []
-                        current_value = None
-                        current_group: list[MSpan] = []
-
-                        for span in spans:
-                            if get_span_type(span) != current_value:
-                                if current_value is not None:
-                                    result.append(current_group)
-                                current_value = get_span_type(span)
-                                current_group = []
-                            current_group.append(span)
-
-                        result.append(current_group)
-
-                        for j, group in enumerate(result):
+                        for j, group in enumerate(groups):
                             if get_span_type(group[0]) == "text":
                                 t = ""
                                 for span in group:
@@ -158,9 +168,9 @@ class JSONGenWorker(PageWorker):
                                         t += char.c
 
                                 if len(chidren) > 0 and chidren[-1]["type"] == "text":
-                                    # when line end with '-', no need to add extra space
-                                    if chidren[-1]["text"][-1] != "-":
-                                        t = ' '+ t
+                                    # when last text item end with '-', no need to add extra space
+                                    if chidren[-1]["text"][-1] not in "- ":
+                                        t = " " + t
                                     chidren[-1]["text"] += t
                                 else:
                                     chidren.append(
@@ -184,28 +194,27 @@ class JSONGenWorker(PageWorker):
                                     shot_counter += 1
                                     x0 = group[0].bbox.x0
                                     if j != 0:
-                                        x0 = min(x0, result[j - 1][-1].bbox.x1)
+                                        x0 = min(x0, groups[j - 1][-1].bbox.x1)
 
                                     x1 = group[-1].bbox.x1
-                                    if j != len(result) - 1:
-                                        x1 = max(x0, result[j + 1][0].bbox.x0)
+                                    if j != len(groups) - 1:
+                                        x1 = max(x0, groups[j + 1][0].bbox.x0)
 
                                     r = Rectangle(x0, line.bbox.y0, x1, line.bbox.y1)
-                                    t_float = r.to_tuple()
-                                    # to int
-                                    t_int = (
-                                        int(t_float[0]),
-                                        int(t_float[1]),
-                                        int(t_float[2]),
-                                        int(t_float[3]),
-                                    )
+                                    inline_shots.append(r)
 
-                                    if t_int[0] >= t_int[2] or t_int[1] >= t_int[3]:
+                                    r_tuple = r.to_tuple()
+
+                                    MIN_SIDE_LEN = 1
+                                    if (
+                                        r_tuple[0] + MIN_SIDE_LEN >= r_tuple[2]
+                                        or r_tuple[1] + MIN_SIDE_LEN >= r_tuple[3]
+                                    ):
                                         self.logger.warning(
                                             f"page[{page_index}] Shot rect invalid: {r}"
                                         )
                                     else:
-                                        page.get_pixmap(clip=t_int, dpi=576).save(file_shot)  # type: ignore
+                                        page.get_pixmap(clip=r_tuple, dpi=576).save(file_shot)  # type: ignore
 
                                     chidren.append(
                                         {
@@ -214,6 +223,8 @@ class JSONGenWorker(PageWorker):
                                         }
                                     )
                     column_block_elements.append(p)
+
+                shots = page_in.shot_rects[column_index]
                 for shot in shots:
                     rect = get_min_bounding_rect(shot)
                     file_shot = (
@@ -240,7 +251,7 @@ class JSONGenWorker(PageWorker):
                     del e["y0"]
                 block_elements.extend(column_block_elements)
 
-        return PageOutParams(), LocalPageOutParams(block_elements)
+        return PageOutParams(inline_shots), LocalPageOutParams(block_elements)
 
     def post_run_page(self, doc_in: DocInParams, page_in: list[PageInParams]):  # type: ignore[override]
         (doc_in.dir_output / "output" / "assets").mkdir(parents=True, exist_ok=True)

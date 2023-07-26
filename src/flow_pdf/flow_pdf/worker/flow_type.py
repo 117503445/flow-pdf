@@ -48,6 +48,9 @@ class Rectangle:
     def to_tuple(self) -> tuple[float, float, float, float]:
         return (self.x0, self.y0, self.x1, self.y1)
 
+    def to_int_tuple(self) -> tuple[int, int, int, int]:
+        return (int(self.x0), int(self.y0), int(self.x1), int(self.y1))
+
     def __repr__(self) -> str:
         return f"Rectangle({self.x0}, {self.y0}, {self.x1}, {self.y1})"
     
