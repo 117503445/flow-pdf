@@ -44,6 +44,8 @@
 - [x] Markdown output
 - [x] fc-be 内网 endpoint / 挂载 OSS
 - [x] 行末连字符处理
+- [x] 行内公式延伸
+- [ ] 行内截图延伸
 - [ ] 行内斜体识别
 - [ ] Shot 绝对大小
 - [ ] Table of Contents

@@ -76,7 +76,7 @@ class DumpWorker(PageWorker):
             page: Page = doc.load_page(page_index)  # type: ignore
 
 
-            page.get_pixmap(dpi=144).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
+            page.get_pixmap(dpi=72*2).save(doc_in.dir_output / "raw" / f"{page_index}.png")  # type: ignore
 
             # block line
             # for block in page_in.page_info.get_text_blocks():
@@ -195,7 +195,7 @@ class DumpWorker(PageWorker):
                 rects.append(r)
             add_annot(page, rects, "", "pink")
 
-            page.get_pixmap(dpi=144).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
+            page.get_pixmap(dpi=72*5).save(doc_in.dir_output / "marked" / f"{page_index}.png")  # type: ignore
 
         return PageOutParams(), LocalPageOutParams()
 

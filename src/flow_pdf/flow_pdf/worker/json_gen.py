@@ -28,7 +28,7 @@ from .flow_type import (
     MLine,
     MSpan,
 )
-
+from typing import Optional
 
 @dataclass
 class DocInParams(DocInputParams):
@@ -118,7 +118,11 @@ class JSONGenWorker(PageWorker):
 
             inline_shots: list[ShotR] = []
 
-            SpanGroup = list[MSpan]
+            @dataclass
+            class SpanGroup:
+                spans: list[MSpan]
+                is_common: bool
+
 
             def make_groups(line: MLine) -> list[SpanGroup]:
                 """
@@ -127,19 +131,52 @@ class JSONGenWorker(PageWorker):
 
                 spans = line.spans
 
-                groups: list[SpanGroup] = []
-                current_type = None
-                current_group: SpanGroup = []
+                d_span_is_common: dict[MSpan, bool] = {}
 
                 for span in spans:
-                    if get_span_type(span) != current_type:
-                        if current_type is not None:
-                            groups.append(current_group)
-                        current_type = get_span_type(span)
-                        current_group = []
-                    current_group.append(span)
+                    d_span_is_common[span] = is_common_span(
+                        span, doc_in.most_common_font, doc_in.common_size_range
+                    )
 
-                groups.append(current_group)
+                for i, cur_span in enumerate(spans):
+                    if not d_span_is_common[cur_span]:
+                        for j in [-1, 1]:
+                            while True:
+                                if i + j >= len(spans):
+                                    break
+                                next_span = spans[i + j]
+
+                                if not d_span_is_common[next_span]:
+                                    break
+
+                                if any([char.c.isalpha() for char in next_span.chars]):
+                                    break
+
+                                d_span_is_common[next_span] = False
+
+                                if j < 0:
+                                    j -= 1
+                                elif j > 0:
+                                    j += 1
+                                else:
+                                    raise
+
+                groups: list[SpanGroup] = []
+                current_type = None
+                current_group: Optional[SpanGroup] = None
+
+                for span in spans:
+                    if d_span_is_common[span] != current_type:
+                        current_type = d_span_is_common[span]
+                        current_group = SpanGroup([], current_type)
+                        groups.append(current_group)
+
+                    if current_group is not None:
+                        current_group.spans.append(span)
+                    else:
+                        raise
+
+                # groups.append(current_group)
                 return groups
 
             shot_counter = 0
@@ -161,9 +198,9 @@ class JSONGenWorker(PageWorker):
                         groups = make_groups(line)
 
                         for j, group in enumerate(groups):
-                            if get_span_type(group[0]) == "text":
+                            if group.is_common:
                                 t = ""
-                                for span in group:
+                                for span in group.spans:
                                     for char in span.chars:
                                         t += char.c
 
@@ -179,11 +216,11 @@ class JSONGenWorker(PageWorker):
                                             "text": t,
                                         }
                                     )
-                            elif get_span_type(group[0]) == "shot":
+                            else:
                                 if not (
-                                    len(group) == 1
-                                    and len(group[0].chars) == 1
-                                    and group[0].chars[0].c == " "
+                                    len(group.spans) == 1
+                                    and len(group.spans[0].chars) == 1
+                                    and group.spans[0].chars[0].c == " "
                                 ):  # space shoud be ignored, like zero.pdf
                                     file_shot = (
                                         doc_in.dir_output
@@ -192,13 +229,13 @@ class JSONGenWorker(PageWorker):
                                         / f"page_{page_index}_shot_{shot_counter}.png"
                                     )
                                     shot_counter += 1
-                                    x0 = group[0].bbox.x0
+                                    x0 = group.spans[0].bbox.x0
                                     if j != 0:
-                                        x0 = min(x0, groups[j - 1][-1].bbox.x1)
+                                        x0 = min(x0, groups[j - 1].spans[-1].bbox.x1)
 
-                                    x1 = group[-1].bbox.x1
+                                    x1 = group.spans[-1].bbox.x1
                                     if j != len(groups) - 1:
-                                        x1 = max(x0, groups[j + 1][0].bbox.x0)
+                                        x1 = max(x0, groups[j + 1].spans[0].bbox.x0)
 
                                     r = Rectangle(x0, line.bbox.y0, x1, line.bbox.y1)
                                     inline_shots.append(r)

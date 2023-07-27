@@ -91,6 +91,9 @@ class MChar:
     origin: Point
 
     def __init__(self, bbox: Rectangle, c: str, origin: Point):
+        if len(c) != 1:
+            raise ValueError("c must be a single character")
+        
         self.bbox = bbox
         self.c = c
         self.origin = origin
