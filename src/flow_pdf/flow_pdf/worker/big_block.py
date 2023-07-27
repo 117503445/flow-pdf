@@ -297,7 +297,10 @@ class BigBlockWorker(Worker):
             for i, b in enumerate(column_blocks):
                 spans: list[MSpan] = []
                 for line in b.lines:
-                    spans.extend(line.spans)
+                    for span in line.spans:
+                        s = ''.join([char.c for char in span.chars])
+                        if not s.isspace():
+                            spans.append(span)
 
                 spans.sort(key=lambda span: (span.bbox.x0, span.bbox.y0))
 

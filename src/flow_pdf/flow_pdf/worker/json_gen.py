@@ -142,7 +142,7 @@ class JSONGenWorker(PageWorker):
                     if not d_span_is_common[cur_span]:
                         for j in [-1, 1]:
                             while True:
-                                if i + j >= len(spans):
+                                if i + j >= len(spans) or i + j < 0:
                                     break
                                 next_span = spans[i + j]
 
@@ -150,6 +150,31 @@ class JSONGenWorker(PageWorker):
                                     break
 
                                 if any([char.c.isalpha() for char in next_span.chars]):
+                                    if j > 0:
+                                        k = 0
+                                        while k < len(next_span.chars):
+                                            if next_span.chars[k].c.isalpha():
+                                                break
+                                            k += 1
+                                        spans[i + j - 1].chars.extend(next_span.chars[:k])
+                                        spans[i + j - 1].bbox = get_min_bounding_rect([c.bbox for c in spans[i + j - 1].chars]) # TODO: auto update bbox
+                                        next_span.chars = next_span.chars[k:]
+                                        next_span.bbox = get_min_bounding_rect([c.bbox for c in next_span.chars])
+                                    elif j < 0:
+                                        k = len(next_span.chars) - 1
+                                        while k >= 0:
+                                            if next_span.chars[k].c.isalpha():
+                                                break
+                                            k -= 1
+                                        spans[i + j + 1].chars = next_span.chars[k + 1 :] + spans[
+                                            i + j + 1
+                                        ].chars
+                                        spans[i + j + 1].bbox = get_min_bounding_rect([c.bbox for c in spans[i + j + 1].chars])
+                                        next_span.chars = next_span.chars[:k + 1]
+                                        next_span.bbox = get_min_bounding_rect([c.bbox for c in next_span.chars])
+                                    else:
+                                        raise
+                                    
                                     break
 
                                 d_span_is_common[next_span] = False
@@ -229,15 +254,17 @@ class JSONGenWorker(PageWorker):
                                         / f"page_{page_index}_shot_{shot_counter}.png"
                                     )
                                     shot_counter += 1
-                                    x0 = group.spans[0].bbox.x0
-                                    if j != 0:
-                                        x0 = min(x0, groups[j - 1].spans[-1].bbox.x1)
+                                    # x0 = group.spans[0].bbox.x0
+                                    # if j != 0:
+                                    #     x0 = min(x0, groups[j - 1].spans[-1].bbox.x1)
 
-                                    x1 = group.spans[-1].bbox.x1
-                                    if j != len(groups) - 1:
-                                        x1 = max(x0, groups[j + 1].spans[0].bbox.x0)
+                                    # x1 = group.spans[-1].bbox.x1
+                                    # if j != len(groups) - 1:
+                                    #     x1 = max(x0, groups[j + 1].spans[0].bbox.x0)
 
-                                    r = Rectangle(x0, line.bbox.y0, x1, line.bbox.y1)
+                                    # r = Rectangle(x0, line.bbox.y0, x1, line.bbox.y1)
+                                    rects = [span.bbox for span in group.spans]
+                                    r = get_min_bounding_rect(rects)
                                     inline_shots.append(r)
 
                                     r_tuple = r.to_tuple()

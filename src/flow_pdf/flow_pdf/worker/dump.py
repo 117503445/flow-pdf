@@ -86,33 +86,33 @@ class DumpWorker(PageWorker):
             #     add_annot(page, rects, "", "red")
 
             # block span
-            # for block in page_in.raw_dict["blocks"]:
-            #     rects = []
-            #     if block["type"] == 0:
+            # rects = []
+            # for blocks in page_in.big_blocks:
+            #     for block in blocks:
             #         for line in block.lines:
             #             for span in line.spans:
-            #                 rects.append(span.bbox)
-            #     add_annot(page, rects, "", "purple")
+            #                     rects.append(span.bbox)
+            # add_annot(page, rects, "", "purple")
 
             # block common span
-            rects = []
-            for blocks in page_in.big_blocks:
-                for block in blocks:
-                    for line in block.lines:
-                        for span in line.spans:
-                            if is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
-                                rects.append(span.bbox)
-            add_annot(page, rects, "", "purple")
+            # rects = []
+            # for blocks in page_in.big_blocks:
+            #     for block in blocks:
+            #         for line in block.lines:
+            #             for span in line.spans:
+            #                 if is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
+            #                     rects.append(span.bbox)
+            # add_annot(page, rects, "", "purple")
 
             # block not common span
-            rects = []
-            for blocks in page_in.big_blocks:
-                for block in blocks:
-                    for line in block.lines:
-                        for span in line.spans:
-                            if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
-                                rects.append(span.bbox)
-            add_annot(page, rects, "", "red")
+            # rects = []
+            # for blocks in page_in.big_blocks:
+            #     for block in blocks:
+            #         for line in block.lines:
+            #             for span in line.spans:
+            #                 if not is_common_span(span, doc_in.most_common_font, doc_in.common_size_range):
+            #                     rects.append(span.bbox)
+            # add_annot(page, rects, "", "red")
 
             # inline shots
             add_annot(page, page_in.inline_shots, "", "blue")
