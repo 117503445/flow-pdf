@@ -153,11 +153,11 @@ class DumpWorker(PageWorker):
             #         add_annot(page, shot, "shot-r", "green")
 
             # big block
-            # for c in page_in.big_blocks:
-            #     rects = []
-            #     for block in c:
-            #         rects.append(block.bbox)
-            #     add_annot(page, rects, "big-block", "blue")
+            for c in page_in.big_blocks:
+                rects = []
+                for block in c:
+                    rects.append(block.bbox)
+                add_annot(page, rects, "big-block", "blue")
 
             # big block line
             # for c in page_in.big_blocks:
@@ -168,15 +168,15 @@ class DumpWorker(PageWorker):
             #     add_annot(page, rects, "", "purple")
 
             # shot in column view
-            # if page_index in doc_in.abnormal_size_pages:
-            #     rects = page_in.shot_rects[0][0]
-            #     add_annot(page, rects, "shot-abnormal-page", "green")
-            # else:
-            #     for shots in page_in.shot_rects:
-            #         rects = []
-            #         for shot in shots:
-            #             rects.append(get_min_bounding_rect(shot))
-            #         add_annot(page, rects, "shot", "green")
+            if page_index in doc_in.abnormal_size_pages:
+                rects = page_in.shot_rects[0][0]
+                add_annot(page, rects, "shot-abnormal-page", "green")
+            else:
+                for shots in page_in.shot_rects:
+                    rects = []
+                    for shot in shots:
+                        rects.append(get_min_bounding_rect(shot))
+                    add_annot(page, rects, "shot", "green")
 
             file.write_json(
                 doc_in.dir_output / "shot_rects" / f"{page_index}.json",

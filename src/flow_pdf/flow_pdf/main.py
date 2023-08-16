@@ -54,7 +54,7 @@ def create_task(file_input: Path, dir_output: Path):
     try:
         e.execute()
     except Exception as e:
-        logger.error(f"{file_input.name} failed")
+        logger.error(f"{file_input.name} failed, time = {time.perf_counter() - t:.2f}s")
         file.write_text(dir_output / "error.txt", traceback.format_exc())
     logger.info(f"end {file_input.name}, time = {time.perf_counter() - t:.2f}s")
 
