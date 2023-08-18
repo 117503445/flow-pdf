@@ -19,14 +19,12 @@ def create_main_logger():
     return logger
 
 
-def create_file_logger(dir_output: Path):
+def create_file_logger(file_output: Path):
     logger = logging.getLogger("main")
     logger.setLevel(logging.DEBUG)
 
-    if not dir_output.exists():
-        dir_output.mkdir(parents=True)
 
-    file_handler = logging.FileHandler(dir_output / "log.txt")
+    file_handler = logging.FileHandler(file_output)
 
     formatter = logging.Formatter(
         "%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",

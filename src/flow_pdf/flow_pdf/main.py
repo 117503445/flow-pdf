@@ -18,15 +18,22 @@ disable_pbar = not cfg["processbar"]["enabled"]
 dir_data = Path(cfg["files"]["path"])
 
 dir_output = dir_data / "flow_pdf_output"
+dir_output.mkdir(parents=True, exist_ok=True)
+
 
 def get_meta_path(f: Path) -> Path:
     return f.parent / (f.stem + ".json")
 
-def get_files_from_cfg() -> list[tuple[Path, Path]]:
-    dir_input = dir_data / 'input'
 
-    tags_include = set(cfg["files"]["tags"]['include'])
-    tags_exclude = set(cfg["files"]["tags"]['exclude'])
+def get_log_path(f: Path) -> Path:
+    return f / "log.txt"
+
+
+def get_files_from_cfg() -> list[tuple[Path, Path]]:
+    dir_input = dir_data / "input"
+
+    tags_include = set(cfg["files"]["tags"]["include"])
+    tags_exclude = set(cfg["files"]["tags"]["exclude"])
 
     files: list[tuple[Path, Path]] = []
 
@@ -40,7 +47,8 @@ def get_files_from_cfg() -> list[tuple[Path, Path]]:
 
     return files
 
-logger = common.create_file_logger(dir_output)
+
+logger = common.create_file_logger(get_log_path(dir_output))
 
 
 def create_task(file_input: Path, dir_output: Path):
@@ -69,15 +77,15 @@ if __name__ == "__main__":
             if not d.is_file():
                 shutil.rmtree(d)
             elif d.name == "log.txt":
-                file.write_text(d, "")  
+                file.write_text(d, "")
             else:
                 d.unlink()
 
     dir_view = dir_data.parent / "flow_pdf_view"
     if dir_view.exists():
         shutil.rmtree(dir_view)
-      
-    dir_view.mkdir(parents=True)   
+
+    dir_view.mkdir(parents=True)
 
     for file_input, dir_out in files:
         dir_out.mkdir(parents=True)
@@ -86,9 +94,15 @@ if __name__ == "__main__":
         os.symlink(str(dir_out.absolute()), str(dir_dest.absolute()))
 
         os.symlink(str(file_input.absolute()), str(dir_dest / file_input.name))
-        os.symlink(str(get_meta_path(file_input).absolute()), str(dir_dest / get_meta_path(file_input).name))
-        
+        os.symlink(
+            str(get_meta_path(file_input).absolute()),
+            str(dir_dest / get_meta_path(file_input).name),
+        )
 
+    os.symlink(
+        str(get_log_path(dir_output).absolute()),
+        str(dir_view / get_log_path(dir_output).name),
+    )
 
     logger.info(f"version: {version}")
 

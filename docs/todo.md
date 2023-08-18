@@ -54,7 +54,7 @@
 - [ ] list 识别支持
 - [ ] figure 识别支持
 - [ ] Docker CLI
-
+- [ ] 水印
 ## big-blocks
 
 - [x] dag 3
