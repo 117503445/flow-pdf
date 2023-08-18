@@ -19,6 +19,8 @@ dir_data = Path(cfg["files"]["path"])
 
 dir_output = dir_data / "flow_pdf_output"
 
+def get_meta_path(f: Path) -> Path:
+    return f.parent / (f.stem + ".json")
 
 def get_files_from_cfg() -> list[tuple[Path, Path]]:
     dir_input = dir_data / 'input'
@@ -29,7 +31,7 @@ def get_files_from_cfg() -> list[tuple[Path, Path]]:
     files: list[tuple[Path, Path]] = []
 
     for f in dir_input.glob("**/*.pdf"):
-        file_meta = f.parent / (f.stem + ".json")
+        file_meta = get_meta_path(f)
         if file_meta.exists():
             meta = file.read_json(file_meta)
             tags = set(meta["tags"])
@@ -77,11 +79,15 @@ if __name__ == "__main__":
       
     dir_view.mkdir(parents=True)   
 
-    for _, dir_out in files:
+    for file_input, dir_out in files:
         dir_out.mkdir(parents=True)
         dir_dest = dir_view / dir_out.name
         # dir_dest.mkdir(parents=True)
         os.symlink(str(dir_out.absolute()), str(dir_dest.absolute()))
+
+        os.symlink(str(file_input.absolute()), str(dir_dest / file_input.name))
+        os.symlink(str(get_meta_path(file_input).absolute()), str(dir_dest / get_meta_path(file_input).name))
+        
 
 
     logger.info(f"version: {version}")
