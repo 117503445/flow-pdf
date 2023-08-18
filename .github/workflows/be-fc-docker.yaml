@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/be-fc-docker.yaml"
-      - "be-fc/**"
+      - "src/be-fc/**"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - run: cd be-fc && ../script/write_git_info.sh
+      - run: cd src/be-fc && ../../script/write_git_info.sh
         env:
           SHA: ${{ github.sha }}
 
@@ -63,7 +63,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: ./be-fc
+          context: ./src/be-fc
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}

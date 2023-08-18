@@ -1,0 +1,16 @@
+files:
+  path: ./data
+  
+  tags:
+    include:
+      - main
+    exclude:
+      - long
+      
+processbar:
+  enabled: True
+
+
+compare:
+  enabled: False
+  target: ./data/target

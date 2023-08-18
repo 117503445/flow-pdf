@@ -1,15 +1,61 @@
 version: '3.9'
 services:
-  flow-pdf:
-    image: '117503445/flow-pdf'
-    container_name: flow-pdf
-    restart: unless-stopped
+  flow-pdf-dev:
+    build:
+      context: ./src/flow_pdf
+      dockerfile: Dockerfile_dev
+
+    container_name: flow-pdf-dev
+    # restart: unless-stopped
     volumes:
-        - './web-data:/root/app/flow_pdf/web-data'
+        - '${INPUT_PATH}:/workspace/flow_pdf/data/input'
+        - '${LAYOUT_PARSER_OUTPUT_PATH}:/workspace/flow_pdf/data/layout-parser-output'
+
+        - '${FLOWPDF_OUTPUT_PATH}:/workspace/flow_pdf/data/flow_pdf_output'
+
+        - './src/flow_pdf:/workspace/flow_pdf'
+        - './vsc_extensions/flow_pdf:/root/.vscode-server/extensions'
     ports:
       - '8080:8080'
+    stdin_open: true
+    tty: true
+  flow-pdf-fe-dev:
+    build:
+      context: ./src/fe
+      dockerfile: Dockerfile_dev
+    container_name: flow-pdf-fe-dev
+
+    volumes:
+      - './src/fe:/workspace/fe'
+
+      - './vsc_extensions/fe:/root/.vscode-server/extensions'
+    ports:
+      - '5173:5173'
+    stdin_open: true
+    tty: true
     deploy:
+      replicas: ${ENABLE_FE}
+  layout-parser-dev:
+    build:
+      context: ./src/layout-parser
+      dockerfile: Dockerfile
+
+    container_name: layout-parser-dev
+    # restart: unless-stopped
+    volumes:
+        - '${INPUT_PATH}:/workspace/layout-parser/data/input'
+        - '${LAYOUT_PARSER_OUTPUT_PATH}:/workspace/layout-parser/data/layout-parser-output'
+
+        - './src/layout-parser:/workspace/layout-parser'
+        - './vsc_extensions/layout-parser:/root/.vscode-server/extensions'
+    deploy:
+      replicas: ${ENABLE_LAYOUT_PARSER}
       resources:
-        limits:
-          cpus: '16'
-          memory: '8G'
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    stdin_open: true
+    tty: true

@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "pdfminer-demo"
+version = "0.1.0"
+description = ""
+authors = ["117503445 <t117503445@gmail.com>"]
+readme = "README.md"
+packages = [{include = "pdfminer_demo"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pdfminer-six = "^20221105"
+htutil = "^3.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

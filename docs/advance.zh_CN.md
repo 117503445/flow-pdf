@@ -72,8 +72,7 @@ poetry run python flow_pdf/main.py
 也可以挂载 tmp 文件夹
 
 ```sh
-mkdir -p /tmp/flow-pdf/out
-ln -s /tmp/flow-pdf/out ./data/out
+mkdir -p /tmp/flow-pdf/out && mkdir -p ./data/out && ln -s /tmp/flow-pdf/out ./data/out
 ```
 
 然后更新配置文件

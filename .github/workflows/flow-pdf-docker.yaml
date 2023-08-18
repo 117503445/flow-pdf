@@ -7,7 +7,8 @@ on:
       - "Dockerfile"
       - ".dockerignore"
       - "pyproject.toml"
-      - "flow_pdf/**"
+      - "src/flow_pdf/**"
+      - "src/fe/**"
 
 jobs:
   build:
@@ -17,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - run: cd flow_pdf && ../script/write_git_info.sh
+      - run: cd src/be-fc && ../../script/write_git_info.sh
         env:
           SHA: ${{ github.sha }}
 
@@ -67,7 +68,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: ./src
+          file: ./src/flow_pdf/Dockerfile
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}

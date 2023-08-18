@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "flow_pdf"
+version = "0.1.0"
+description = "flow-pdf converts PDFs into fluid and dynamic HTML documents, transforming the static layout of PDFs into a responsive and user-friendly format."
+authors = ["117503445 <t117503445@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pillow = "^9.5.0"
+pymupdf = "^1.22.5"
+pyyaml = "^6.0"
+htutil = "^3.1.0"
+scikit-learn = "^1.2.2"
+requests = "^2.31.0"
+beautifulsoup4 = "^4.12.2"
+black = "^23.3.0"
+types-pyyaml = "^6.0.12.10"
+types-beautifulsoup4 = "^4.12.0.5"
+fastapi = "^0.95.2"
+uvicorn = {extras = ["standard"], version = "^0.22.0"}
+python-multipart = "^0.0.6"
+types-pillow = "^9.5.0.4"
+oss2 = "^2.18.0"
+tqdm = "^4.65.0"
+types-tqdm = "^4.65.0.1"
+python-markdown-generator = "^0.1.0"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

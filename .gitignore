@@ -6,3 +6,7 @@ git.txt
 .VSCodeCounter
 web-data
 config.yaml.new
+docker-compose-dev.yml
+.env
+vsc_extensions
+.pnpm-store

@@ -1,0 +1,9 @@
+FROM 117503445/dev-python
+
+WORKDIR /workspace/flow_pdf
+
+COPY .devcontainer/init.sh /scripts/init.sh
+
+RUN /scripts/init.sh
+
+SHELL [ "/bin/zsh" ]
