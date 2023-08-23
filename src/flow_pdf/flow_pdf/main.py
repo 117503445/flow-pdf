@@ -33,7 +33,10 @@ def get_files_from_cfg() -> list[tuple[Path, Path]]:
     dir_input = dir_data / "input"
 
     tags_include = set(cfg["files"]["tags"]["include"])
-    tags_exclude = set(cfg["files"]["tags"]["exclude"])
+    if 'exclude' in cfg["files"]["tags"]:
+        tags_exclude = set(cfg["files"]["tags"]["exclude"])
+    else:
+        tags_exclude = set()
 
     files: list[tuple[Path, Path]] = []
 
