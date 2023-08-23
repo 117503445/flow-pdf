@@ -88,5 +88,23 @@ class HTMLGenWorker(Worker):
                     doc["elements"][i * PER_HTML_ELEMENTS : (i + 1) * PER_HTML_ELEMENTS],
                     doc_in.dir_output / "output" / f"part_{i}.html",
                 )
+            
+            # make index
+            soup = BeautifulSoup(html, "html.parser")
+            # add version to head
+            for k, v in doc["meta"].items():
+                soup.html.head.append(soup.new_tag("meta", attrs={"name": k, "content": v}))  # type: ignore
+
+            for i in range(0, int(len(doc["elements"]) / PER_HTML_ELEMENTS) + 1):
+                a = soup.new_tag(
+                        "a", href=f"part_{i}.html", attrs={"class": "part-link"}
+                    )
+                a.string = f"part_{i}"
+                soup.html.body.append(a) # type: ignore
+
+                soup.html.body.append(soup.new_tag("br")) # type: ignore
+
+            file.write_text(doc_in.dir_output / "output" / "index.html", soup.prettify())
+
 
         return DocOutParams(), []
