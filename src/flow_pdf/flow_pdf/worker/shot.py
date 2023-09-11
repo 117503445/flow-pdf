@@ -74,7 +74,9 @@ def shot_between_blocks(
             if r[3] - r[1] > 0:
                 shots.append([Rectangle(r[0], r[1], r[2], r[3])])
             last_y = bbox.y1
-        shots.append([Rectangle(column.min, last_y, column.max, doc_in.core_y.max)])
+        
+        if doc_in.core_y.max - last_y > 0:
+            shots.append([Rectangle(column.min, last_y, column.max, doc_in.core_y.max)])
 
         column_shots[i] = shots
 
@@ -91,7 +93,11 @@ class ShotWorker(PageWorker):
             column_shots[0].append([Rectangle(0, 0, page_in.width, page_in.height)])
             return PageOutParams(column_shots), LocalPageOutParams()
 
-        shot_between_blocks(column_shots, doc_in, page_in)
+        try:
+            shot_between_blocks(column_shots, doc_in, page_in)
+        except Exception as e:
+            self.logger.error(f"shot_between_blocks, page_index = {page_index}, error: {e}")
+            raise e
 
         elements_rect: list[Rectangle] = []
         for block in page_in.page_info.blocks:

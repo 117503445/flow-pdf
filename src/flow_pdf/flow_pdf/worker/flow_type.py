@@ -36,9 +36,9 @@ class Rectangle:
 
     def __init__(self, x0: float, y0: float, x1: float, y1: float):
         if x0 > x1:
-            raise ValueError("x0 must be less than or equal to x1")
+            raise ValueError(f"x0 must be less than or equal to x1, x0: {x0}, y0: {y0}, x1: {x1}, y1: {y1}")
         if y0 > y1:
-            raise ValueError("y0 must be less than or equal to y1")
+            raise ValueError(f"y0 must be less than or equal to y1, x0: {x0}, y0: {y0}, x1: {x1}, y1: {y1}")
 
         self.x0 = x0
         self.y0 = y0
