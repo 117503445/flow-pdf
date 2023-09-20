@@ -8,7 +8,6 @@ on:
 jobs:
   update-flow-pdf-fc-version:
     runs-on: ubuntu-latest
-    needs: build
     steps:
       # https://github.com/actions/setup-node
       - name: install node
@@ -32,7 +31,6 @@ jobs:
           s cli fc-api updateFunction --region cn-hangzhou --access default --serviceName flow-pdf --functionName convert-pdf --customContainerConfig '{"image": "registry-vpc.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf:${{ steps.commit.outputs.short }}","command": "[\"python\", \"flow_pdf/fc.py\"]"}'
   update-be-fc-version:
     runs-on: ubuntu-latest
-    needs: build
     steps:
       # https://github.com/actions/setup-node
       - name: install node
