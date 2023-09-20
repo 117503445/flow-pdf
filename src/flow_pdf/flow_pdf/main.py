@@ -32,17 +32,27 @@ def get_log_path(f: Path) -> Path:
 def get_files_from_cfg() -> list[tuple[Path, Path]]:
     dir_input = dir_data / "input"
 
-    tags_include = set(cfg["files"]["tags"]["include"])
-    tags_exclude = set(cfg["files"]["tags"]["exclude"])
+    tags_include: set[str] = set(cfg["files"]["tags"]["include"])
+    if 'exclude' in cfg["files"]["tags"]:
+        tags_exclude = set(cfg["files"]["tags"]["exclude"])
+    else:
+        tags_exclude = set()
 
     files: list[tuple[Path, Path]] = []
 
     for f in dir_input.glob("**/*.pdf"):
-        file_meta = get_meta_path(f)
+        file_meta = f.parent / (f.stem + ".json")
         if file_meta.exists():
             meta = file.read_json(file_meta)
             tags = set(meta["tags"])
-            if tags_include & tags and not tags_exclude & tags:
+
+            fuzzy_filename = False
+            for tag in tags_include:
+                if f.stem.lower().startswith(tag.lower()):
+                    fuzzy_filename = True
+                    break
+
+            if (tags_include & tags or fuzzy_filename) and not tags_exclude & tags:
                 files.append((f, (dir_output / f.stem)))
 
     return files
