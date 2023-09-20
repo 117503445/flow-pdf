@@ -7,7 +7,10 @@ from htutil import file
 import shutil
 
 logger = create_main_logger()
-logger.info(f"version: {version}")
+if version == "dev":
+    logger.warning("dev mode, version is not set")
+else:
+    logger.info(f"version: {version}")
 
 eventsStr = os.getenv("FC_CUSTOM_CONTAINER_EVENT")
 
