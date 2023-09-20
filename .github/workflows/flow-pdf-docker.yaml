@@ -18,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - run: cd src/be-fc && ../../script/write_git_info.sh
+      - run: cd src/flow_pdf && ../../script/write_git_info.sh
         env:
           SHA: ${{ github.sha }}
 
