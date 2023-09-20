@@ -2,9 +2,6 @@ name: fe-oss
 
 on:
   push:
-    paths:
-      - ".github/workflows/fe-oss.yaml"
-      - "src/fe/**"
     tags:
       - "*"
 jobs:
