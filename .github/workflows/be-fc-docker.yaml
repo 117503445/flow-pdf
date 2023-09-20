@@ -2,7 +2,7 @@ name: be-fc-docker
 
 on:
   push:
-    tags-ignore:
+    branches:
       - '**'
 
 jobs:

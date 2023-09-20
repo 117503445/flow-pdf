@@ -2,7 +2,7 @@ name: flow-pdf-docker
 
 on:
   push:
-    tags-ignore:
+    branches:
       - '**'
 
 jobs:
