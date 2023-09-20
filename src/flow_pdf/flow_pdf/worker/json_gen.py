@@ -30,6 +30,16 @@ from .flow_type import (
 )
 from typing import Optional
 
+def convert_img_to_webp(file_img: Path) -> Path:
+    '''
+    convert image to webp format, and return the path of the converted image
+    '''
+    file_webp = file_img.parent / f"{file_img.stem}.webp"
+    with Image.open(file_img) as img:
+        img.save(file_webp, "webp")
+    # file_img.unlink()
+    return file_webp
+
 @dataclass
 class DocInParams(DocInputParams):
     most_common_font: str
@@ -279,13 +289,13 @@ class JSONGenWorker(PageWorker):
                                         )
                                     else:
                                         page.get_pixmap(clip=r_tuple, dpi=576).save(file_shot)  # type: ignore
-
-                                    chidren.append(
-                                        {
-                                            "type": "shot",
-                                            "path": f"./assets/{file_shot.name}",
-                                        }
-                                    )
+                                        file_shot = convert_img_to_webp(file_shot)
+                                        chidren.append(
+                                            {
+                                                "type": "shot",
+                                                "path": f"./assets/{file_shot.name}",
+                                            }
+                                        )
                     column_block_elements.append(p)
 
                 shots = page_in.shot_rects[column_index]
@@ -300,6 +310,8 @@ class JSONGenWorker(PageWorker):
                     save_shot_pixmap(shot, file_shot)
                     # crop_image(file_shot)
 
+
+                    file_shot = convert_img_to_webp(file_shot)
                     shot_counter += 1
 
                     column_block_elements.append(
