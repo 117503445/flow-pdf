@@ -1,66 +1,425 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>flow-pdf Document</title>
-  </head>
-  <body></body>
 
-  <style>
-    body {
-      max-width: 750px;
-      font-size: 16px;
-      line-height: 23px;
-      margin: auto;
-    }
-    img {
-      max-width: 750px;
-    }
-    .inline-img {
-      max-height: 16px;
-      vertical-align: middle;
-    }
-    .shot {
-      border: 1px double black;
-      border-radius: 5px;
-      /* padding: 10px; */
-    }
-    p {
-      text-indent: 2em;
-      margin-bottom: 20px;
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>flow-pdf Document</title>
 
-      font-size: 18.4px;
-      line-height: 29.44px;
+</head>
+
+<body>
+  <fieldset style="position: absolute; top: 100px; left: max(calc(25% - 250px), 0px);background-color: white;">
+    <legend>布局模式选择</legend>
+
+    <div>
+      <input type="radio" id="single" name="layout" value="single" checked onclick="setLayout()" />
+      <label for="single">单栏布局</label>
+    </div>
+
+    <div>
+      <input type="radio" id="double" name="layout" value="double" onclick="setLayout()" />
+      <label for="double">双栏布局</label>
+    </div>
+  </fieldset>
+</body>
+
+<style>
+  html,
+  body {
+    margin: 0;
+    padding: 0
+  }
+
+  body {
+    font-size: 16px;
+    line-height: 23px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  img {
+    max-width: min(100%, 750px);
+    height: auto;
+    margin: auto;
+  }
+
+  .inline-img {
+    max-height: 16px;
+    vertical-align: middle;
+  }
+
+  .shot {
+    border: 1px double black;
+    border-radius: 5px;
+  }
+
+  p {
+    text-indent: 2em;
+    margin-bottom: 20px;
+
+    font-size: 18.4px;
+    line-height: 29.44px;
+
+    max-width: 750px;
+  }
+</style>
+<script>
+  function loadImage(img, src, maxRetries, delay) {
+    let retries = 0;
+
+    img.onerror = function () {
+      if (retries < maxRetries) {
+        const nextDelay = delay * Math.pow(2, retries);
+        retries++;
+
+        setTimeout(function () {
+          img.src = src;
+        }, nextDelay);
+      } else {
+        console.error("can't load image, src =", src);
+      }
+    };
+
+    img.src = src;
+  }
+
+  window.onload = function () {
+    const images = document.getElementsByTagName("img");
+
+    for (let i = 0; i < images.length; i++) {
+      loadImage(images[i], images[i].src, 3, 1000);
     }
-  </style>
-  <script>
-    function loadImage(img, src, maxRetries, delay) {
-      let retries = 0;
+  };
 
-      img.onerror = function () {
-        if (retries < maxRetries) {
-          const nextDelay = delay * Math.pow(2, retries);
-          retries++;
 
-          setTimeout(function () {
-            img.src = src;
-          }, nextDelay);
+  function setLayout() {
+    let layout = "";
+    if (window.innerWidth <= 1000) {
+      layout = "single";
+    } else {
+      let singleRadio = document.getElementById("single");
+      if (singleRadio.checked) {
+        layout = "single";
+      } else {
+        layout = "double";
+      }
+    }
+
+    console.log(`layout: ${layout}`)
+    if (layout === "single") {
+      let dynamicStyle = document.getElementById('single-layout-style');
+      if (!dynamicStyle) {
+        let style = document.createElement('style');
+        style.setAttribute('id', 'single-layout-style');
+        const css = `p {
+          
+          max-width: 750px;
+        }`;
+        style.appendChild(document.createTextNode(css));
+        document.head.appendChild(style);
+      }
+
+      dynamicStyle = document.getElementById('double-layout-style');
+      if (dynamicStyle) {
+        dynamicStyle.parentNode.removeChild(dynamicStyle);
+      }
+
+      let elements = document.getElementsByTagName("p")
+      for (let i = 0; i < elements.length; i++) {
+        let p = elements[i];
+        p.style.display = "block";
+        p.style.maxWidth = "750px";
+      }
+
+    } else {
+      let dynamicStyle = document.getElementById('double-layout-style');
+      if (!dynamicStyle) {
+        let style = document.createElement('style');
+        style.setAttribute('id', 'double-layout-style');
+        const css = `
+      p {
+        max-width: min(1500px, 100%);
+      }
+
+      br {
+        display: hidden;
+      }
+
+      .immersive-translate-target-wrapper {
+        display: flex;
+        min-width: 50%;
+      }
+
+      .immersive-translate-target-translation-block-wrapper {
+        display: flex;
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
+      }
+      `
+        style.appendChild(document.createTextNode(css));
+        document.head.appendChild(style);
+      }
+
+      dynamicStyle = document.getElementById('single-layout-style');
+      if (dynamicStyle) {
+        dynamicStyle.parentNode.removeChild(dynamicStyle);
+      }
+
+      let elements = document.getElementsByTagName("p")
+      for (let i = 0; i < elements.length; i++) {
+        let p = elements[i];
+        if (p.classList.contains("has-translated")) {
+          p.style.display = "flex";
+          p.style.maxWidth = "1500px";
         } else {
-          console.error("can't load image, src =", src);
+          p.style.display = "block";
+          p.style.maxWidth = "750px";
+        }
+      }
+    }
+  }
+  window.onresize = setLayout;
+  setLayout();
+
+  function observerCallback(mutationList, observer) {
+    observer.disconnect();
+
+    mutationList.forEach((mutation) => {
+      let process = function (mutation) {
+        switch (mutation.type) {
+          case "childList":
+            /* 从树上添加或移除一个或更多的子节点；参见 mutation.addedNodes 与
+               mutation.removedNodes */
+
+            // console.log(mutation.addedNodes, mutation.removedNodes);
+
+            if (mutation.addedNodes.length > 0) {
+              if (mutation.addedNodes.length != 1) {
+                console.warn("mutation.addedNodes.length != 1");
+                return;
+              }
+
+              try {
+                let is_warpper = mutation.addedNodes[0].classList.contains("immersive-translate-target-wrapper");
+                if (!is_warpper) {
+                  // console.warn("mutation.addedNodes[0] not contains(\"immersive-translate-target-wrapper\")", mutation.addedNodes[0]);
+                  return;
+                }
+              } catch (e) {
+                return;
+              }
+
+              // console.log("add immersive-translate-target-wrapper")
+              set_div(mutation.target);
+
+            } else if (mutation.removedNodes.length > 0) {
+              if (mutation.removedNodes.length != 1) {
+                // console.warn("mutation.removedNodes.length != 1");
+                return;
+              }
+
+              try {
+                let is_warpper = mutation.removedNodes[0].classList.contains("immersive-translate-target-wrapper");
+                if (!is_warpper) {
+                  return;
+                }
+              } catch (e) {
+                return;
+              }
+              // if (!mutation.removedNodes[0].classList.contains("immersive-translate-target-wrapper")) {
+              //   // console.warn("mutation.removedNodes[0] not contains(\"immersive-translate-target-wrapper\")");
+              //   return;
+              // }
+
+              // console.log("remove immersive-translate-target-wrapper")
+              remove_div(mutation.target);
+            } else {
+              console.warn("mutation.addedNodes.length == 0 && mutation.removedNodes.length == 0");
+              return;
+            }
+            break;
+          case "attributes":
+            /* mutation.target 中某节点的一个属性值被更改；该属性名称在 mutation.attributeName 中，
+               该属性之前的值为 mutation.oldValue */
+            break;
         }
       };
 
-      img.src = src;
+      try {
+        process(mutation)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        for (let i = 0; i < targetNodeList.length; i++) {
+          let targetNode = targetNodeList[i];
+          observer.observe(targetNode, observerOptions);
+        }
+        // observer.observe(targetNode, observerOptions);
+      }
+    });
+
+  }
+
+  let targetNodeList = document.getElementsByTagName("p");
+  // var targetNode = first_p;
+  var observerOptions = {
+    childList: true, // 观察目标子节点的变化，是否有添加或者删除
+    attributes: false, // 观察属性变动
+    subtree: true, // 观察后代节点，默认为 false
+  };
+
+  var observer = new MutationObserver(observerCallback);
+  // observer.observe(targetNode, observerOptions);
+
+  for (let i = 0; i < targetNodeList.length; i++) {
+    let targetNode = targetNodeList[i];
+    observer.observe(targetNode, observerOptions);
+  }
+
+
+  function set_div(p_tag) {
+
+    if (!p_tag instanceof HTMLElement) {
+      return;
     }
 
-    window.onload = function () {
-      const images = document.getElementsByTagName("img");
+    if (p_tag.tagName != "P") {
+      // console.warn("p_tag.tagName != \"P\"");
+      return;
+    }
 
-      for (let i = 0; i < images.length; i++) {
-        loadImage(images[i], images[i].src, 3, 1000);
-      }
-    };
-  </script>
+    if (p_tag.parentNode != document.body) {
+      return;
+    }
+
+    // let p_tag = first_p;
+    if (p_tag.childNodes[0].tagName == "DIV") {
+      // console.log("p_tag.childNodes[0].tagName == \"DIV\"");
+      return;
+    }
+
+    console.log(`set_div for `, p_tag)
+    let childs = [...p_tag.childNodes]
+
+    // console.log(childs);
+
+
+    // if (!childs[childs.length - 1].classList.contains("immersive-translate-target-wrapper")) {
+    //   console.warn("childs[childs.length-1] not contains(\"immersive-translate-target-wrapper\")");
+    //   return;
+    // }
+    // try {
+    //   if (!childs[childs.length - 1].classList.contains("immersive-translate-target-wrapper")) {
+    //     console.warn("childs[childs.length-1] not contains(\"immersive-translate-target-wrapper\")");
+    //     return;
+    //   }
+    // } catch (e) {
+
+    //   try {
+    //     if (!childs[childs.length - 2].classList.contains("immersive-translate-target-wrapper")) {
+    //       console.warn("childs[childs.length-2] not contains(\"immersive-translate-target-wrapper\")");
+    //       return;
+    //     }
+    //   } catch (e) {
+    //     console.log(e)
+    //     return;
+    //   }
+
+    //   return;
+    // }
+
+
+    // console.log("before childs", childs)
+    let div_tag = document.createElement("div");
+    for (let i = 0; i < childs.length - 1; i++) {
+      // console.log(i, childs)
+      p_tag.removeChild(childs[i]);
+      div_tag.appendChild(childs[i]);
+    }
+
+    // console.log("after childs",childs)
+    // console.log(p_tag)
+
+
+    // div_tag.setAttribute("data-immersive-translate-effect", "1");
+    // div_tag.setAttribute("data-immersive_translate_original", p_tag.getAttribute('data-immersive_translate_original'));
+
+    div_tag.classList.add("notranslate")
+
+    p_tag.insertBefore(div_tag, childs[childs.length - 1]);
+
+
+    p_tag.classList.add("has-translated")
+
+
+    // console.log("after set_div, p_tag = ", p_tag)
+
+
+    // let style = document.createElement('style');
+    // style.setAttribute('id', 'test-double-layout-style');
+    // const css = `
+    //   p {
+    //     display: flex;
+    //   }
+    //   `
+    // style.appendChild(document.createTextNode(css));
+    // document.head.appendChild(style);
+    setLayout();
+  }
+
+  function remove_div(p_tag) {
+    if (!p_tag instanceof HTMLElement) {
+      return;
+    }
+
+    if (p_tag.tagName != "P") {
+      // console.warn("p_tag.tagName != \"P\"");
+      return;
+    }
+
+    if (p_tag.parentNode != document.body) {
+      return;
+    }
+
+    // if (p_tag.childNodes.length != 2 || p_tag.childNodes[0].tagName != "DIV" || p_tag.childNodes[1].tagName != "FONT" ) {
+    //   // console.log("p_tag.childNodes[0].tagName != \"DIV\"");
+    //   return;
+    // }
+
+    // console.log("pre remove_div for ", p_tag, p_tag.childNodes)
+
+    let case_end_with_inline_img = p_tag.childNodes.length == 2 && p_tag.childNodes[0].tagName == "DIV" && p_tag.childNodes[1].nodeName == "#text"
+    let case_end_with_text = p_tag.childNodes.length == 1 && p_tag.childNodes[0].tagName == "DIV"
+
+    if (!case_end_with_inline_img && !case_end_with_text) {
+      // console.log("p_tag.childNodes[0].tagName != \"DIV\"");
+      return;
+    }
+    console.log("remove_div for ", p_tag)
+
+    let div_tag = p_tag.childNodes[0];
+    let childs = [...div_tag.childNodes];
+    for (let i = 0; i < childs.length; i++) {
+      p_tag.insertBefore(childs[i], div_tag);
+    }
+    p_tag.removeChild(div_tag);
+
+    p_tag.classList.remove("has-translated")
+
+    // let style = document.getElementById('test-double-layout-style');
+    // if (style) {
+    //   style.parentNode.removeChild(style);
+    // }
+
+    // p_tag.removeAttribute("data-immersive-translate-effect");
+    setLayout();
+  }
+
+
+</script>
+
 </html>

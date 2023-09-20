@@ -59,6 +59,12 @@ class HTMLGenWorker(Worker):
                     for c in element["children"]:
                         if c["type"] == "text":
                             t.append(c["text"])
+                            # span = soup.new_tag("span")
+                            # span.append(c["text"])
+                            # t.append(
+                            #     span
+                            # )
+                            
                         elif c["type"] == "shot":
                             t.append(
                                 soup.new_tag(
@@ -67,6 +73,9 @@ class HTMLGenWorker(Worker):
                             )
                         else:
                             self.logger.warning(f"unknown child type {c['type']}")
+                    # for two column layout, paragraph ends with a shot will crash, so add a dot
+                    if element["children"][-1]["type"] == "shot":
+                        t.append(".")
                     soup.html.body.append(t)  # type: ignore
                 elif element["type"] == "shot":
                     t = soup.new_tag(

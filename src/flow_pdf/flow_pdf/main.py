@@ -32,7 +32,7 @@ def get_log_path(f: Path) -> Path:
 def get_files_from_cfg() -> list[tuple[Path, Path]]:
     dir_input = dir_data / "input"
 
-    tags_include = set(cfg["files"]["tags"]["include"])
+    tags_include: set[str] = set(cfg["files"]["tags"]["include"])
     if 'exclude' in cfg["files"]["tags"]:
         tags_exclude = set(cfg["files"]["tags"]["exclude"])
     else:
@@ -48,7 +48,7 @@ def get_files_from_cfg() -> list[tuple[Path, Path]]:
 
             fuzzy_filename = False
             for tag in tags_include:
-                if f.stem.startswith(tag):
+                if f.stem.lower().startswith(tag.lower()):
                     fuzzy_filename = True
                     break
 
