@@ -76,11 +76,13 @@ for event in events:
     stem = Path(file_k).stem
 
     file_task = dir_output / stem / "task.json"
-    file_doc = dir_output / stem / "doc.json"
+    file_doc = dir_output / stem / 'output' / "doc.json"
 
     if file_doc.exists():
+        logger.info(f'file_doc exists')
         doc = file.read_json(file_doc)
         if doc["meta"]["flow-pdf-version"] == version:
+            logger.info(f'file_doc version is same, skip')
             continue
         else:
             logger.info(f'clean old version {doc["meta"]["flow-pdf-version"]}')
@@ -97,12 +99,9 @@ for event in events:
     e.register(workers_prod)
     try:
         e.execute()
-
         file.write_json(file_task, {"status": "done"})
-
+        logger.info(f"{file_input.name} success")
     except Exception as e:
-        logger.error(e)
-
         file.write_json(
             file_task,
             {
@@ -111,6 +110,6 @@ for event in events:
             },
         )
 
-        continue
+        logger.error(f"{file_input.name} error, {e}")
 
     logger.info(f"end {file_input.name}")
