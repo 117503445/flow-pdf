@@ -5,7 +5,8 @@ on:
     paths:
       - ".github/workflows/fe-oss.yaml"
       - "src/fe/**"
-
+    tags:
+      - "*"
 jobs:
   build:
     runs-on: ubuntu-latest
