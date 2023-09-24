@@ -10,7 +10,7 @@ from .flow_type import MSimpleBlock, MPage, init_mpage_from_mupdf, Rectangle
 
 
 import fitz
-from fitz import Page  # type: ignore
+from fitz import Page, TEXT_PRESERVE_LIGATURES, TEXT_PRESERVE_WHITESPACE, TEXT_MEDIABOX_CLIP, TEXT_PRESERVE_IMAGES  # type: ignore
 from dataclasses import dataclass
 from htutil import file
 
@@ -52,7 +52,9 @@ class ReadDocWorker(PageWorker):
         with fitz.open(doc_in.file_input) as doc:  # type: ignore
             page: Page = doc.load_page(page_index)
 
-            raw_dict = page.get_text("rawdict")  # type: ignore
+            # raw_dict = page.get_text("rawdict", flags = ~TEXT_PRESERVE_LIGATURES | TEXT_PRESERVE_WHITESPACE | TEXT_MEDIABOX_CLIP)  # type: ignore
+            # raw_dict = page.get_text("rawdict")  # type: ignore
+            raw_dict = page.get_text("rawdict", flags = TEXT_PRESERVE_WHITESPACE | TEXT_MEDIABOX_CLIP | TEXT_PRESERVE_IMAGES)  # type: ignore
             page_info = init_mpage_from_mupdf(raw_dict)
             try:
                 drawings = page.get_drawings()
