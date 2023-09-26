@@ -1,0 +1,5 @@
+pip install "nougat-ocr[api]"
+
+
+nougat hotstuff.pdf -o out -m 0.1.0-base --markdown
+nougat bitcoin.pdf -o out -m 0.1.0-base --markdown

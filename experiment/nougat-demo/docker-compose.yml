@@ -1,0 +1,30 @@
+version: '3.9'
+services:
+  nougat-demo-dev:
+    build:
+      # context: ./src/flow_pdf
+      dockerfile: Dockerfile
+
+    container_name: nougat-demo-dev
+    # restart: unless-stopped
+    volumes:
+      - ./:/workspace/nougat-demo
+        # - '${INPUT_PATH}:/workspace/nougat-demo/data/input'
+        # - '${LAYOUT_PARSER_OUTPUT_PATH}:/workspace/nougat-demo/data/layout-parser-output'
+
+        # - '${FLOWPDF_OUTPUT_PATH}:/workspace/nougat-demo/data/nougat-demo_output'
+
+        # - './src/flow_pdf:/workspace/flow_pdf'
+        # - './vsc_extensions/flow_pdf:/root/.vscode-server/extensions'
+    ports:
+      - '8503:8503'
+    stdin_open: true
+    tty: true
+    deploy:
+      # replicas: ${ENABLE_LAYOUT_PARSER}
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
