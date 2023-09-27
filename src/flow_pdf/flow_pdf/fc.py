@@ -5,6 +5,7 @@ from worker import Executer, ExecuterConfig, workers_prod  # type: ignore
 from pathlib import Path
 from htutil import file
 import shutil
+import traceback
 
 logger = create_main_logger()
 if version == "dev":
@@ -76,19 +77,19 @@ for event in events:
     stem = Path(file_k).stem
 
     file_task = dir_output / stem / "task.json"
-    file_doc = dir_output / stem / 'output' / "doc.json"
+    file_doc = dir_output / stem / "output" / "doc.json"
 
     if file_doc.exists():
-        logger.info(f'file_doc exists')
+        logger.info(f"file_doc exists")
         doc = file.read_json(file_doc)
         if doc["meta"]["flow-pdf-version"] == version:
-            logger.info(f'file_doc version is same, skip')
+            logger.info(f"file_doc version is same, skip")
             continue
         else:
             logger.info(f'clean old version {doc["meta"]["flow-pdf-version"]}')
             shutil.rmtree(dir_output / stem)
 
-    file_input = dir_input / f'{stem}.pdf'
+    file_input = dir_input / f"{stem}.pdf"
 
     logger.info(f"start {file_input.name}")
 
@@ -110,6 +111,7 @@ for event in events:
             },
         )
 
-        logger.error(f"{file_input.name} error, {e}")
+        logger.error(f"{file_input.name} error")
+        traceback.print_exc()
 
     logger.info(f"end {file_input.name}")
