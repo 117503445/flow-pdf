@@ -47,7 +47,7 @@ if len(events) == 0:
     logger.error("events is empty")
     exit(1)
 
-dir_data = Path("/data")
+dir_data = Path("/data/nougat")
 dir_input = dir_data / "input"
 dir_output = dir_data / "output"
 dir_input.mkdir(parents=True, exist_ok=True)
