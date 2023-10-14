@@ -52,3 +52,27 @@ jobs:
           s config add --AccountID ${{secrets.AccountID}} --AccessKeyID ${{secrets.FC_ACCESS_KEY_ID}} --AccessKeySecret ${{secrets.FC_ACCESS_KEY_SECRET}} -a default
 
           s cli fc-api updateFunction --region cn-hangzhou --access default --serviceName flow-pdf --functionName be --customContainerConfig '{"image": "registry-vpc.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf-be-fc:${{ steps.commit.outputs.short }}"}'
+
+  update-nougat-version:
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/actions/setup-node
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: install serverless-devs
+        run: npm install -g @serverless-devs/s
+
+      - id: commit
+        uses: pr-mpt/actions-commit-hash@v2
+        with:
+          prefix: "sha-"
+
+      # https://help.aliyun.com/document_detail/295913.html
+      - name: Update fc version
+        run: |
+          s config add --AccountID ${{secrets.AccountID}} --AccessKeyID ${{secrets.FC_ACCESS_KEY_ID}} --AccessKeySecret ${{secrets.FC_ACCESS_KEY_SECRET}} -a default
+
+          s cli fc-api updateFunction --region cn-hangzhou --access default --serviceName flow-pdf --functionName nougat --customContainerConfig '{"image": "registry-vpc.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf-nougat:${{ steps.commit.outputs.short }}"}'
