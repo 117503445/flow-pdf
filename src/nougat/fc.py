@@ -78,9 +78,18 @@ for event in events:
 
     try:
         command = f'nougat {file_input} -o {dir_output / stem / "output"} -m 0.1.0-base --markdown'
-        logger.debug(f'command = {command}')
+        logger.debug(f'nougat command = {command}')
         subprocess.run(command, shell=True)
+
+        file_mmd = dir_output / stem / "output" / f'{stem}.mmd'
+        if not file_mmd.exists():
+            raise Exception(f'{file_mmd} not exists')
+        file_html = dir_output / stem / "output" / f'{stem}.html'
+
+        command = f'cd mmd-converter && npm run app --input {file_mmd} --output {file_html}'
+        logger.debug(f'mmd-converter command = {command}')
         file.write_json(file_task, {"status": "done"})
+
         logger.info(f"{file_input.name} success")
     except Exception as e:
         file.write_json(

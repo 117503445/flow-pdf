@@ -86,3 +86,30 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+  nougat-dev:
+    build:
+      context: ./src/nougat
+      dockerfile: Dockerfile_dev
+
+    container_name: nougat-dev
+    # restart: unless-stopped
+    volumes:
+      # - '${INPUT_PATH}:/workspace/nougat/data/input'
+      # - '${NOUGAT_OUTPUT_PATH}:/workspace/nougat/data/output'
+
+        # - '${FLOWPDF_OUTPUT_PATH}:/workspace/nougat-demo/data/nougat-demo_output'
+
+      - ./src/nougat:/workspace/nougat
+      - './vsc_extensions/nougat:/root/.vscode-server/extensions'
+    ports:
+      - '8503:8503'
+    stdin_open: true
+    tty: true
+    deploy:
+      replicas: ${ENABLE_EXP_NOUGAT}
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
