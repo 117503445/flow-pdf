@@ -6,4 +6,7 @@ WORKDIR /workspace/nougat-demo
 
 COPY . .
 
+# download models
+RUN nougat bitcoin.pdf -o out -m 0.1.0-base --markdown
+
 ENTRYPOINT [ "python", "fc.py" ]
