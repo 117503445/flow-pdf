@@ -77,7 +77,7 @@ for event in events:
     file.write_json(file_task, {"status": "executing"})
 
     try:
-        command = f'nougat {file} -o {dir_output / stem / "output"} -m 0.1.0-base --markdown'
+        command = f'nougat {file_input} -o {dir_output / stem / "output"} -m 0.1.0-base --markdown'
         logger.debug(f'command = {command}')
         subprocess.run(command, shell=True)
         file.write_json(file_task, {"status": "done"})
