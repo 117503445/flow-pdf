@@ -106,7 +106,7 @@ services:
     stdin_open: true
     tty: true
     deploy:
-      replicas: ${ENABLE_EXP_NOUGAT}
+      replicas: ${ENABLE_NOUGAT}
       resources:
         reservations:
           devices:
