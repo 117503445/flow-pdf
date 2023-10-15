@@ -86,3 +86,46 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+  nougat-dev:
+    build:
+      context: ./src/nougat
+      dockerfile: Dockerfile_dev
+
+    container_name: nougat-dev
+    # restart: unless-stopped
+    volumes:
+      # - '${INPUT_PATH}:/workspace/nougat/data/input'
+      # - '${NOUGAT_OUTPUT_PATH}:/workspace/nougat/data/output'
+
+        # - '${FLOWPDF_OUTPUT_PATH}:/workspace/nougat-demo/data/nougat-demo_output'
+
+      - ./src/nougat:/workspace/nougat
+      - './vsc_extensions/nougat:/root/.vscode-server/extensions'
+    ports:
+      - '8503:8503'
+    stdin_open: true
+    tty: true
+    deploy:
+      replicas: ${ENABLE_NOUGAT}
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+  fc-local-dev-dev:
+    build:
+      context: ./src/fc-local-dev
+      dockerfile: Dockerfile_dev
+
+    container_name: fc-local-dev-dev
+    # restart: unless-stopped
+    volumes:
+        - './src/fc-local-dev:/workspace/fc-local-dev'
+        - './vsc_extensions/fc-local-dev:/root/.vscode-server/extensions'
+
+        - './data/local-oss:/data'
+
+        - '/var/run/docker.sock:/var/run/docker.sock:ro'
+    stdin_open: true
+    tty: true

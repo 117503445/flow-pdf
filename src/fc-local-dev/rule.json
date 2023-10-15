@@ -1,0 +1,16 @@
+{
+    "triggers": [
+        {
+            "prefix": "nougat/input",
+            "suffix": "pdf"
+        }
+    ],
+    "actions": [
+        {
+            "type": "docker",
+            "args": {
+                "image": "117503445/flow-pdf-nougat"
+            }
+        }
+    ]
+}
