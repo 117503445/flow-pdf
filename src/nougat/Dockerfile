@@ -14,6 +14,6 @@ RUN nougat bitcoin-page-2.pdf -o out -m 0.1.0-base --markdown
 COPY mmd-converter mmd-converter
 RUN cd /workspace/nougat/mmd-converter && npm i
 
-COPY fc.py .
+COPY main.py .
 
-ENTRYPOINT [ "python", "fc.py" ]
+ENTRYPOINT [ "python", "main.py" ]

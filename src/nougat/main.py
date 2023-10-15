@@ -36,26 +36,39 @@ if version == "dev":
 else:
     logger.info(f"version: {version}")
 
-eventsStr = os.getenv("FC_CUSTOM_CONTAINER_EVENT")
 
-if not eventsStr:
-    logger.error("FC_CUSTOM_CONTAINER_EVENT is not set")
-    exit(1)
 
-events: dict = json.loads(eventsStr)["events"]
-if len(events) == 0:
-    logger.error("events is empty")
-    exit(1)
+# return dir_data and files
+def get_files()->tuple[Path, list[Path]]:
+    eventsENV = os.getenv("FC_CUSTOM_CONTAINER_EVENT")
+    if eventsENV:
+        logger.info("FC MODE")
+        events: dict = json.loads(eventsENV)["events"]
+        if len(events) == 0:
+            logger.error("events is empty")
+            exit(1)
+        dir_data = Path("/data/nougat")
+        files = [Path(event["oss"]["object"]["key"]) for event in events]
+        return dir_data, files
+    elif Path('/local-data').exists():
+        logger.info("LOCAL MODE")
+        dir_data = Path('/local-data')
+        files = [f for f in dir_data.glob('**/*.pdf')]
+        return dir_data, files
+    else:
+        logger.error("NO MODE DETECTED")
+        exit(1)
 
-dir_data = Path("/data/nougat")
+dir_data, files = get_files()
+
 dir_input = dir_data / "input"
 dir_output = dir_data / "output"
 dir_input.mkdir(parents=True, exist_ok=True)
 dir_output.mkdir(parents=True, exist_ok=True)
 
-for event in events:
-    file_k: str = event["oss"]["object"]["key"]
-    stem = Path(file_k).stem
+def process_file(f: Path):
+    logger.info(f"processing {f.name}")
+    stem = Path(f).stem
 
     file_task = dir_output / stem / "task.json"
     file_doc = dir_output / stem / "output" / "doc.json"
@@ -65,7 +78,7 @@ for event in events:
         doc = file.read_json(file_doc)
         if doc["meta"]["flow-pdf-version"] == version:
             logger.info(f"file_doc version is same, skip")
-            continue
+            return
         else:
             logger.info(f'clean old version {doc["meta"]["flow-pdf-version"]}')
             shutil.rmtree(dir_output / stem)
@@ -88,6 +101,7 @@ for event in events:
 
         command = f'cd mmd-converter && npm run app --input {file_mmd} --output {file_html}'
         logger.debug(f'mmd-converter command = {command}')
+        subprocess.run(command, shell=True)
         file.write_json(file_task, {"status": "done"})
 
         logger.info(f"{file_input.name} success")
@@ -103,3 +117,6 @@ for event in events:
         traceback.print_exc()
 
     logger.info(f"end {file_input.name}")
+
+for f in files:
+    process_file(f)
