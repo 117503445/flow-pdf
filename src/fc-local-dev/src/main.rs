@@ -1,10 +1,15 @@
-use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{
+    event::{AccessKind, AccessMode},
+    Config, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
+};
 use std::path::Path;
 
 fn main() {
-    let path = std::env::args()
-        .nth(1)
-        .expect("Argument 1 needs to be a path");
+    // let path = std::env::args()
+    //     .nth(1)
+    //     .expect("Argument 1 needs to be a path");
+
+    let path = "/data";
 
     println!("Watching {path}");
 
@@ -26,7 +31,13 @@ fn watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
 
     for res in rx {
         match res {
-            Ok(event) => println!("Change: {event:?}"),
+            Ok(event) => {
+                if event.kind == EventKind::Access(AccessKind::Close(AccessMode::Write)) {
+                    println!("Change: {event:?}");
+                    let paths = event.paths;
+                    println!("path: {:?}", paths);
+                }
+            }
             Err(error) => println!("Error: {error:?}"),
         }
     }
