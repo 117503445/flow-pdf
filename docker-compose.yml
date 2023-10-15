@@ -123,6 +123,9 @@ services:
     volumes:
         - './src/fc-local-dev:/workspace/fc-local-dev'
         - './vsc_extensions/fc-local-dev:/root/.vscode-server/extensions'
+
+        - './data/local-oss:/data'
+
         - '/var/run/docker.sock:/var/run/docker.sock:ro'
     stdin_open: true
     tty: true

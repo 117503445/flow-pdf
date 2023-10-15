@@ -99,9 +99,9 @@ def process_file(f: Path):
             raise Exception(f'{file_mmd} not exists')
         file_html = dir_output / stem / "output" / f'{stem}.html'
 
-        command = f'cd mmd-converter && npm run app --input {file_mmd} --output {file_html}'
+        command = f'node app.js --input {file_mmd} --output {file_html}'
         logger.debug(f'mmd-converter command = {command}')
-        subprocess.run(command, shell=True)
+        subprocess.run(command, shell=True, cwd='./mmd-converter')
         file.write_json(file_task, {"status": "done"})
 
         logger.info(f"{file_input.name} success")
