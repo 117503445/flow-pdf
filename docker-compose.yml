@@ -113,3 +113,16 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+  fc-local-dev-dev:
+    build:
+      context: ./src/fc-local-dev
+      dockerfile: Dockerfile_dev
+
+    container_name: fc-local-dev-dev
+    # restart: unless-stopped
+    volumes:
+        - './src/fc-local-dev:/workspace/fc-local-dev'
+        - './vsc_extensions/fc-local-dev:/root/.vscode-server/extensions'
+        - '/var/run/docker.sock:/var/run/docker.sock:ro'
+    stdin_open: true
+    tty: true

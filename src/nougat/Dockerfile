@@ -7,13 +7,13 @@ RUN pip install nougat-ocr[api] htutil
 
 WORKDIR /workspace/nougat
 
-COPY . .
-
+COPY bitcoin-page-2.pdf .
 # download models
 RUN nougat bitcoin-page-2.pdf -o out -m 0.1.0-base --markdown
 
+COPY mmd-converter mmd-converter
 RUN cd /workspace/nougat/mmd-converter && npm i
 
-WORKDIR /workspace/nougat
+COPY fc.py .
 
 ENTRYPOINT [ "python", "fc.py" ]

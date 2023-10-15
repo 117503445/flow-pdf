@@ -1,0 +1,5 @@
+FROM 117503445/dev-rust
+
+WORKDIR /workspace/fc-local-dev
+
+ENTRYPOINT [ "zsh" ]
