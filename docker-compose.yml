@@ -129,3 +129,50 @@ services:
         - '/var/run/docker.sock:/var/run/docker.sock:ro'
     stdin_open: true
     tty: true
+  casdoor:
+    image: registry.cn-hangzhou.aliyuncs.com/117503445-mirror/casdoor
+    # image: casbin/casdoor@sha256:466a495dd6bfee08caf3d42249722139f41ac4bee9ef708b9294bfab4e0e7f69
+    ports:
+    - 18001:18001
+    volumes:
+      - ./src/casdoor/app.conf:/conf/app.conf
+    depends_on:
+      - db
+    deploy:
+      restart_policy:
+        condition: on-failure
+      
+  db:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_DATABASE=casdoor
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    cap_add:
+      - SYS_NICE  # CAP_SYS_NICE to avoid 'mbind: Operation not permitted'
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-ppass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - 3306:3306
+  dbgate:
+    image: dbgate/dbgate
+    ports:
+      - 18002:3000
+    # volumes:
+    #   - dbgate-data:/root/.dbgate
+    environment:
+      CONNECTIONS: con1
+
+      LABEL_con1: MySql
+      SERVER_con1: db
+      USER_con1: root
+      PASSWORD_con1: 123456
+      PORT_con1: 3306
+      ENGINE_con1: mysql@dbgate-plugin-mysql
+    depends_on:
+      - db
