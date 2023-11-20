@@ -17,6 +17,7 @@ services:
     restart: unless-stopped
     volumes:
         - './web-data:/root/app/flow_pdf/web-data'
+    working_dir: /root/app/flow_pdf/flow_pdf
     ports:
       - '8080:8080'
     deploy:

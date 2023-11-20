@@ -25,7 +25,7 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 WORKDIR /root/app
 ENV PATH=/root/app/.venv/bin:$PATH
 COPY --from=be-build /root/app/.venv /root/app/.venv
-COPY --from=fe-build /root/fe/dist /root/app/fe/dist
+COPY --from=fe-build /root/fe/dist /root/app/flow_pdf/fe/dist
 
 COPY flow_pdf flow_pdf
 
