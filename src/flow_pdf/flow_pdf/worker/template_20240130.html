@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>
+    flow-pdf Document
+  </title>
+  <meta content="dev" name="flow-pdf-version" />
+</head>
+
+<body>
+  <fieldset style="position: absolute; top: 100px; left: max(calc(25% - 250px), 0px);background-color: white;">
+    <legend>
+      布局模式选择
+    </legend>
+    <div>
+      <input checked="" id="single" name="layout" onclick="setLayout()" type="radio" value="single" />
+      <label for="single">
+        单栏布局
+      </label>
+    </div>
+    <div>
+      <input id="double" name="layout" onclick="setLayout()" type="radio" value="double" />
+      <label for="double">
+        双栏布局
+      </label>
+    </div>
+  </fieldset>
+  <img class="shot" src="./assets/page_0_shot_0.webp" />
+  <p>
+    The emergence of blockchain technology has revived in-terest in Byzantine fault-tolerant (BFT) systems [1], [2],
+    [3], [4], [5]. Unlike traditional distributed databases, BFT systems (or blockchains) provide data provenance and
+    allow federated data processing in untrusted and hostile environments [6], [7]. This enables a rich set of
+    decentralized applications, in e.g., ﬁnance [8], gaming [9], healthcare [10], and social media [11]. Many companies
+    and researchers are seeking to build enterprise-grade blockchain systems [12], [13], [14], [15] to provide
+    Internet-scale decentralized services [16].
+  </p>
+  <p>
+    The core of a blockchain system is the BFT consensus pro-tocol, which allows distrusting parties to replicate and
+    order a sequence of transactions. Many BFT consensus protocols [17], [18], [19], [20] adopted by permissioned
+    blockchains follow the classic leader-based design of PBFT [21]: only the leader node determines the order to avoid
+    conﬂicts. We call such protocols leader-based BFT protocols, or LBFT.
+  </p>
+  <p>
+    In the normal case (Byzantine-free), an LBFT consensus instance roughly consists of a proposing phase and a commit
+    phase. In the proposing phase, the leader pulls transactions from its local transaction pool (or mempool), forms a
+    proposal, and broadcasts the proposal to the other replicas. On receiving
+  </p>
+  <img class="shot" src="./assets/page_0_shot_1.webp" />
+  <p>
+    a proposal, replicas verify the proposal content before entering the commit phase. In the commit phase, the leader
+    coordinates multiple rounds of message exchanges to ensure that all correct replicas commit the same proposal at the
+    same position. If the leader behaves in a detectable Byzantine manner, a view-change sub-protocol will be triggered
+    to replace the leader with one of the replicas.
+  </p>
+  <p>
+    A key scalability challenge for LBFT is the leader bot-tleneck. Since the proposing and commit phases are both
+    handled by the leader, adding replicas increases the load on the leader and reduces performance. For example, in a
+    LAN environment, the throughput of LBFT protocols drops from 120K tps (transaction per second) with 4 replicas to
+    20K tps with 64 replicas, while the transaction latency surges from
+    <img class="inline-img" src="./assets/page_0_shot_2.webp" />
+    milliseconds to
+    <img class="inline-img" src="./assets/page_0_shot_3.webp" />
+    seconds [22]. This has also been documented by other work [23], [24], [25].
+  </p>
+  <p>
+    Prior work has focused on increasing LBFT performance by improving the
+    <img class="inline-img" src="./assets/page_0_shot_4.webp" />
+    e.g., reducing message complex-ity [19], truncating communication rounds [26], and enhancing tolerance to Byzantine
+    faults [27], [28]. Recent works [23], [25] reveal that a more signiﬁcant factor limiting LBFT’s scalability lies in
+    the
+    <img class="inline-img" src="./assets/page_0_shot_5.webp" />
+    in which a proposal with batched transaction data (e.g., 10 MB) is disseminated by the single leader node, whereas
+    messages exchanged in the commit phase (e.g., signatures, hashes) are much smaller (e.g., 100 Byte). Formal analysis
+    in Appendix A shows that reducing the message complexity of the commit phase cannot address this scalability issue.
+  </p>
+  <p>
+    More broadly, previous works to address the leader bot-tleneck have proposed
+    <img class="inline-img" src="./assets/page_0_shot_6.webp" />
+    or sharding the blockchain into shards that concurrently run consensus [29], [30], [31], [2]. These approaches
+    require a large network to en-sure safety [32] and demand meticulous coordination for cross-shard transactions. By
+    contrast
+    <img class="inline-img" src="./assets/page_0_shot_7.webp" />
+    approaches employ hierarchical schemes to send out messages and collect votes [33], [34]. Unfortunately, this
+    increases latency and requires complex re-conﬁguration to deal with faults.
+  </p>
+  <p>
+    In this paper, we follow neither of the above strategies. Instead, we introduce the
+    <img class="inline-img" src="./assets/page_0_shot_8.webp" />
+    SMP) abstrac-tion, which decouples transaction distribution from consensus, leaving consensus with the job of
+    ordering transaction ids. SMP allows every replica to accept and disseminate client transactions so that the leader
+    only needs to order transaction ids. Applying SMP reaps the following beneﬁts
+    <img class="inline-img" src="./assets/page_0_shot_9.webp" />
+    SMP
+  </p>
+  <p>
+    reduces the proposal size and increases throughput
+    <img class="inline-img" src="./assets/page_1_shot_0.webp" />
+    SMP decouples the transaction synchronization from ordering so that non-leader replicas can help with transaction
+    distri-bution
+    <img class="inline-img" src="./assets/page_1_shot_1.webp" />
+    SMP can be integrated into existing systems without changing the consensus core.
+  </p>
+  <p>
+    SMP has been used to improve scalability [35], [23], [25], but prior work has passed over two challenges. Challenge
+    1: ensuring the availability of transactions referenced in a proposal. When a replica receives a proposal, its local
+    mem-pool may not contain all the referenced transactions. These missing transactions prevent consensus from entering
+    the commit phase, which may cause frequent view-changes (Sec-tion VII-C). Challenge 2: dealing with unbalanced load
+    across replicas. SMP distributes the load from the leader and lets each replica disseminate transactions. But, real
+    workloads are highly skewed [36], overwhelming some replicas and leaving others under-utilized (Section VII-D).
+    Existing SMP protocols ignore this and assume that each client sends transactions to a uniformly random replica
+    [25], [23], [35], but this assumption does not hold in practical deployments [37], [38], [39], [40]. We address
+    these challenges with
+    <img class="inline-img" src="./assets/page_1_shot_2.webp" />
+    an SMP imple-mentation that scales leader-based blockchains to hundreds of nodes. Stratus introduces a
+    <img class="inline-img" src="./assets/page_1_shot_3.webp" />
+    (PAB) primitive to ensure the availability of transactions refer-enced in a proposal. With PAB, consensus can safely
+    enter the commit phase and not block on missing transactions. To deal with unbalanced workloads, Stratus uses a
+    distributed load-balancing (DLB) co-designed with PAB. DLB dynamically estimates a replica’s workload and capacity
+    so that overloaded replicas can forward their excess load to under-utilized repli-cas. To summarize, we make the
+    following contributions:
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_1_shot_4.webp" />
+    We introduce and study a shared mempool abstraction that decouples network-based synchronization from ordering for
+    leader-based BFT protocols. To the best of our knowledge, we are the ﬁrst to study this abstraction explicitly.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_1_shot_5.webp" />
+    To ensure the availability of transactions, we introduce a broadcast primitive called PAB, which allows replicas to
+    process proposals without waiting for transaction data.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_1_shot_6.webp" />
+    To balance load across replicas, we introduce a distributed load-balancing protocol co-designed with PAB, which
+    al-lows busy replicas to transfer their excess load to under-utilized replicas.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_1_shot_7.webp" />
+    We implemented Stratus and integrated it with Hot-Stuff [19], Streamlet [20], and PBFT [21]. We show that
+    Stratus-based protocols substantially outperform the native protocols in throughput, reaching up to
+    <img class="inline-img" src="./assets/page_1_shot_8.webp" />
+    and
+    <img class="inline-img" src="./assets/page_1_shot_9.webp" />
+    in typ-ical LANs and WANs with 128 replicas. Under unbalanced workloads, Stratus achieves up to
+    <img class="inline-img" src="./assets/page_1_shot_10.webp" />
+    more throughput.
+  </p>
+  <img class="shot" src="./assets/page_1_shot_13.webp" />
+  <p>
+    One classic approach that relieves the load on the leader is
+    <img class="inline-img" src="./assets/page_1_shot_11.webp" />
+    or sharding [30], [2], [29]. However, using sharding in BFT consensus requires inter-shard and intra-shard
+    consensus, which adds extra complexity to the system. An alternative
+    <img class="inline-img" src="./assets/page_1_shot_12.webp" />
+    technique has been used in
+  </p>
+  <p>
+    PigPaxos [33], which replaced direct communication between a Paxos leader and replicas with relay-based message ﬂow.
+  </p>
+  <p>
+    Recently, many scalable designs have been proposed to bypass the leader bottleneck. Algorand [15] can scale up to
+    tens of thousands of replicas using Veriﬁable Random Functions (VRFs) [41] and a novel Byzantine agreement protocol
+    called BA
+    <img class="inline-img" src="./assets/page_1_shot_14.webp" />
+    For each consensus instance, a committee is randomly selected via VRFs to reach consensus on the next set of
+    transactions. Some protocols such as HoneyBadger [42] and Dumbo [43] adopt a leader-less design in which all the
+    replicas contribute to a proposal. They are targeting on consensus problems under asynchronous networks, while our
+    proposal is for partially synchronous networks. Multi-leader BFT protocols [24], [44], [45] have multiple consensus
+    in-stances run concurrently, each led by a different leader. Multi-leader BFT protocols such as MirBFT [45] and RCC
+    [24] use multiple consensus instances that are run concurrently by dif-ferent leaders. These protocols follow a
+    monolithic approach and introduce mechanisms in the view-change procedure to deal with the ordering across different
+    instances and during failures. These additions render a BFT system more error-prone and inefﬁcient in recovery.
+    Stratus-enabled protocols are agnostic to the view-change since Stratus does not modify the consensus core.
+  </p>
+  <p>
+    Several proposals address the leader bottleneck in BFT, and we compare these in Table I. Tendermint uses gossip to
+    shed the load from the leader. Speciﬁcally, a block proposal is divided into several parts and each part is gossiped
+    into the network. Replicas reconstruct the whole block after receiving all parts of the block. The most recent work,
+    Kauri [34], follows the
+    <img class="inline-img" src="./assets/page_1_shot_15.webp" />
+    approach by arranging nodes in a tree to propagate transactions and collect votes. It leverages a pipelining
+    technique and a novel re-conﬁguration strategy to overcome the disadvantages of using a tree structure. However,
+    Kauri’s fast re-conﬁguration requires a large fan-out parameter (that is at least larger than the number of expected
+    faulty replicas), which constrains its ability to load balance. In general, tree-based approaches increase latency
+    and require complex re-conﬁguration strategies to deal with faults.
+  </p>
+  <p>
+    To our knowledge, S-Paxos [35] is the ﬁrst consensus protocol to use a shared Mempool (SMP) to resolve the leader
+    bottleneck. S-Paxos is not designed for Byzantine failures. Leopard [25] and Narwhal [23] utilize SMP to sepa-rate
+    transaction dissemination from consensus and are most similar to our work. Leopard modiﬁes the consensus core of
+    PBFT to allow different consensus instances to execute in parallel, since transactions may not be received in the
+    order that proposals are proposed. However, Leopard does not guarantee that the referenced transactions in a
+    proposal will be available. It also does not scale well when the load across replicas is unbalanced. Narwhal [23] is
+    a DAG-based Mempool protocol. It employs reliable broadcast (RB) [46] to reliably disseminate transactions and uses
+    a DAG to establish a causal relationship among blocks. Narwhal can make progress even if the consensus protocol is
+    stuck. However, RB incurs quadratic message complexity and Narwhal only scales well
+  </p>
+  <img class="shot" src="./assets/page_2_shot_10.webp" />
+  <p>
+    when the nodes running the Mempool and nodes running the consensus are located on separate machines. Our work
+    differs from prior systems by contributing (1) an efﬁcient and resilient broadcast primitive, along with (2) a
+    co-designed load balancing mechanism to handle uneven workloads.
+  </p>
+  <img class="shot" src="./assets/page_2_shot_11.webp" />
+  <p>
+    We propose a
+    <img class="inline-img" src="./assets/page_2_shot_0.webp" />
+    SMP) abstraction that decouples transaction dissemination from consensus to replace the original mempool in
+    leader-based BFT protocols. This decoupling idea enables us to use off-the-shelf consensus pro-tocols rather than
+    designing a scalable protocol from scratch.
+  </p>
+  <img class="shot" src="./assets/page_2_shot_12.webp" />
+  <p>
+    We consider two roles in the BFT protocol: leader and replica. A replica can become a
+    <img class="inline-img" src="./assets/page_2_shot_1.webp" />
+    replica via view-changes or leader-rotation. We inherit the Byzantine threat model and communication model from
+    general BFT proto-cols [21], [19]. In particular, there are
+    <img class="inline-img" src="./assets/page_2_shot_2.webp" />
+    replicas in the network and at most
+    <img class="inline-img" src="./assets/page_2_shot_3.webp" />
+    replicas are Byzantine. The network is partially synchronous, whereby a known bound
+    <img class="inline-img" src="./assets/page_2_shot_4.webp" />
+    on message transmission holds after some unknown Global Stabilization Time (GST) [47].
+  </p>
+  <p>
+    We consider external clients that issue transactions to the system. We assume that each transaction has a unique ID
+    and that every client knows about all the replicas (e.g., their IP addresses). We also assume that each replica
+    knows, or can learn, the leader for the current view. Clients can select replicas based on network delay
+    measurements, a random hash function, or another preference. Byzantine replicas can censor transactions, however, so
+    a client may need to switch to another replica (using a timeout mechanism) until a correct replica is found. We
+    assume that messages sent in our system are cryptographically signed and authenticated. The adversary cannot break
+    these signatures.
+  </p>
+  <p>
+    We futher assume that
+    <img class="inline-img" src="./assets/page_2_shot_5.webp" />
+    <img class="inline-img" src="./assets/page_2_shot_6.webp" />
+    <img class="inline-img" src="./assets/page_2_shot_7.webp" />
+    Byzantine clients can perform a
+    <img class="inline-img" src="./assets/page_2_shot_8.webp" />
+    <img class="inline-img" src="./assets/page_2_shot_9.webp" />
+    by sending identical transactions to multiple replicas. We consider these attacks out of scope. In future work we
+    plan to defend against these attacks using the bucket and transaction partitioning mechanism from MirBFT [45].
+  </p>
+  <img class="shot" src="./assets/page_2_shot_13.webp" />
+  <p>
+    A mempool protocol is a built-in component in a consensus protocol, running at every replica. The mempool uses the
+    <img class="inline-img" src="./assets/page_2_shot_14.webp" />
+    primitive to receive transactions from clients and store them in memory (or to disk, if necessary). If a replica
+    becomes the leader, it calls the
+    <img class="inline-img" src="./assets/page_2_shot_15.webp" />
+    primitive to pull transactions from the mempool and constructs a proposal for the subsequent consensus process. In
+    most existing cryp-tocurrencies and permissioned blockchains [48], [13], [18], the
+    <img class="inline-img" src="./assets/page_2_shot_16.webp" />
+    primitive generates a full proposal that includes all the transaction data. As such, the leader bears the
+    responsibility for transaction distribution and consensus coordination, leading to the leader bottleneck. See our
+    analysis in Appendix A.
+  </p>
+  <p>
+    To relieve the leader’s burden of distributing transaction data, we propose a
+    <img class="inline-img" src="./assets/page_2_shot_17.webp" />
+    SMP) abstraction, which has been used in the previous works [49], [25], [23], but has not been systematically
+    studied. The SMP abstraction enables the transaction data to be ﬁrst disseminated among replicas, and then
+    small-sized proposals containing only transaction ids are produced by the leader for replication. In addition,
+    transaction data can be broadcast in batches with a unique id for each batch. This further reduces the proposal
+    size. See our analysis in Appendix B. The SMP abstraction requires the following properties:
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_2_shot_18.webp" />
+    <img class="inline-img" src="./assets/page_2_shot_19.webp" />
+    <img class="inline-img" src="./assets/page_2_shot_20.webp" />
+    <img class="inline-img" src="./assets/page_2_shot_21.webp" />
+    <img class="inline-img" src="./assets/page_2_shot_22.webp" />
+    .
+  </p>
+  <p>
+    The above two liveness properties ensure that a valid trans-action is eventually replicated among correct replicas.
+    Par-ticularly
+    <img class="inline-img" src="./assets/page_2_shot_23.webp" />
+    ensures that every valid transaction is eventually proposed while
+    <img class="inline-img" src="./assets/page_2_shot_24.webp" />
+    ﬁrst mentioned in [35], ensures that every proposed transaction is eventually available at all the correct replicas.
+    The second property makes SMP non-trivial to implement in a Byzantine environment; we elaborate on this in Section
+    III-E. We should note that a BFT consensus protocol needs to ensure that all the correct replicas maintain the same
+    history of transaction, or safety. Using SMP does not change the order of committed transactions. Thus, the safety
+    of the consensus protocol is always maintained.
+  </p>
+  <img class="shot" src="./assets/page_2_shot_35.webp" />
+  <p>
+    The implementation of the SMP abstraction modiﬁes the two primitives
+    <img class="inline-img" src="./assets/page_2_shot_25.webp" />
+    and
+    <img class="inline-img" src="./assets/page_2_shot_26.webp" />
+    used in the traditional Mempool and adds two new primitives
+    <img class="inline-img" src="./assets/page_2_shot_27.webp" />
+    and
+    <img class="inline-img" src="./assets/page_2_shot_28.webp" />
+    as follows:
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_2_shot_29.webp" />
+    is used to receive an incoming
+    <img class="inline-img" src="./assets/page_2_shot_30.webp" />
+    from a client or replica, and stores it in memory (or disk if necessary).
+  </p>
+  <img class="shot" src="./assets/page_2_shot_36.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_2_shot_31.webp" />
+    is used by the leader to pull transactions from the local mempool and construct a proposal with their ids.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_2_shot_32.webp" />
+    is used when receiving a new proposal
+    <img class="inline-img" src="./assets/page_2_shot_33.webp" />
+    It pulls transactions from the local mempool according to the transaction ids in
+    <img class="inline-img" src="./assets/page_2_shot_34.webp" />
+    and ﬁlls it into a full proposal. It returns missing transactions if there are any.
+  </p>
+  <img class="shot" src="./assets/page_3_shot_31.webp" />
+  <p>
+    Next, we show how these primitives work in an order-execute (OE) model, where transactions are ﬁrst ordered through
+    a consensus engine (using leader-based BFT consen-sus protocols) and then sent to an executor for execution. We
+    argue that while for simplicity our description hinges on an OE model, the principles could also be used in an
+    execute-order-validate (EOV) model that is adopted by Hyperledger [3].
+  </p>
+  <p>
+    We use two primitives from the consensus engine, which are
+    <img class="inline-img" src="./assets/page_3_shot_0.webp" />
+    and
+    <img class="inline-img" src="./assets/page_3_shot_1.webp" />
+    The leader replica uses
+    <img class="inline-img" src="./assets/page_3_shot_2.webp" />
+    to broadcast a new proposal
+    <img class="inline-img" src="./assets/page_3_shot_3.webp" />
+    and
+    <img class="inline-img" src="./assets/page_3_shot_4.webp" />
+    to commit
+    <img class="inline-img" src="./assets/page_3_shot_5.webp" />
+    when the order of
+    <img class="inline-img" src="./assets/page_3_shot_6.webp" />
+    is agreed on across the replicas (i.e., total ordering). As illustrated in Figure 1, the transaction processing in
+    state machine replication using SMP consists of the following steps:
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_3_shot_7.webp" />
+    Upon receiving a new transaction
+    <img class="inline-img" src="./assets/page_3_shot_8.webp" />
+    from the network, a replica calls
+    <img class="inline-img" src="./assets/page_3_shot_9.webp" />
+    to add
+    <img class="inline-img" src="./assets/page_3_shot_10.webp" />
+    into the mempool, and
+    <img class="inline-img" src="./assets/page_3_shot_11.webp" />
+    disseminates
+    <img class="inline-img" src="./assets/page_3_shot_12.webp" />
+    by calling
+    <img class="inline-img" src="./assets/page_3_shot_13.webp" />
+    if
+    <img class="inline-img" src="./assets/page_3_shot_14.webp" />
+    is from a client (avoiding re-sharing if
+    <img class="inline-img" src="./assets/page_3_shot_15.webp" />
+    is from a replica).
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_3_shot_16.webp" />
+    Once the replica becomes the leader, it obtains a proposal (with transaction ids
+    <img class="inline-img" src="./assets/page_3_shot_17.webp" />
+    by calling
+    <img class="inline-img" src="./assets/page_3_shot_18.webp" />
+    and
+    <img class="inline-img" src="./assets/page_3_shot_19.webp" />
+    proposes it via
+    <img class="inline-img" src="./assets/page_3_shot_20.webp" />
+    .
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_3_shot_21.webp" />
+    Upon receipt of a proposal
+    <img class="inline-img" src="./assets/page_3_shot_22.webp" />
+    a non-leader replica calls
+    <img class="inline-img" src="./assets/page_3_shot_23.webp" />
+    to reconstruct
+    <img class="inline-img" src="./assets/page_3_shot_24.webp" />
+    pulling referenced trans-action from the mempool), which is sent to the consensus engine to continue the consensus
+    process.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_3_shot_25.webp" />
+    The consensus engine calls
+    <img class="inline-img" src="./assets/page_3_shot_26.webp" />
+    to send com-mitted proposals to the executor for execution.
+  </p>
+  <img class="shot" src="./assets/page_3_shot_32.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_3_shot_27.webp" />
+    Transactions are collected from clients and batched into microblocks for dissemination
+    <img class="inline-img" src="./assets/page_3_shot_28.webp" />
+    This is to amor-tize the veriﬁcation cost. Recall that we assume a client only sends a request to a single replica,
+    which makes the microblocks sent from a replica disjoint from others. Each microblock has a unique id calculated
+    from the transaction ids it contains.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_3_shot_29.webp" />
+    The
+    <img class="inline-img" src="./assets/page_3_shot_30.webp" />
+    primitive generates a pro-posal that consists of an id list of the microblocks and some
+  </p>
+  <img class="shot" src="./assets/page_3_shot_33.webp" />
+  <p>
+    metadata (e.g., the hash of the previous block, root hash of the microblocks).
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_3_shot_34.webp" />
+    A block is obtained by calling the
+    <img class="inline-img" src="./assets/page_3_shot_35.webp" />
+    primitive. If all the microblocks referenced in a proposal
+    <img class="inline-img" src="./assets/page_3_shot_36.webp" />
+    can be found in the local mempool, we call it a
+    <img class="inline-img" src="./assets/page_3_shot_37.webp" />
+    or a
+    <img class="inline-img" src="./assets/page_3_shot_38.webp" />
+    Otherwise, we call it a
+    <img class="inline-img" src="./assets/page_3_shot_39.webp" />
+    A block contains all the data included in the relevant proposal and a list of microblocks.
+  </p>
+  <img class="shot" src="./assets/page_3_shot_61.webp" />
+  <p>
+    Here we discuss two challenges and corresponding solutions in implementing our SMP protocol.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_3_shot_40.webp" />
+    Using best-effort broadcast [50] to implement
+    <img class="inline-img" src="./assets/page_3_shot_41.webp" />
+    cannot ensure
+    <img class="inline-img" src="./assets/page_3_shot_42.webp" />
+    since some referenced transactions (i.e., microblocks) in a proposal might never be received due to Byzantine
+    behavior [25]. Even in a Byzantine-free case, it is possible that a proposal arrives earlier than some of the
+    referenced transactions. We call these transactions
+    <img class="inline-img" src="./assets/page_3_shot_43.webp" />
+    <img class="inline-img" src="./assets/page_3_shot_44.webp" />
+    Figure 2 illustrates an example in which a Byzan-tine broadcaster
+    <img class="inline-img" src="./assets/page_3_shot_45.webp" />
+    only shares a transaction
+    <img class="inline-img" src="./assets/page_3_shot_46.webp" />
+    with the leader
+    <img class="inline-img" src="./assets/page_3_shot_47.webp" />
+    not the other replicas. Therefore, when
+    <img class="inline-img" src="./assets/page_3_shot_48.webp" />
+    includes
+    <img class="inline-img" src="./assets/page_3_shot_49.webp" />
+    in a proposal
+    <img class="inline-img" src="./assets/page_3_shot_50.webp" />
+    will be missing at the receiving replicas. On the one hand, missing transactions block the consensus instance
+    because the integrity of a proposal depends on the availability of the referenced transactions, which is essential
+    to the security of a blockchain. This could cause frequent view-changes which signiﬁcantly affect performance, as we
+    will show in Section VII-C. On the other hand, to ensure
+    <img class="inline-img" src="./assets/page_3_shot_51.webp" />
+    replicas have to proactively fetch missing transactions from the leader. This, however, creates a new bottleneck. It
+    is also difﬁcult for the leader to distinguish between legitimate and malicious transaction requests.
+  </p>
+  <p>
+    A natural solution to address the above challenge is to use reliable broadcast (RB) [23] to implement
+    <img class="inline-img" src="./assets/page_3_shot_52.webp" />
+    However, Byzantine reliable broadcast has quadratic message complexity and needs three communication rounds (round
+    trip delay) [50], which is not suitable for large-scale systems. We observe that some properties of reliable
+    broadcast are
+    <img class="inline-img" src="./assets/page_3_shot_53.webp" />
+    needed by SMP since they can be provided by the consensus protocol itself (i.e., consistency and totality). This
+    enlightens us to seek for a lighter broadcast primitive.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_3_shot_54.webp" />
+    We resolve this problem by introducing a
+    <img class="inline-img" src="./assets/page_3_shot_55.webp" />
+    PAB) primitive to ensure the availability of transactions referenced in a proposal with negligible overhead. PAB
+    provides an API to generate an
+    <img class="inline-img" src="./assets/page_3_shot_56.webp" />
+    with at least
+    <img class="inline-img" src="./assets/page_3_shot_57.webp" />
+    signatures. Since at most
+    <img class="inline-img" src="./assets/page_3_shot_58.webp" />
+    signatures are Byzantine, the
+    <img class="inline-img" src="./assets/page_3_shot_59.webp" />
+    <img class="inline-img" src="./assets/page_3_shot_60.webp" />
+    guarantees that at least one correct replica (excluding the sender) has the message. This guarantees that the
+    message can be eventually fetched from at least one correct replica. As such, by using PAB in Stratus, if a proposal
+    contains valid available proofs for each referenced transaction, it can be passed directly to the commit phase
+    without waiting for the transaction contents to arrive. Therefore, missing transactions
+  </p>
+  <img class="shot" src="./assets/page_4_shot_6.webp" />
+  <p>
+    can be fetched using background bandwidth without blocking the consensus.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_4_shot_0.webp" />
+    In deploying a BFT system across datacenters, it is difﬁcult to ensure that all the nodes have identical resources.
+    Even if all the nodes have similar resources, it is unrealistic to assume that they will have a balanced workload in
+    time and space. This is because clients are unevenly distributed across regions and tend to use a preferred replica
+    (nearest or most trusted). In these cases, replicas with a low ratio of workload to bandwidth become bottlenecks.
+  </p>
+  <p>
+    To address the heterogeneity in workload/bandwidth, one popular approach is gossip [51], [52], [15]: the broadcaster
+    randomly picks some of its peers and sends them the message, and the receivers repeat this process until all the
+    nodes receive the message with high probability. Despite their scalability, gossip protocols have a long
+    tail-latency (the time required for the last node to receive the message) and high redundancy.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_4_shot_1.webp" />
+    We address the challenge by introducing a distributed load-balancing (DLB) protocol that is co-designed with PAB.
+    DLB works locally at each replica and dynamically estimates a replica’s local workloads and capacities so that
+    overloaded replicas can for-ward their excess load (microblocks) to under-utilized replicas (proxies). A proxy can
+    disseminate a certain microblock on behalf of the original sender and prove that a microblock is successfully
+    distributed by submitting available proof to the sender. If the proof is not submitted in time, the sender picks
+    another under-utilized replica and repeats the process.
+  </p>
+  <img class="shot" src="./assets/page_4_shot_7.webp" />
+  <p>
+    We now introduce a new broadcast primitive called
+    <img class="inline-img" src="./assets/page_4_shot_2.webp" />
+    <img class="inline-img" src="./assets/page_4_shot_3.webp" />
+    PAB) for transaction dissemination, which mitigates the impact of missing transactions
+    <img class="inline-img" src="./assets/page_4_shot_4.webp" />
+    <img class="inline-img" src="./assets/page_4_shot_5.webp" />
+    in Stratus runs PAB to distribute microblocks and collect availability proofs (threshold signatures). When a replica
+    becomes the leader, it pulls microblock ids as well as corresponding proofs into a proposal. This ensures that
+    every receiving replica will have an availability proof for all the referenced microblocks in a valid proposal.
+    These proofs resolve Problem I (Section III-E) by providing
+    <img class="inline-img" src="./assets/page_4_shot_8.webp" />
+    <img class="inline-img" src="./assets/page_4_shot_9.webp" />
+    This ensures that a replica will eventually receive all the referenced microblocks and it does not need to wait for
+    missing microblocks to arrive.
+  </p>
+  <p>
+    Broadcasting microblocks and collecting proofs is a dis-tributed process that is not on the critical path of
+    consensus. As a result, they will
+    <img class="inline-img" src="./assets/page_4_shot_10.webp" />
+    increase latency. In fact, we found that PAB signiﬁcantly improves throughput and latency (Figure 7).
+  </p>
+  <img class="shot" src="./assets/page_4_shot_76.webp" />
+  <p>
+    In PAB, the sending replica, or sender
+    <img class="inline-img" src="./assets/page_4_shot_11.webp" />
+    broadcasts a message
+    <img class="inline-img" src="./assets/page_4_shot_12.webp" />
+    collects acknowledgements of receiving the mes-sage
+    <img class="inline-img" src="./assets/page_4_shot_13.webp" />
+    from other replicas, and produces a succinct proof
+    <img class="inline-img" src="./assets/page_4_shot_14.webp" />
+    (realized via threshold signature [53]) over
+    <img class="inline-img" src="./assets/page_4_shot_15.webp" />
+    showing that
+    <img class="inline-img" src="./assets/page_4_shot_16.webp" />
+    is available to at least one correct replica, say
+    <img class="inline-img" src="./assets/page_4_shot_17.webp" />
+    Eventually, other replicas that do not receive
+    <img class="inline-img" src="./assets/page_4_shot_18.webp" />
+    from
+    <img class="inline-img" src="./assets/page_4_shot_19.webp" />
+    retrieves
+    <img class="inline-img" src="./assets/page_4_shot_20.webp" />
+    from
+    <img class="inline-img" src="./assets/page_4_shot_21.webp" />
+    Formally, PAB satisﬁes the following properties:
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_4_shot_22.webp" />
+    If a correct replica delivers a message
+    <img class="inline-img" src="./assets/page_4_shot_23.webp" />
+    from sender
+    <img class="inline-img" src="./assets/page_4_shot_24.webp" />
+    and
+    <img class="inline-img" src="./assets/page_4_shot_25.webp" />
+    is correct, then
+    <img class="inline-img" src="./assets/page_4_shot_26.webp" />
+    was previously broadcast by
+    <img class="inline-img" src="./assets/page_4_shot_27.webp" />
+    .
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_4_shot_28.webp" />
+    If a correct sender broadcasts a message
+    <img class="inline-img" src="./assets/page_4_shot_29.webp" />
+    then every correct replica eventually delivers
+    <img class="inline-img" src="./assets/page_4_shot_30.webp" />
+    .
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_4_shot_31.webp" />
+    If a correct replica
+    <img class="inline-img" src="./assets/page_4_shot_32.webp" />
+    receives a valid proof
+    <img class="inline-img" src="./assets/page_4_shot_33.webp" />
+    over
+    <img class="inline-img" src="./assets/page_4_shot_34.webp" />
+    then
+    <img class="inline-img" src="./assets/page_4_shot_35.webp" />
+    eventually delivers
+    <img class="inline-img" src="./assets/page_4_shot_36.webp" />
+    .
+  </p>
+  <p>
+    We divide the algorithm into two phases, the
+    <img class="inline-img" src="./assets/page_4_shot_37.webp" />
+    phase and the
+    <img class="inline-img" src="./assets/page_4_shot_38.webp" />
+    phase. The communication pattern is illustrated in Figure 3. We use angle brackets to denote messages and events and
+    assume that messages are signed by their senders. In the
+    <img class="inline-img" src="./assets/page_4_shot_39.webp" />
+    phase, the
+    <img class="inline-img" src="./assets/page_4_shot_40.webp" />
+    broadcasts a message
+    <img class="inline-img" src="./assets/page_4_shot_41.webp" />
+    and each receiver (including the sender) sends a
+    <img class="inline-img" src="./assets/page_4_shot_42.webp" />
+    message
+    <img class="inline-img" src="./assets/page_4_shot_43.webp" />
+    receives at least a quorum of
+    <img class="inline-img" src="./assets/page_4_shot_44.webp" />
+    back to the
+    <img class="inline-img" src="./assets/page_4_shot_45.webp" />
+    As long as the
+    <img class="inline-img" src="./assets/page_4_shot_46.webp" />
+    messages
+    <img class="inline-img" src="./assets/page_4_shot_47.webp" />
+    (including the sender) from distinct receivers, it produces a succinct proof
+    <img class="inline-img" src="./assets/page_4_shot_48.webp" />
+    realized via threshold signature), showing that
+    <img class="inline-img" src="./assets/page_4_shot_49.webp" />
+    has been delivered by at least one correct replica. The
+    <img class="inline-img" src="./assets/page_4_shot_50.webp" />
+    phase begins right after
+    <img class="inline-img" src="./assets/page_4_shot_51.webp" />
+    is generated, and the
+    <img class="inline-img" src="./assets/page_4_shot_52.webp" />
+    broadcasts the proof message
+    <img class="inline-img" src="./assets/page_4_shot_53.webp" />
+    If some replica
+    <img class="inline-img" src="./assets/page_4_shot_54.webp" />
+    receives a valid
+    <img class="inline-img" src="./assets/page_4_shot_55.webp" />
+    without receiving
+    <img class="inline-img" src="./assets/page_4_shot_56.webp" />
+    <img class="inline-img" src="./assets/page_4_shot_57.webp" />
+    fetches
+    <img class="inline-img" src="./assets/page_4_shot_58.webp" />
+    from other replicas in a repeated manner.
+  </p>
+  <p>
+    Algorithm 1 shows the
+    <img class="inline-img" src="./assets/page_4_shot_59.webp" />
+    phase, which consists of two rounds of message exchanges. In the ﬁrst round, the broadcaster disseminates
+    <img class="inline-img" src="./assets/page_4_shot_60.webp" />
+    via
+    <img class="inline-img" src="./assets/page_4_shot_61.webp" />
+    when the PAB-B
+    <img class="inline-img" src="./assets/page_4_shot_62.webp" />
+    event is triggered. Note that a replica triggers PAB-B
+    <img class="inline-img" src="./assets/page_4_shot_63.webp" />
+    only if
+    <img class="inline-img" src="./assets/page_4_shot_64.webp" />
+    is received from a client to avoid re-sharing (Line 8). We use
+    <img class="inline-img" src="./assets/page_4_shot_65.webp" />
+    to denote the client set and
+    <img class="inline-img" src="./assets/page_4_shot_66.webp" />
+    to denote the replica set. In the second round, every replica that receives
+    <img class="inline-img" src="./assets/page_4_shot_67.webp" />
+    acts as a witness by sending the sender a
+    <img class="inline-img" src="./assets/page_4_shot_68.webp" />
+    message over
+    <img class="inline-img" src="./assets/page_4_shot_69.webp" />
+    including the signature). If the sender receives at least
+    <img class="inline-img" src="./assets/page_4_shot_70.webp" />
+    messages for
+    <img class="inline-img" src="./assets/page_4_shot_71.webp" />
+    from distinct replicas, it generates a proof
+    <img class="inline-img" src="./assets/page_4_shot_72.webp" />
+    from associated signatures via
+    <img class="inline-img" src="./assets/page_4_shot_73.webp" />
+    and triggers a PAB-A
+    <img class="inline-img" src="./assets/page_4_shot_74.webp" />
+    event. The value of
+    <img class="inline-img" src="./assets/page_4_shot_75.webp" />
+    will be introduced shortly.
+  </p>
+  <img class="shot" src="./assets/page_5_shot_33.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_5_shot_0.webp" />
+    PAB with message
+    <img class="inline-img" src="./assets/page_5_shot_1.webp" />
+    at
+    <img class="inline-img" src="./assets/page_5_shot_2.webp" />
+    phase)
+  </p>
+  <img class="shot" src="./assets/page_5_shot_34.webp" />
+  <p>
+    The
+    <img class="inline-img" src="./assets/page_5_shot_3.webp" />
+    phase serves as a backup in case the Byzantine senders only send messages to a subset of replicas or if messages are
+    delayed due to network asynchrony. The pseu-docode of the
+    <img class="inline-img" src="./assets/page_5_shot_4.webp" />
+    phase is presented in Algorithm 2. The sender broadcasts the proof
+    <img class="inline-img" src="./assets/page_5_shot_5.webp" />
+    of
+    <img class="inline-img" src="./assets/page_5_shot_6.webp" />
+    on event PAB-A
+    <img class="inline-img" src="./assets/page_5_shot_7.webp" />
+    After verifying
+    <img class="inline-img" src="./assets/page_5_shot_8.webp" />
+    the replica that has not received the content of
+    <img class="inline-img" src="./assets/page_5_shot_9.webp" />
+    invokes the
+    <img class="inline-img" src="./assets/page_5_shot_10.webp" />
+    procedure, which sends
+    <img class="inline-img" src="./assets/page_5_shot_11.webp" />
+    messages to a subset of replicas that are randomly picked from
+    <img class="inline-img" src="./assets/page_5_shot_12.webp" />
+    of
+    <img class="inline-img" src="./assets/page_5_shot_13.webp" />
+    excluding replicas that have been requested). The function
+    <img class="inline-img" src="./assets/page_5_shot_14.webp" />
+    returns a random real number between
+    <img class="inline-img" src="./assets/page_5_shot_15.webp" />
+    and
+    <img class="inline-img" src="./assets/page_5_shot_16.webp" />
+    The conﬁgurable parameter
+    <img class="inline-img" src="./assets/page_5_shot_17.webp" />
+    denotes the probability that a replica is requested. If the message is not fetched in
+    <img class="inline-img" src="./assets/page_5_shot_18.webp" />
+    time, the
+    <img class="inline-img" src="./assets/page_5_shot_19.webp" />
+    procedure will be invoked again and the timer will be reset. Although we use
+    <img class="inline-img" src="./assets/page_5_shot_20.webp" />
+    as the stability parameter in the previous description of PAB, the threshold is adjustable between
+    <img class="inline-img" src="./assets/page_5_shot_21.webp" />
+    and
+    <img class="inline-img" src="./assets/page_5_shot_22.webp" />
+    without hurting PAB’s properties. The upper bound is
+    <img class="inline-img" src="./assets/page_5_shot_23.webp" />
+    because there are
+    <img class="inline-img" src="./assets/page_5_shot_24.webp" />
+    replicas in total, where up to
+    <img class="inline-img" src="./assets/page_5_shot_25.webp" />
+    of them are Byzantine. In fact
+    <img class="inline-img" src="./assets/page_5_shot_26.webp" />
+    captures a trade-off between the efﬁciency of the
+    <img class="inline-img" src="./assets/page_5_shot_27.webp" />
+    and
+    <img class="inline-img" src="./assets/page_5_shot_28.webp" />
+    phases. A larger
+    <img class="inline-img" src="./assets/page_5_shot_29.webp" />
+    value improves the
+    <img class="inline-img" src="./assets/page_5_shot_30.webp" />
+    phase since it increases the chance of fetching the message from a correct replica. But, a larger
+    <img class="inline-img" src="./assets/page_5_shot_31.webp" />
+    increases latency, since it requires that the replica waits for more acks in the
+    <img class="inline-img" src="./assets/page_5_shot_32.webp" />
+    phase.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_5_shot_35.webp" />
+    PAB with message
+    <img class="inline-img" src="./assets/page_5_shot_36.webp" />
+    at
+    <img class="inline-img" src="./assets/page_5_shot_37.webp" />
+    phase)
+  </p>
+  <img class="shot" src="./assets/page_5_shot_68.webp" />
+  <p>
+    Now we discuss how we use PAB in our Stratus Mempool and how it is integrated with a leader-based BFT protocol.
+    Recall Figure 1 that shows the interactions between the shared mempool and the consensus engine in the
+    <img class="inline-img" src="./assets/page_5_shot_38.webp" />
+    phase. Speciﬁcally, (i) the leader makes a proposal by calling
+    <img class="inline-img" src="./assets/page_5_shot_39.webp" />
+    <img class="inline-img" src="./assets/page_5_shot_40.webp" />
+    and (ii) upon a replica receiving a new proposal
+    <img class="inline-img" src="./assets/page_5_shot_41.webp" />
+    it ﬁlls
+    <img class="inline-img" src="./assets/page_5_shot_42.webp" />
+    by calling
+    <img class="inline-img" src="./assets/page_5_shot_43.webp" />
+    Here we present the implementations of the
+    <img class="inline-img" src="./assets/page_5_shot_44.webp" />
+    and
+    <img class="inline-img" src="./assets/page_5_shot_45.webp" />
+    procedures as well as the logic for handling an incoming proposal in Algorithm 3. The consensus events and messages
+    are denoted with CE.
+  </p>
+  <p>
+    Since transactions are batched into microblocks for dissem-ination, we use microblocks (i.e
+    <img class="inline-img" src="./assets/page_5_shot_46.webp" />
+    instead of transactions in our description. The consensus protocol subscribes PAB-D
+    <img class="inline-img" src="./assets/page_5_shot_47.webp" />
+    events and
+    <img class="inline-img" src="./assets/page_5_shot_48.webp" />
+    messages from the under-lying PAB protocol and modiﬁes the handlers, in which we use
+    <img class="inline-img" src="./assets/page_5_shot_49.webp" />
+    and
+    <img class="inline-img" src="./assets/page_5_shot_50.webp" />
+    for bookkeeping. Speciﬁcally,
+    <img class="inline-img" src="./assets/page_5_shot_51.webp" />
+    stores microblocks upon the PAB-D
+    <img class="inline-img" src="./assets/page_5_shot_52.webp" />
+    event (Line 9). Upon the receipt of
+    <img class="inline-img" src="./assets/page_5_shot_53.webp" />
+    messages, the microblock
+    <img class="inline-img" src="./assets/page_5_shot_54.webp" />
+    is pushed into the queue
+    <img class="inline-img" src="./assets/page_5_shot_55.webp" />
+    Line 8) and the relevant proof
+    <img class="inline-img" src="./assets/page_5_shot_56.webp" />
+    is recorded in
+    <img class="inline-img" src="./assets/page_5_shot_57.webp" />
+    Line 7).
+  </p>
+  <p>
+    We assume the consensus protocol proceeds in views, and each view has a designated leader. A new view is initiated
+    by a CE-N
+    <img class="inline-img" src="./assets/page_5_shot_58.webp" />
+    V
+    <img class="inline-img" src="./assets/page_5_shot_59.webp" />
+    event. Once a replica becomes the leader for the current view, it attempts to invoke the
+    <img class="inline-img" src="./assets/page_5_shot_60.webp" />
+    <img class="inline-img" src="./assets/page_5_shot_61.webp" />
+    procedure, which pulls microblocks (only ids) from the front of
+    <img class="inline-img" src="./assets/page_5_shot_62.webp" />
+    and piggybacks associated proofs. It stops pulling when the number of contained microblocks has reached B
+    <img class="inline-img" src="./assets/page_5_shot_63.webp" />
+    S
+    <img class="inline-img" src="./assets/page_5_shot_64.webp" />
+    or there are no microblocks left in
+    <img class="inline-img" src="./assets/page_5_shot_65.webp" />
+    The reason why the proposal needs to include all the associated available proofs of each referenced transaction is
+    to show that the availability of each referenced microblock is guaranteed. We argue that the inevitable overhead is
+    negligible provided that the microblock is large.
+  </p>
+  <p>
+    On the receipt of an incoming proposal
+    <img class="inline-img" src="./assets/page_5_shot_66.webp" />
+    the replica veriﬁes every proof included in
+    <img class="inline-img" src="./assets/page_5_shot_67.webp" />
+    and triggers a
+  </p>
+  <img class="shot" src="./assets/page_6_shot_12.webp" />
+  <p>
+    CE-V
+    <img class="inline-img" src="./assets/page_6_shot_0.webp" />
+    C
+    <img class="inline-img" src="./assets/page_6_shot_1.webp" />
+    event if the veriﬁcation is not passed, attempting to replace the current leader. If the veriﬁcation is passed, a
+    <img class="inline-img" src="./assets/page_6_shot_2.webp" />
+    CE-E
+    <img class="inline-img" src="./assets/page_6_shot_3.webp" />
+    C
+    <img class="inline-img" src="./assets/page_6_shot_4.webp" />
+    event is triggered and the processing of
+    <img class="inline-img" src="./assets/page_6_shot_5.webp" />
+    enters the commit phase (Line 26). Next, the replica invokes the
+    <img class="inline-img" src="./assets/page_6_shot_6.webp" />
+    procedure to pull the content of microblocks associated with
+    <img class="inline-img" src="./assets/page_6_shot_7.webp" />
+    from the mempool. The
+    <img class="inline-img" src="./assets/page_6_shot_8.webp" />
+    procedure (Algorithm 2) is invoked when missing microblocks are found. The thread waits until all the requested
+    microblocks are delivered. Note that this thread is independent of the thread handling consensus events. Therefore,
+    waiting for requested microblocks will not block consensus. After a
+    <img class="inline-img" src="./assets/page_6_shot_9.webp" />
+    is constructed, the replica triggers a
+    <img class="inline-img" src="./assets/page_6_shot_10.webp" />
+    CE-F
+    <img class="inline-img" src="./assets/page_6_shot_11.webp" />
+    event, indicating that the block is ready for execution.
+  </p>
+  <p>
+    In Stratus, the transactions in a microblock are executed if and only if all transactions in the previous
+    microblocks are received and executed. Since missing transactions are fetched according to their unique ids,
+    consistency is ensured. Therefore, using Stratus in any case will not compromise the
+    safety of the consensus protocol
+    <img class="inline-img" src="./assets/page_6_shot_13.webp" />
+    <img class="inline-img" src="./assets/page_6_shot_14.webp" />
+    <img class="inline-img" src="./assets/page_6_shot_15.webp" />
+    <img class="inline-img" src="./assets/page_6_shot_16.webp" />
+    In addition, the
+    <img class="inline-img" src="./assets/page_6_shot_17.webp" />
+    phase proceeds concurrently with the consensus protocol (only background bandwidth is used) until the associated
+    block is full for execution. Many optimizations [54], [55], [7] for improving the execution have been proposed and
+    we hope to build on them in our future work. Our implementation satis-ﬁes
+    <img class="inline-img" src="./assets/page_6_shot_18.webp" />
+    which helps Stratus achieve
+    <img class="inline-img" src="./assets/page_6_shot_19.webp" />
+    and
+    <img class="inline-img" src="./assets/page_6_shot_20.webp" />
+    .
+  </p>
+  <img class="shot" src="./assets/page_6_shot_51.webp" />
+  <p>
+    Now we prove the correctness of PAB. Since the integrity and validity properties are simple to prove, here we only
+    show that Algorithm 1 and Algorithm 2 satisfy
+    <img class="inline-img" src="./assets/page_6_shot_21.webp" />
+    <img class="inline-img" src="./assets/page_6_shot_22.webp" />
+    Then we provide proofs that Stratus satisﬁes
+    <img class="inline-img" src="./assets/page_6_shot_23.webp" />
+    and
+    <img class="inline-img" src="./assets/page_6_shot_24.webp" />
+    .
+  </p>
+  <img class="shot" src="./assets/page_6_shot_52.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_6_shot_25.webp" />
+    If a transaction
+    <img class="inline-img" src="./assets/page_6_shot_26.webp" />
+    is delivered and veriﬁed by a correct replica
+    <img class="inline-img" src="./assets/page_6_shot_27.webp" />
+    the sender), it will be eventually batched into a microblock
+    <img class="inline-img" src="./assets/page_6_shot_28.webp" />
+    and disseminated by PAB. Due to the
+    <img class="inline-img" src="./assets/page_6_shot_29.webp" />
+    property of PAB
+    <img class="inline-img" src="./assets/page_6_shot_30.webp" />
+    will be eventually delivered by every correct replica, which sends acks over
+    <img class="inline-img" src="./assets/page_6_shot_31.webp" />
+    back to the sender. An available proof
+    <img class="inline-img" src="./assets/page_6_shot_32.webp" />
+    over
+    <img class="inline-img" src="./assets/page_6_shot_33.webp" />
+    will be generated and broadcast by the sender. Upon the receipt of
+    <img class="inline-img" src="./assets/page_6_shot_34.webp" />
+    every correct replica pushes
+    <img class="inline-img" src="./assets/page_6_shot_35.webp" />
+    into
+    <img class="inline-img" src="./assets/page_6_shot_36.webp" />
+    Therefore
+    <img class="inline-img" src="./assets/page_6_shot_37.webp" />
+    will be eventually popped from
+    <img class="inline-img" src="./assets/page_6_shot_38.webp" />
+    of a correct leader
+    <img class="inline-img" src="./assets/page_6_shot_39.webp" />
+    and proposed by
+    <img class="inline-img" src="./assets/page_6_shot_40.webp" />
+    .
+  </p>
+  <img class="shot" src="./assets/page_6_shot_53.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_6_shot_41.webp" />
+    If a transaction
+    <img class="inline-img" src="./assets/page_6_shot_42.webp" />
+    is included in a proposal by a correct leader, it means that
+    <img class="inline-img" src="./assets/page_6_shot_43.webp" />
+    is provably available (a valid proof
+    <img class="inline-img" src="./assets/page_6_shot_44.webp" />
+    over
+    <img class="inline-img" src="./assets/page_6_shot_45.webp" />
+    is valid). Due to the
+    <img class="inline-img" src="./assets/page_6_shot_46.webp" />
+    property of PAB, every correct replica eventually delivers
+    <img class="inline-img" src="./assets/page_6_shot_47.webp" />
+    .
+  </p>
+  <img class="shot" src="./assets/page_6_shot_54.webp" />
+  <p>
+    We now discuss Stratus’ load balancing. Recall that replicas disseminate transactions in a distributed manner. But,
+    due to network heterogeneity and workload imbalance
+    <img class="inline-img" src="./assets/page_6_shot_48.webp" />
+    <img class="inline-img" src="./assets/page_6_shot_49.webp" />
+    performance will be bottlenecked by overloaded replicas. Furthermore, a replica’s workload and its resources may
+    vary over time. Therefore, a load balancing protocol that can adapt to a replica’s workload and capacity is
+    necessary.
+  </p>
+  <p>
+    In our design, busy replicas will forward excess load to less busy replicas that we term
+    <img class="inline-img" src="./assets/page_6_shot_50.webp" />
+    The challenges are (i) how to determine whether a replica is busy, (ii) how to decide which
+    replica should receive excess loads, and (iii) how to deal with Byzantine proxies that refuse to disseminate the
+    received load. Our load balancing protocol works as follows. A local workload estimator monitors the replica to
+    determine if it is
+    <img class="inline-img" src="./assets/page_7_shot_0.webp" />
+    or
+    <img class="inline-img" src="./assets/page_7_shot_1.webp" />
+    We discuss work estimation in Section V-B. Next, a
+    <img class="inline-img" src="./assets/page_7_shot_2.webp" />
+    replica forwards newly generated microblocks to a proxy. The proxy initiates a PAB instance with a forwarded
+    microblock and is responsible for the
+    <img class="inline-img" src="./assets/page_7_shot_3.webp" />
+    phase. When the
+    <img class="inline-img" src="./assets/page_7_shot_4.webp" />
+    phase completes, the proxy sends the
+    <img class="inline-img" src="./assets/page_7_shot_5.webp" />
+    message of the microblock to the original replica, which continues the
+    <img class="inline-img" src="./assets/page_7_shot_6.webp" />
+    phase. In addition, we adopt a
+    <img class="inline-img" src="./assets/page_7_shot_7.webp" />
+    to avoid Byzantine proxies. Next, we discuss how a busy replica forwards excess load.
+  </p>
+  <img class="shot" src="./assets/page_7_shot_32.webp" />
+  <p>
+    Before forwarding excess load, a busy replica needs to know which replicas are unbusy. A na¨ıve approach is to ask
+    other replicas for their load status. However, this requires all-to-all communications and is not scalable. Instead,
+    we use the well-known Power-of-d-choices (Pod) algorithm [56], [57], [58]. A
+    <img class="inline-img" src="./assets/page_7_shot_8.webp" />
+    replica randomly samples load status from
+    <img class="inline-img" src="./assets/page_7_shot_9.webp" />
+    replicas, and forwards its excess load to the least loaded replica (the proxy). Here
+    <img class="inline-img" src="./assets/page_7_shot_10.webp" />
+    is usually much smaller than the number of replicas
+    <img class="inline-img" src="./assets/page_7_shot_11.webp" />
+    Our evaluation shows that
+    <img class="inline-img" src="./assets/page_7_shot_12.webp" />
+    is sufﬁcient for a network with hundreds of nodes and unbalanced workloads (see Section VII-D). Note that the choice
+    of
+    <img class="inline-img" src="./assets/page_7_shot_13.webp" />
+    is independent of
+    <img class="inline-img" src="./assets/page_7_shot_14.webp" />
+    we discuss how we handle Byzantine proxies later in this section. The randomness in Pod ensures that the same proxy
+    is unlikely to be re-sampled and overloaded.
+  </p>
+  <p>
+    Algorithm 4 depicts the
+    <img class="inline-img" src="./assets/page_7_shot_15.webp" />
+    procedure and relevant handlers. Upon the generation of a new microblock
+    <img class="inline-img" src="./assets/page_7_shot_16.webp" />
+    the replica ﬁrst checks whether it is
+    <img class="inline-img" src="./assets/page_7_shot_17.webp" />
+    see Sec-tion V-B). If so, it invokes the
+    <img class="inline-img" src="./assets/page_7_shot_18.webp" />
+    proce-dure to forward
+    <img class="inline-img" src="./assets/page_7_shot_19.webp" />
+    to the proxy; otherwise, it broadcasts
+    <img class="inline-img" src="./assets/page_7_shot_20.webp" />
+    using PAB by itself. To select a proxy, a replica samples load status from
+    <img class="inline-img" src="./assets/page_7_shot_21.webp" />
+    random replicas (excluding itself) within a time-out of
+    <img class="inline-img" src="./assets/page_7_shot_22.webp" />
+    Line 10). Upon receiving a workload query, a replica obtains its current load status by calling the
+    <img class="inline-img" src="./assets/page_7_shot_23.webp" />
+    (see Section V-B) and piggybacks it on the reply (Line 23-25). If the sender receives all the replies or times out,
+    it picks the replica that replied with the smallest workload and sends
+    <img class="inline-img" src="./assets/page_7_shot_24.webp" />
+    to it. This proxy then initiates a PAB instance for
+    <img class="inline-img" src="./assets/page_7_shot_25.webp" />
+    and sends the
+    <img class="inline-img" src="./assets/page_7_shot_26.webp" />
+    message back to the original sender when a valid proof over
+    <img class="inline-img" src="./assets/page_7_shot_27.webp" />
+    is generated. Note that if no replies are received before timeout, the sending replica initiates a PAB instance by
+    itself (Line 13). Note that due to the decoupling design of Stratus, the overhead introduced by load forwarding has
+    negligible impact on consensus. To prevent a malicious replica from sending a small batch to reduce the performance,
+    every replica can set a minimum batch size for receiving a batch.
+  </p>
+  <p>
+    In Stratus, each replica randomly and independently chooses
+    <img class="inline-img" src="./assets/page_7_shot_28.webp" />
+    replicas from the remaining
+    <img class="inline-img" src="./assets/page_7_shot_29.webp" />
+    replicas. Since the work-load of each replica changes quickly
+    <img class="inline-img" src="./assets/page_7_shot_30.webp" />
+    <img class="inline-img" src="./assets/page_7_shot_31.webp" />
+    without blocking the forwarding process. Therefore, for each load balancing event of an overloaded
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_7_shot_33.webp" />
+    The Load Forwarding procedure at replica
+    <img class="inline-img" src="./assets/page_7_shot_34.webp" />
+    .
+  </p>
+  <img class="shot" src="./assets/page_7_shot_58.webp" />
+  <p>
+    replica A, the probability that a speciﬁc replica (other than replica A) is chosen by replica A is
+    <img class="inline-img" src="./assets/page_7_shot_35.webp" />
+    The probability that a replica is chosen by all replicas is very small. For example, when
+    <img class="inline-img" src="./assets/page_7_shot_36.webp" />
+    and
+    <img class="inline-img" src="./assets/page_7_shot_37.webp" />
+    the probability that a replica is chosen by more than 7 replicas is about
+    <img class="inline-img" src="./assets/page_7_shot_38.webp" />
+    We omit the analysis details due to the page limit. Next, we discuss how we handle Byzantine behaviors during load
+    forwarding.
+    <img class="inline-img" src="./assets/page_7_shot_39.webp" />
+    A sampled Byzantine replica can pretend to be unoccupied by responding with a low busy level and censoring the
+    forwarded microblocks. In this case, the
+    <img class="inline-img" src="./assets/page_7_shot_40.webp" />
+    <img class="inline-img" src="./assets/page_7_shot_41.webp" />
+    would be compromised: the transactions included in the censored microblock will not be proposed. We address this
+    issue as follows. A replica
+    <img class="inline-img" src="./assets/page_7_shot_42.webp" />
+    sets a timer before sending
+    <img class="inline-img" src="./assets/page_7_shot_43.webp" />
+    to a selected proxy
+    <img class="inline-img" src="./assets/page_7_shot_44.webp" />
+    Line 16). If
+    <img class="inline-img" src="./assets/page_7_shot_45.webp" />
+    does not receive the available proof
+    <img class="inline-img" src="./assets/page_7_shot_46.webp" />
+    over
+    <img class="inline-img" src="./assets/page_7_shot_47.webp" />
+    before the timeout
+    <img class="inline-img" src="./assets/page_7_shot_48.webp" />
+    re-transmits
+    <img class="inline-img" src="./assets/page_7_shot_49.webp" />
+    by re-invoking the
+    <img class="inline-img" src="./assets/page_7_shot_50.webp" />
+    Line 20). Here, the unique microblock ids prevent duplication. The above procedure repeats until a valid
+    <img class="inline-img" src="./assets/page_7_shot_51.webp" />
+    over
+    <img class="inline-img" src="./assets/page_7_shot_52.webp" />
+    is received. Then
+    <img class="inline-img" src="./assets/page_7_shot_53.webp" />
+    continues the
+    <img class="inline-img" src="./assets/page_7_shot_54.webp" />
+    phase of the PAB instance with
+    <img class="inline-img" src="./assets/page_7_shot_55.webp" />
+    by triggering the PAB-A
+    <img class="inline-img" src="./assets/page_7_shot_56.webp" />
+    event (Line 33).
+  </p>
+  <p>
+    To prevent Byzantine replicas from being sampled again, we use a
+    <img class="inline-img" src="./assets/page_7_shot_57.webp" />
+    to store proxies that have not ﬁnished the
+  </p>
+  <img class="shot" src="./assets/page_8_shot_16.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_8_shot_0.webp" />
+    phase of a previous PAB instance. That is, before a busy sender sends a microblock
+    <img class="inline-img" src="./assets/page_8_shot_1.webp" />
+    to a proxy, the proxy is added to the
+    <img class="inline-img" src="./assets/page_8_shot_2.webp" />
+    Line 17). For future sampling, the replicas in the
+    <img class="inline-img" src="./assets/page_8_shot_3.webp" />
+    are excluded. As long as the sender receives a valid proof message for
+    <img class="inline-img" src="./assets/page_8_shot_4.webp" />
+    from the proxy before a timeout, the proxy will be removed from the
+    <img class="inline-img" src="./assets/page_8_shot_5.webp" />
+    Line 21). The
+    <img class="inline-img" src="./assets/page_8_shot_6.webp" />
+    is periodically cleared by a timer to avoid replicas from being banned forever (Line 33). Note that more advanced
+    <img class="inline-img" src="./assets/page_8_shot_7.webp" />
+    mechanisms can be used based on proxies’ behavior [59] and we consider to include them in our future work.
+  </p>
+  <img class="shot" src="./assets/page_8_shot_17.webp" />
+  <p>
+    Our workload estimator runs locally on an on-going basis and is responsible for estimating
+    <img class="inline-img" src="./assets/page_8_shot_8.webp" />
+    Speciﬁcally, it determines: (i) whether the replica is overloaded, and (ii) how much the replica is overloaded,
+    which correspond to the two functions in Algorithm
+    <img class="inline-img" src="./assets/page_8_shot_9.webp" />
+    and
+    <img class="inline-img" src="./assets/page_8_shot_10.webp" />
+    respectively. To evaluate replicas’ load status, two ingredients need to be considered: workload and capacity. As
+    well, the estimated results must be comparable across replicas in a heterogeneous network.
+  </p>
+  <p>
+    To address these challenges, we use
+    <img class="inline-img" src="./assets/page_8_shot_11.webp" />
+    ST) to es-timate a replica’s load status. The stable time of a microblock is measured from when the sender
+    broadcasts the microblock until the time that the microblock becomes stable (receiving
+    <img class="inline-img" src="./assets/page_8_shot_12.webp" />
+    acks). To estimate ST of a replica, the replica calculates the ST of each microblock if it is the sender and takes
+    the
+    <img class="inline-img" src="./assets/page_8_shot_13.webp" />
+    th (e.g
+    <img class="inline-img" src="./assets/page_8_shot_14.webp" />
+    percentile of the ST values in a window of the latest stable microblocks. Figure 4 shows the estimation process. The
+    estimated ST of a replica is updated when a new microblock becomes stable. The window size is conﬁgurable and we use
+    <img class="inline-img" src="./assets/page_8_shot_15.webp" />
+    as the default size.
+  </p>
+  <p>
+    Our approach is based on two observations. First, the variability in network delay in a private network is small
+    [60]. Second, network delay increases sharply when a node is overloaded. The above observations are based on our
+    measure-ments. A selection of these is shown in Figure 5. Figure 5a is a heat map of measured delays between two
+    regions (Virginia and Singapore) in Alibaba Cloud over 24 hours. Figure 5b exhibits the round-trip delay
+    distribution during 1 minute starting the 12th hour in the measurements. We omit measurements of other pair of
+    datacenters in this paper. Our results demonstrate that the inter-datacenter network delays across different regions
+    are stable and predictable based on recent measurement data. Thus, under a constant workload, the calculated ST
+    should be at around a constant number
+    <img class="inline-img" src="./assets/page_8_shot_18.webp" />
+    with an error of
+    <img class="inline-img" src="./assets/page_8_shot_19.webp" />
+    If the estimated ST is larger than
+    <img class="inline-img" src="./assets/page_8_shot_20.webp" />
+    by a parameter of
+    <img class="inline-img" src="./assets/page_8_shot_21.webp" />
+    a replica is considered
+    <img class="inline-img" src="./assets/page_8_shot_22.webp" />
+    return
+    <img class="inline-img" src="./assets/page_8_shot_23.webp" />
+    in the
+    <img class="inline-img" src="./assets/page_8_shot_24.webp" />
+    function). Additionally, the value of ST reﬂects the degree to which a replica is loaded: the smaller the ST, the
+    more resources a replica has for disseminating microblocks. Therefore, we use the ST as the return value of the
+    function
+    <img class="inline-img" src="./assets/page_8_shot_25.webp" />
+    Note that the
+    <img class="inline-img" src="./assets/page_8_shot_26.webp" />
+    returns a NULL value if the calling replica is
+    <img class="inline-img" src="./assets/page_8_shot_27.webp" />
+    Also note that due to network topology, the ST value does not faithfully reﬂect the load status across replicas. For
+    example, some replicas may have a smaller ST because they are closer to a quorum of other replicas. In this case,
+    forwarding excess load to these replicas also beneﬁts the system. For overloaded replicas with large ST values, the
+    topology has a negligible impact. In case the network is unstable, we can also estimate the load status by
+    monitoring the queue length of the network interface card. We save that for future work.
+  </p>
+  <p>
+    VI. I
+    <img class="inline-img" src="./assets/page_8_shot_28.webp" />
+    .
+  </p>
+  <p>
+    We prototyped Stratus
+    <img class="inline-img" src="./assets/page_8_shot_29.webp" />
+    in Go with Bamboo
+    <img class="inline-img" src="./assets/page_8_shot_30.webp" />
+    which is an open source project for prototyping, evaluating, and benchmarking BFT protocols. Bamboo provides
+    validated implementations of state-of-the-art BFT protocols such as PBFT [21], HotStuff [19], and Streamlet [20].
+    Bamboo also supplies common functionalities that a BFT replication proto-col needs. In our implementation, we
+    replaced the mempool in Bamboo with Stratus shared mempool. Because of Stratus’ well-designed interfaces, the
+    consensus core is minimally modiﬁed. We used HotStuff’s Pacemaker for view change, though Stratus is agnostic to the
+    view-change mechanism. Similar to [19], [61], we use ECDSA to implement the quorum proofs in PAB instead of
+    threshold signature. This is because the computation efﬁciency of ECDSA
+    <img class="inline-img" src="./assets/page_8_shot_31.webp" />
+    is better than Boldyreva’s threshold signature [61]. Overall, our imple-mentation added about 1,300 lines of Go to
+    Bamboo.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_8_shot_32.webp" />
+    Since microblocks consume the most band-width, we need to reserve sufﬁcient resources for consensus messages to
+    ensure progress. For this, we adopt two optimiza-tions. First, we prioritize the transmission and processing of
+  </p>
+  <img class="shot" src="./assets/page_8_shot_33.webp" />
+  <img class="shot" src="./assets/page_9_shot_10.webp" />
+  <p>
+    consensus messages. Second, we use a token-based limiter to limit the sending rate of data messages: every data
+    message (i.e., microblock) needs a token to be sent out, and tokens are reﬁlled at a conﬁgurable rate. This ensures
+    that the network resources will not be overtaken by data messages. The above optimizations are specially designed
+    for Stratus and are only used in Stratus-based implementations. We did
+    <img class="inline-img" src="./assets/page_9_shot_0.webp" />
+    use these optimizations in non-Stratus protocols in our evaluation since they may negatively effect those protocols.
+  </p>
+  <img class="shot" src="./assets/page_9_shot_11.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_9_shot_1.webp" />
+    how does Stratus perform as compared to the alternative Shared Mempool implementations with a varying number of
+    replicas? (Section VII-B)
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_9_shot_2.webp" />
+    how do missing transactions caused by network asyn-chrony and Byzantine replicas affect the protocols’ perfor-mance?
+    (Section VII-C)
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_9_shot_3.webp" />
+    how does unbalanced load affect protocols’ throughput? (Section VII-D)
+  </p>
+  <img class="shot" src="./assets/page_9_shot_12.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_9_shot_4.webp" />
+    We conducted our experiments on Alibaba Cloud
+    <img class="inline-img" src="./assets/page_9_shot_5.webp" />
+    instances
+    <img class="inline-img" src="./assets/page_9_shot_6.webp" />
+    Each instance has 4vGPUs and 8GB memory and runs Ubuntu server 20.04. We ran each replica on a single ECS instance.
+    We performed protocol eval-uations in LANs and WANs to simulate
+    <img class="inline-img" src="./assets/page_9_shot_7.webp" />
+    and
+    <img class="inline-img" src="./assets/page_9_shot_8.webp" />
+    deployments, respectively [34]. LANs and WANs are typical deployments of permissioned blockchains and permissionless
+    blockchains that run a BFT-based PoS consensus protocol [12], [14].In LAN deployments, a replica has up to 3 Gb/s of
+    bandwidth and inter-replica RTT of less than 10 ms. For WAN deployments, we use NetEm [62] to simulate a WAN
+    environment with 100 ms inter-replica RTT and 100 Mb/s replica bandwidth.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_9_shot_9.webp" />
+    Clients are run on 4 instances with the same speciﬁcations. Each client concurrently sends multiple trans-actions to
+    different replicas. Bamboo’s benchmark provides an in-memory key-value store backed by the protocol under
+    evaluation. Each transaction is issued as a simple key-value set operation submitted to a single replica. Since our
+    focus is on the performance of the consensus protocol with the mempool,
+  </p>
+  <img class="shot" src="./assets/page_9_shot_13.webp" />
+  <p>
+    we do not involve application-speciﬁc veriﬁcation (including signatures) and execution (including disk IO
+    operations) of transactions in our evaluation. We measure both throughput and latency on the server side. The
+    latency is measured between the moment a transaction is ﬁrst received by a replica and the moment the block
+    containing it is committed. We avoid end-to-end measurements to exclude the impact of the network delay between a
+    replica and a client. Each data point is obtained when the measurement is stabilized (sampled data do not vary by
+    more than 1%) and is an average over 3 runs. In our experiments, workloads are evenly distributed across replicas
+    except for the last set of experiments (Section VII-D), in which we create skewed load to evaluate load balancing.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_9_shot_14.webp" />
+    We evaluate the performance of a wide range of protocols (Table II). We use native HotStuff and PBFT with the
+    original mempool as the baseline, denoted as (N-HS and N-PBFT, respectively). All of our implementations of HotStuff
+    are based on the Chained-HotStuff (three-chain) version from the original paper [19], in which pipelining is used
+    and leaders are rotated for each proposal. Our implementation of PBFT shares the same chained blockchain structure
+    as Chained-HotStuff for a fair comparison.We also compare against a version of HotStuff with a basic shared mempool
+    with best-effort broadcast and fetching (denoted as SMP-HS). Finally, we equip HotStuff and PBFT with our Stratus
+    Mempool, de-noted as S-HS and S-PBFT, respectively. We also implemented a gossip-based shared mempool (distributing
+    microblocks via gossip), denoted by SMP-HS-G, to evaluate load balancing and compare it with S-HS. All protocols are
+    implemented using the same Bamboo code base for a fair comparison. The sampling parameter
+    <img class="inline-img" src="./assets/page_9_shot_15.webp" />
+    is set to
+    <img class="inline-img" src="./assets/page_9_shot_16.webp" />
+    by default. This is because
+    <img class="inline-img" src="./assets/page_9_shot_17.webp" />
+    allows the busy sender to randomly pick exactly one replica without comparing workload status between others. When
+    we gradually increase
+    <img class="inline-img" src="./assets/page_9_shot_18.webp" />
+    the chance of selecting a less busy replica increases signiﬁcantly. However, increasing
+    <img class="inline-img" src="./assets/page_9_shot_19.webp" />
+    also incurs overhead. In our experiments (Section VII-D) we show that
+    <img class="inline-img" src="./assets/page_9_shot_20.webp" />
+    exhibits the best performance.
+  </p>
+  <p>
+    We also compare against Narwhal
+    <img class="inline-img" src="./assets/page_9_shot_21.webp" />
+    which uses a shared mempool with reliable broadcast. Narwhal is based on Hot-Stuff and splits functionality between
+    workers and primaries, responsible for transaction dissemination and consensus, re-spectively. To fairly compare
+    Narwhal with Stratus, we let each primary have one worker and locate both in one VM instance. As another baseline,
+    we compare our protocols with MirBFT
+    <img class="inline-img" src="./assets/page_9_shot_22.webp" />
+    a state-of-the-art multi-leader protocol. All replicas act as leaders in an epoch for fair comparison.
+  </p>
+  <img class="shot" src="./assets/page_9_shot_23.webp" />
+  <p>
+    In the ﬁrst set of experiments, we explore the impact of batch sizes on S-HS and then we evaluate the scalability of
+    protocols. These experiments are run in a common BFT setting in which less than one-third of replicas remain silent.
+    Since
+  </p>
+  <img class="shot" src="./assets/page_9_shot_24.webp" />
+  <img class="shot" src="./assets/page_10_shot_14.webp" />
+  <p>
+    our focus is on normal-case performance, view changes are not triggered in these experiments unless clearly stated.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_10_shot_0.webp" />
+    Batching more transactions in a microblock can increase throughput since the message cost is better amortized (e.g.,
+    fewer acks). However, batching also leads to higher latency since it requires more time to ﬁll a microblock. In this
+    experiment, we study the impact of batch size on Stratus (S-HS) and pick a proper batch size for different network
+    sizes to balance throughput and latency.
+  </p>
+  <p>
+    We deploy Stratus-based HotStuff (S-HS) in a LAN setting with
+    <img class="inline-img" src="./assets/page_10_shot_1.webp" />
+    and
+    <img class="inline-img" src="./assets/page_10_shot_2.webp" />
+    replicas, respectively. For
+    <img class="inline-img" src="./assets/page_10_shot_3.webp" />
+    we vary the batch size from 32KB to 128KB, while for
+    <img class="inline-img" src="./assets/page_10_shot_4.webp" />
+    we vary the batch size from 128KB to 512KB. We denote each pair of settings as the network size followed by the
+    batch size. For instance, the network size of
+    <img class="inline-img" src="./assets/page_10_shot_5.webp" />
+    with the batch size of 32KB bytes is denoted as
+    <img class="inline-img" src="./assets/page_10_shot_6.webp" />
+    K. We use the transaction payloads of
+    <img class="inline-img" src="./assets/page_10_shot_7.webp" />
+    bytes (commonly used in blockchain systems [48], [13]). We gradually increase the workload until the system is
+    saturated, i.e., the workload exceeds the maximum system throughput, resulting in sharply increasing delay.
+  </p>
+  <p>
+    The results are depicted in Figure 6. We can see that as the batch size increases, the throughput improves
+    accordingly for both network sizes. However, the throughput gain of choosing a larger batch size is reduced when the
+    batch size is beyond 64KB (for
+    <img class="inline-img" src="./assets/page_10_shot_8.webp" />
+    and 256KB (for
+    <img class="inline-img" src="./assets/page_10_shot_9.webp" />
+    Also, we observe that a larger network requires a larger batch size for better throughput. This is because large
+    batch size amortizes the overhead of PAB (fewer acks). But, a larger batch size leads to increased latency (as we
+    explained previously). We use the batch size of 128KB for small networks
+    <img class="inline-img" src="./assets/page_10_shot_10.webp" />
+    the batch size of 256KB for large networks
+    <img class="inline-img" src="./assets/page_10_shot_11.webp" />
+    and a
+    <img class="inline-img" src="./assets/page_10_shot_12.webp" />
+    byte transaction payload in the rest of our experiments. As long as a replica accumulates sufﬁcient transactions
+    (reaching the batch size), it produces and disseminates a microblock. If the batch size is not reached before a
+    timeout
+    <img class="inline-img" src="./assets/page_10_shot_13.webp" />
+    by default), all the remaining transactions will be batched into a microblock. We also ﬁnd that proposal size
+    (number of microblock ids included in a proposal) does not have obvious impact on the performance as long as a
+    proper batch size (number of transactions included in a microblock) is chosen. Therefore, we do not set any
+    constraint on proposal size. The above settings also apply in SMP-HS and SMP-HS-G.
+  </p>
+  <p>
+    We evaluate the scalability of the protocols by increasing the
+  </p>
+  <img class="shot" src="./assets/page_10_shot_16.webp" />
+  <p>
+    number of replicas from 16 to 400. We use N-HS, N-PBFT, SMP-HS, S-PBFT, Narwhal, and MirBFT for comparison and run
+    experiments in both LANs and WANs. We gradually increase the workload until the system is saturated, i.e., the
+    workload exceeds the maximum system throughput, resulting in sharply increasing delay.
+  </p>
+  <p>
+    We use a batch size of 256KB and
+    <img class="inline-img" src="./assets/page_10_shot_15.webp" />
+    byte transaction payload, which gives 2,000 transactions per batch, for Stratus-based protocols throughout our
+    experiments. We ﬁnd that pro-posal size (number of microblock ids included in a proposal) does not have an obvious
+    impact on performance as long as we choose a proper batch size (number of transactions in a microblock). Therefore,
+    we do not constrain proposal size. For every protocol we use a microblock/proposal size settings that maximizes the
+    protocol’s performance. We omit experimental results that explore these settings due to space constraints.
+  </p>
+  <p>
+    Figure 7 depicts the throughput and latency of the protocols with an increasing number of replicas in LANs and WANs.
+    We can see that protocols using the shared mempool (SMP-HS, S-HS, S-PBFT, and Narwhal) or relying on multiple
+    leaders outperform the native HotStuff and Streamlet (N-HS and N-PBFT) in throughput in all experiments. Previous
+    works [19], [25], [23] have also shown that the throughput/latency of N-HS decreases/increases sharply as the number
+    of replicas increases, and meaningful results can no longer be observed beyond 256 nodes. Although Narwhal
+    outperforms N-HS due to the use of a shared mempool, it does not scale well since it employs the heavy reliable
+    broadcast primitive. As shown in [23], Narwhal achieves better scalability only when each primary has multiple
+    workers that are located in different machines. MirBFT has higher throughput than S-HS when there are fewer than 16
+    replicas. This is because Stratus imposes a higher message overhead than PBFT. However,
+  </p>
+  <p>
+    MirBFT’s performance drops faster than S-HS because of higher message complexity. MirBFT is comparable to S-PBFT
+    because they have the same message complexity. The gap between them is due to implementation differences.
+  </p>
+  <p>
+    SMP-HS and S-HS show a slightly higher latency than N-HS when the network size is small
+    <img class="inline-img" src="./assets/page_11_shot_0.webp" />
+    in LANs and
+    <img class="inline-img" src="./assets/page_11_shot_1.webp" />
+    in WANs). This is due to batching. They outperform the other two protocols in both throughput and latency when the
+    network size is beyond 64 and show ﬂatter lines in throughput as the network size increases. The throughput of
+    SMP-HS and S-HS achieve
+    <img class="inline-img" src="./assets/page_11_shot_2.webp" />
+    throughput when
+    <img class="inline-img" src="./assets/page_11_shot_3.webp" />
+    as compared to N-HS, and this gap grows with network size. Finally, SMP-HS and S-HS have similar performance, which
+    indicates that the use of PAB incurs negligible overhead, which is amortized by a large batch size.
+  </p>
+  <img class="shot" src="./assets/page_11_shot_9.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_11_shot_4.webp" />
+    We evaluate the outbound band-width usage at the leader and the non-leader replica in N-HS, SMP-HS, and S-HS. We
+    present the results in Table III. We can see that the communication bottleneck in N-HS is at the leader, while the
+    bandwidth of non-leader replicas is under-utilized. In SMP-HS and S-HS, the bandwidth consumption between leader
+    replicas and non-leader replicas are more even, and the leader bottleneck is therefore alleviated. We observe that
+    S-HS adds around 10% overhead on top of SMP-HS due to the use of PAB. Next, we show that this overhead is worthwhile
+    as it provides availability insurance. We also observe that around 40% of bandwidth remains unused. This is because
+    chain-based protocols are bounded by latency: each proposal goes through two rounds of communication
+    (one-to-all-to-one). We consider out-of-order processing of proposals for better network utilization as important
+    future work.
+  </p>
+  <img class="shot" src="./assets/page_11_shot_10.webp" />
+  <p>
+    Recall that in
+    <img class="inline-img" src="./assets/page_11_shot_5.webp" />
+    Section III-E), a basic shared mempool with best-effort broadcast is subject to
+    <img class="inline-img" src="./assets/page_11_shot_6.webp" />
+    <img class="inline-img" src="./assets/page_11_shot_7.webp" />
+    In the next set of experiments, we evaluate the throughput of SMP-HS and S-HS under a period of network asynchrony
+    and Byzantine attacks.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_11_shot_8.webp" />
+    During network asynchrony, a proposal is likely to arrive before some of referenced transactions (i.e., missing
+    transactions), which negatively impacts performance. The point of this experiment is to show that Stratus-based
+  </p>
+  <img class="shot" src="./assets/page_11_shot_28.webp" />
+  <p>
+    We ran an experiment in a WAN setting, during which we induce a period of network ﬂuctuation via NetEm. The
+    ﬂuctuation lasts for
+    <img class="inline-img" src="./assets/page_11_shot_11.webp" />
+    during which network delays between replicas ﬂuctuate between
+    <img class="inline-img" src="./assets/page_11_shot_12.webp" />
+    and
+    <img class="inline-img" src="./assets/page_11_shot_13.webp" />
+    for each mes-sage (i.e
+    <img class="inline-img" src="./assets/page_11_shot_14.webp" />
+    base with
+    <img class="inline-img" src="./assets/page_11_shot_15.webp" />
+    uniform jitter). We set the view-change timer to be
+    <img class="inline-img" src="./assets/page_11_shot_16.webp" />
+    We keep the transaction rate at 25KTx/s without saturating the network.
+  </p>
+  <p>
+    We ran the experiment 10 times and each run lasts 30 sec-onds. We show the results in Figure 8. During the
+    ﬂuctuation, the throughput of SMP-HS drops to zero. This is because missing transactions are fetched from the
+    leader, which causes congestion at the leader. As a result, view-changes are trig-gered, during which no progress is
+    made. When the network ﬂuctuation is over, SMP-HS slowly recovers by processing the accumulated proposals. On the
+    other hand, S-HS makes progress at the speed of the network and no view-changes are triggered. This is due to the
+    <img class="inline-img" src="./assets/page_11_shot_17.webp" />
+    property: no missing transactions need to be fetched on the critical consensus path.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_11_shot_18.webp" />
+    The attacker’s goal in this scenario is to overwhelm the leader with many missing microblocks.
+  </p>
+  <p>
+    The strategies for each protocol are described as follows. In SMP-HS, Byzantine replicas only send microblocks to
+    the leader (Figure 2). In S-HS, Byzantine replicas have to send microblocks to the leader and to at least
+    <img class="inline-img" src="./assets/page_11_shot_19.webp" />
+    replicas to get proofs. Otherwise, their microblocks will not be included in a proposal (consider the leader is
+    correct). In this experiment, we consider two different quorum parameters for PAB (see Section VIII
+    <img class="inline-img" src="./assets/page_11_shot_20.webp" />
+    and
+    <img class="inline-img" src="./assets/page_11_shot_21.webp" />
+    denoted by S-HS-f and S-HS-2f, respectively). These variants will explain the tradeoff between throughput and
+    latency. We ran this experiment in a LAN setting with
+    <img class="inline-img" src="./assets/page_11_shot_22.webp" />
+    and
+    <img class="inline-img" src="./assets/page_11_shot_23.webp" />
+    replicas (including the leader). The number of Byzantine replicas ranged from
+    <img class="inline-img" src="./assets/page_11_shot_24.webp" />
+    to
+    <img class="inline-img" src="./assets/page_11_shot_25.webp" />
+    and
+    <img class="inline-img" src="./assets/page_11_shot_26.webp" />
+    to
+    <img class="inline-img" src="./assets/page_11_shot_27.webp" />
+    .
+  </p>
+  <p>
+    Figure 9 plots the results. As the number of Byzantine replicas increases, the throughput/latency of SMP-HS
+    de-creases/increases sharply. This is because replicas have to fetch missing microblocks from the leader before
+    processing a proposal. We also observe a slight drop in throughput of S-HS. The reason is that only background
+    bandwidth is used to deal with missing microblocks. The latency of S-HS remains ﬂat since the consensus will never
+    be blocked by missing
+  </p>
+  <img class="shot" src="./assets/page_12_shot_11.webp" />
+  <p>
+    microblocks as long as the leader provides correct proofs. In addition, we notice that Byzantine behavior has more
+    impact on larger deployments. With
+    <img class="inline-img" src="./assets/page_12_shot_0.webp" />
+    replicas, the perfor-mance of SMP-HS decreases signiﬁcantly. The throughput is almost zero when the number of
+    Byzantine replicas is
+    <img class="inline-img" src="./assets/page_12_shot_1.webp" />
+    and the latency surges when there are more than
+    <img class="inline-img" src="./assets/page_12_shot_2.webp" />
+    Byzantine replicas. Finally, S-HS-2f has better throughput than S-HS-f at the cost of higher latency as the number
+    of Byzantine replicas increases. The reason is that with a larger quorum size, fewer microblocks need to be fetched.
+    However, a replica needs to wait for more acks to generate available proofs.
+  </p>
+  <img class="shot" src="./assets/page_12_shot_12.webp" />
+  <p>
+    Previous work [37], [38], [39], [40] has observed that node degrees in large-scale blockchains have a power-law
+    distribution. As a result, most clients send transactions to a few popular nodes, leading to unbalanced workload
+    <img class="inline-img" src="./assets/page_12_shot_3.webp" />
+    <img class="inline-img" src="./assets/page_12_shot_4.webp" />
+    in Section III-E). In this experiment, we vary the ratio of workload to bandwidth by using identical bandwidth for
+    each replica but skewed workloads across replicas. We use two Zipﬁan parameters [63], Zipf
+    <img class="inline-img" src="./assets/page_12_shot_5.webp" />
+    and Zipf
+    <img class="inline-img" src="./assets/page_12_shot_6.webp" />
+    to simulate a highly skewed workload and a lightly skewed workload, respectively. We show the workload distributions
+    in Figure 10. For example, when
+    <img class="inline-img" src="./assets/page_12_shot_7.webp" />
+    and there are 100 replicas
+    <img class="inline-img" src="./assets/page_12_shot_8.webp" />
+    of the replicas will receive over
+    <img class="inline-img" src="./assets/page_12_shot_9.webp" />
+    of the load.
+  </p>
+  <img class="shot" src="./assets/page_12_shot_13.webp" />
+  <p>
+    We evaluate load-balancing in Stratus using the above distributions in a WAN setting. Stratus samples
+    <img class="inline-img" src="./assets/page_12_shot_10.webp" />
+    replicas
+  </p>
+  <img class="shot" src="./assets/page_12_shot_34.webp" />
+  <p>
+    to select the least loaded one as the proxy, we consider
+    <img class="inline-img" src="./assets/page_12_shot_14.webp" />
+    denoted by S-HS-d1, S-HS-d2, and S-HS-d3, respectively. We also use SMP-HS-G, HotStuff with a gossip-based shared
+    mempool for comparison. We set the gossip fan-out parameter to
+    <img class="inline-img" src="./assets/page_12_shot_15.webp" />
+    .
+  </p>
+  <p>
+    Figure 11 shows protocols’ throughput. We can see that S-HS-dX outperforms SMP-HS and SMP-HS-G in all exper-iments.
+    S-HS-dX achieves
+    <img class="inline-img" src="./assets/page_12_shot_16.webp" />
+    to
+    <img class="inline-img" src="./assets/page_12_shot_17.webp" />
+    throughput with Zipf1 as compared with SMP-HS. SMP-HS-G does not scale well under a lightly skewed workload (Zipf10)
+    due to the message redundancy. We also observe that S-HS-dX achieves the best performance when
+    <img class="inline-img" src="./assets/page_12_shot_18.webp" />
+    while the gap between different
+    <img class="inline-img" src="./assets/page_12_shot_19.webp" />
+    values is not signiﬁcant.
+  </p>
+  <img class="shot" src="./assets/page_12_shot_35.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_12_shot_20.webp" />
+    Byzantine replicas can create availability proofs and send them to fewer than
+    <img class="inline-img" src="./assets/page_12_shot_21.webp" />
+    replicas. If the leader is correct, then a valid proposal is proposed with microblock ids and their availability
+    proofs. Using these, replicas can recover if a referenced microblock is missing. The microblocks with missing proofs
+    will be discarded after a timeout.
+  </p>
+  <p>
+    Now consider a Byzantine leader that includes microblocks without availability proofs into a proposal. This will
+    trigger a view-change, which will replace the leader. In some PoS blockchains [12], [13], such leaders are also
+    slashed.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_12_shot_22.webp" />
+    A Byzantine sender can try to to congest the network by sending identical microblocks to multiple proxies. To
+    mitigate this attack, we propose a simple solution. When a busy replica
+    <img class="inline-img" src="./assets/page_12_shot_23.webp" />
+    decides on
+    <img class="inline-img" src="./assets/page_12_shot_24.webp" />
+    as the proxy, it forwards the microblock
+    <img class="inline-img" src="./assets/page_12_shot_25.webp" />
+    to
+    <img class="inline-img" src="./assets/page_12_shot_26.webp" />
+    along with a message
+    <img class="inline-img" src="./assets/page_12_shot_27.webp" />
+    that contains
+    <img class="inline-img" src="./assets/page_12_shot_28.webp" />
+    s signature over
+    <img class="inline-img" src="./assets/page_12_shot_29.webp" />
+    concatenated with
+    <img class="inline-img" src="./assets/page_12_shot_30.webp" />
+    s identity. Then
+    <img class="inline-img" src="./assets/page_12_shot_31.webp" />
+    broadcast
+    <img class="inline-img" src="./assets/page_12_shot_32.webp" />
+    along with
+    <img class="inline-img" src="./assets/page_12_shot_33.webp" />
+    using PAB. This allows other replicas to check if a microblock by the same sender is broadcast by different proxies.
+    Once detected, a replica can reject microblocks from this sender or report this behavior by sending evidence to the
+    other replicas. If the proxy fails to complete PAB, the original sender either broadcasts the microblock by itself
+    or waits for a timeout to garbage collect the microblock.
+  </p>
+  <p>
+    A malicious replica can pretend to be busy and forward its load to other replicas. This can be addressed with an
+    incentive mechanism: a replica that produced the availability proof for a microblock using PAB is rewarded. This
+    information is veriﬁable because the availability proofs for each microblock are in the proposal and will be
+    recorded on the blockchain if
+    the proposal is committed. In addition, to prevent a malicious senders from overloading a proxy, the proxy can set a
+    limit on its buffer, and reject extra load.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_13_shot_0.webp" />
+    Stratus can be extended to support adding or removing replicas. For example, Stratus can sub-scribe to
+    re-conﬁguration events from the consensus engine. When new replicas join or leave, Stratus will update its
+    conﬁguration. Newly joined replicas may then fetch stable microblocks (i.e., ids with available proofs) to catch up.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_13_shot_1.webp" />
+    To ensure that transactions remain available, replicas may have to keep the microblocks and rele-vant meta-data
+    (e.g., acks) in case other replicas fetch them. To garbage-collect these messages, the consensus protocol should
+    inform Stratus that a proposal is committed and the contained microblocks can then be garbage collected.
+  </p>
+  <img class="shot" src="./assets/page_13_shot_4.webp" />
+  <p>
+    We presented a shared mempool abstraction that resolves the leader bottleneck of leader-based BFT protocols. We
+    designed Stratus, a novel shared mempool protocol to address two challenges: missing transactions and unbalanced
+    workloads. Stratus overcomes these with an efﬁcient provably available broadcast (PAB) and a load balancing
+    protocol. For example, Stratus-HotStuff throughput is
+    <img class="inline-img" src="./assets/page_13_shot_2.webp" />
+    to
+    <img class="inline-img" src="./assets/page_13_shot_3.webp" />
+    higher than native HotStuff. In our future work, we plan to extend Stratus to multi-leader BFT protocols.
+  </p>
+  <img class="shot" src="./assets/page_13_shot_5.webp" />
+  <img class="shot" src="./assets/page_13_shot_6.webp" />
+  <img class="shot" src="./assets/page_14_shot_0.webp" />
+  <img class="shot" src="./assets/page_14_shot_1.webp" />
+  <p>
+    A
+    <img class="inline-img" src="./assets/page_15_shot_0.webp" />
+    .
+  </p>
+  <p>
+    In this section, we theoretically reveal the leader bottleneck of leader-based BFT protocols (LBFT) and then show
+    how shared mempool addresses the issue. We consider the ideal performance, i.e., all replicas are honest and the
+    network is synchronous. We assume that the ideal performance is limited by the available processing capacity of each
+    replica, denoted by
+    <img class="inline-img" src="./assets/page_15_shot_1.webp" />
+    For simplicity, we further assume that transactions have the same size
+    <img class="inline-img" src="./assets/page_15_shot_2.webp" />
+    in bits). We use
+    <img class="inline-img" src="./assets/page_15_shot_3.webp" />
+    to denote the maximum throughput, i.e., number of transactions per second. We use
+    <img class="inline-img" src="./assets/page_15_shot_4.webp" />
+    (resp
+    <img class="inline-img" src="./assets/page_15_shot_5.webp" />
+    to denote the workload of the leader (resp. a non-leader replica) for conﬁrming a transaction. Furthermore, we have
+    <img class="inline-img" src="./assets/page_15_shot_6.webp" />
+    .
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_15_shot_7.webp" />
+    .
+  </p>
+  <p>
+    Since each replica has to receive and process the transaction once, we have
+    <img class="inline-img" src="./assets/page_15_shot_8.webp" />
+    Besides, due to the protocol overhead, we have
+    <img class="inline-img" src="./assets/page_15_shot_9.webp" />
+    As a result
+    <img class="inline-img" src="./assets/page_15_shot_10.webp" />
+    In other words
+    <img class="inline-img" src="./assets/page_15_shot_11.webp" />
+    is the upper bound of the maximum throughput of any BFT protocol.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_15_shot_12.webp" />
+    .
+  </p>
+  <p>
+    In LBFT protocols, when making a consensus of a trans-action, the leader is in charge of disseminating it to other
+    <img class="inline-img" src="./assets/page_15_shot_13.webp" />
+    replicas, while each non-leader replica proceeds it from the leader. Hence, the workloads of proceeding with the
+    transaction for the leader and a non-leader replica are
+    <img class="inline-img" src="./assets/page_15_shot_14.webp" />
+    and
+    <img class="inline-img" src="./assets/page_15_shot_15.webp" />
+    respectively. Furthermore, we have
+  </p>
+  <img class="shot" src="./assets/page_15_shot_21.webp" />
+  <p>
+    The equation shows that with the increase of replicas, the max-imum throughput of LBFT protocols will drop
+    proportionally. Note that protocol overhead is not considered, which makes it easier to illustrate the unbalanced
+    loads between the leader and non-leader replicas and to show the leader bottleneck.
+  </p>
+  <p>
+    Next, we take PBFT [21] as a concrete example to show more details of the leader bottleneck. In PBFT the agreement
+    of a transaction involves three phases: the pre-prepare, prepare, and commit phases. In particular, the leader ﬁrst
+    receives a transaction from a client and then disseminates the transaction to all other
+    <img class="inline-img" src="./assets/page_15_shot_16.webp" />
+    replicas in the pre-prepare phase. In prepare and commit phases, each replica broadcasts their vote messages and
+    receives all others’ vote messages for reaching consensus
+    <img class="inline-img" src="./assets/page_15_shot_17.webp" />
+    Let
+    <img class="inline-img" src="./assets/page_15_shot_18.webp" />
+    denote the size of voting messages. The workloads for the leader and a non-leader replica are
+    <img class="inline-img" src="./assets/page_15_shot_19.webp" />
+    and
+    <img class="inline-img" src="./assets/page_15_shot_20.webp" />
+    respectively. Finally, we can derive the maximum throughput of PBFT as
+  </p>
+  <img class="shot" src="./assets/page_15_shot_22.webp" />
+  <p>
+    see that when processing a transaction, each replica has to process
+    <img class="inline-img" src="./assets/page_15_shot_23.webp" />
+    vote messages, which leads to high protocol overhead. To address this, multiple transactions can be batch into a
+    proposal (e.g., forming a block) to amortize the protocol overhead. For example, let
+    <img class="inline-img" src="./assets/page_15_shot_24.webp" />
+    denote the size of a proposal, and the maximum throughput of PBFT when adopting batch strategy is
+  </p>
+  <img class="shot" src="./assets/page_15_shot_41.webp" />
+  <p>
+    <img class="inline-img" src="./assets/page_15_shot_25.webp" />
+    <img class="inline-img" src="./assets/page_15_shot_26.webp" />
+    and
+    <img class="inline-img" src="./assets/page_15_shot_27.webp" />
+    This shows that the maximum throughput drops with the increasing number of replicas, and the dissem-ination of the
+    proposal by the leader is still the bottleneck. In other words, batching strategy cannot address the scalability
+    issues of LBFT protocols. What is more, several state-of-the-art LBFT protocols such as HotStuff [19] achieve the
+    linear message complexity by removing the
+    <img class="inline-img" src="./assets/page_15_shot_28.webp" />
+    factor from the
+    <img class="inline-img" src="./assets/page_15_shot_29.webp" />
+    overhead of non-leader replicas. However, this also cannot address the scalability issue since the proposal
+    dissemination for the leader is still the dominating component.
+  </p>
+  <img class="shot" src="./assets/page_15_shot_42.webp" />
+  <p>
+    To address the leader bottleneck of LBFT protocols, our solution is to decouple the transaction dissemination with a
+    consensus algorithm, by which dissemination workloads can be balanced among all replicas, leading to better
+    utilization of replicas’ processing capacities. In particular, to improve the efﬁciency of dissemination,
+    transactions can be batched into microblocks, and replicas disseminate microblocks to each other. Each microblock is
+    accompanied by a unique identiﬁer, which can be generated by the hash function. Later, after a microblock is
+    synchronized among replicas, the leader only needs to propose an identiﬁer of the microblock. Since the unique
+    mapping between identiﬁers and microblocks, ordered identiﬁers lead to a sequence of microblocks, which further
+    determines a sequence of transactions.
+  </p>
+  <p>
+    Next, we show how the above decoupling idea can address the leader bottleneck. We use
+    <img class="inline-img" src="./assets/page_15_shot_30.webp" />
+    to denote the size of an identiﬁer and
+    <img class="inline-img" src="./assets/page_15_shot_31.webp" />
+    to denote the size of a microblock. Given a proposal with the same size
+    <img class="inline-img" src="./assets/page_15_shot_32.webp" />
+    it can include
+    <img class="inline-img" src="./assets/page_15_shot_33.webp" />
+    identiﬁers. Each identiﬁer represents a microblock with
+    <img class="inline-img" src="./assets/page_15_shot_34.webp" />
+    transactions. Hence, a proposal represents
+    <img class="inline-img" src="./assets/page_15_shot_35.webp" />
+    transactions. As said previously, the
+    <img class="inline-img" src="./assets/page_15_shot_36.webp" />
+    microblocks are disseminated by all non-leader replicas, so each non-leader replica has to dissemi-nate
+    <img class="inline-img" src="./assets/page_15_shot_37.webp" />
+    microblocks to all other replicas. Cor-respondingly, each replica (including the leader) can receive
+    <img class="inline-img" src="./assets/page_15_shot_38.webp" />
+    microblocks from
+    <img class="inline-img" src="./assets/page_15_shot_39.webp" />
+    non-leader replicas. Hence, the workload for the leader is
+  </p>
+  <img class="shot" src="./assets/page_15_shot_43.webp" />
+  <p>
+    where
+    <img class="inline-img" src="./assets/page_15_shot_40.webp" />
+    is the workload for disseminating the proposal. Similarly, the workload for a non-leader replica is
+  </p>
+  <img class="shot" src="./assets/page_15_shot_44.webp" />
+  <p>
+    where
+    <img class="inline-img" src="./assets/page_16_shot_0.webp" />
+    is the workload for receiving a proposal from the leader. Finally, we can derive the maximum throughput as
+  </p>
+  <img class="shot" src="./assets/page_16_shot_3.webp" />
+  <p>
+    To make the throughout maximum, we can adjust
+    <img class="inline-img" src="./assets/page_16_shot_1.webp" />
+    and
+    <img class="inline-img" src="./assets/page_16_shot_2.webp" />
+    to balance the workloads of the leader and non-leader replicas.
+  </p>
+  <p>
+    <img class="inline-img" src="./assets/page_16_shot_4.webp" />
+    and we have
+    <img class="inline-img" src="./assets/page_16_shot_5.webp" />
+    Finally, we can obtain the maximum throughput is
+    <img class="inline-img" src="./assets/page_16_shot_6.webp" />
+    <img class="inline-img" src="./assets/page_16_shot_7.webp" />
+    Particularly, when
+    <img class="inline-img" src="./assets/page_16_shot_8.webp" />
+    is large, we have
+    <img class="inline-img" src="./assets/page_16_shot_9.webp" />
+    The result is optimal since given a transaction, it has to be
+    <img class="inline-img" src="./assets/page_16_shot_10.webp" />
+    sent and received
+    <img class="inline-img" src="./assets/page_16_shot_11.webp" />
+    times (one for each replica), which leads to about
+    <img class="inline-img" src="./assets/page_16_shot_12.webp" />
+    workload, and the total processing capacities of all replicas is
+    <img class="inline-img" src="./assets/page_16_shot_13.webp" />
+    .
+  </p>
+</body>
+<style>
+  html,
+  body {
+    margin: 0;
+    padding: 0
+  }
+
+  body {
+    font-size: 16px;
+    line-height: 23px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  img {
+    max-width: min(100%, 750px);
+    height: auto;
+    margin: auto;
+  }
+
+  .inline-img {
+    max-height: 16px;
+    vertical-align: middle;
+  }
+
+  .shot {
+    border: 1px double black;
+    border-radius: 5px;
+  }
+
+  p {
+    text-indent: 2em;
+    margin-bottom: 20px;
+
+    font-size: 18.4px;
+    line-height: 29.44px;
+
+    max-width: 750px;
+  }
+</style>
+<script>
+  function loadImage(img, src, maxRetries, delay) {
+    let retries = 0;
+
+    img.onerror = function () {
+      if (retries < maxRetries) {
+        const nextDelay = delay * Math.pow(2, retries);
+        retries++;
+
+        setTimeout(function () {
+          img.src = src;
+        }, nextDelay);
+      } else {
+        console.error("can't load image, src =", src);
+      }
+    };
+
+    img.src = src;
+  }
+
+  window.onload = function () {
+    const images = document.getElementsByTagName("img");
+
+    for (let i = 0; i < images.length; i++) {
+      loadImage(images[i], images[i].src, 3, 1000);
+    }
+  };
+
+
+  // setLayout 根据用户设置的 单栏/双栏 对样式进行调整
+  function setLayout() {
+
+
+    // 只有在宽度大于 1000px 并勾选了双栏的情况下才会使用双栏
+    let layout = "";
+    if (window.innerWidth <= 1000) {
+      layout = "single";
+    } else {
+      let singleRadio = document.getElementById("single");
+      if (singleRadio.checked) {
+        layout = "single";
+      } else {
+        layout = "double";
+      }
+    }
+
+    console.log(`layout: ${layout}`)
+
+    if (layout === "single") {
+      let dynamicStyle = document.getElementById('single-layout-style');
+      if (!dynamicStyle) {
+        let style = document.createElement('style');
+        style.setAttribute('id', 'single-layout-style');
+        const css = `p {
+          max-width: 750px;
+        }`;
+        style.appendChild(document.createTextNode(css));
+        document.head.appendChild(style);
+      }
+
+      dynamicStyle = document.getElementById('double-layout-style');
+      if (dynamicStyle) {
+        dynamicStyle.parentNode.removeChild(dynamicStyle);
+      }
+
+      let elements = document.getElementsByTagName("p")
+      for (let i = 0; i < elements.length; i++) {
+        let p = elements[i];
+        p.style.display = "block";
+        p.style.maxWidth = "750px";
+      }
+
+    } else {
+      let dynamicStyle = document.getElementById('double-layout-style');
+      if (!dynamicStyle) {
+        let style = document.createElement('style');
+        style.setAttribute('id', 'double-layout-style');
+        const css = `
+      p {
+        max-width: min(1500px, 100%);
+      }
+
+      br {
+        display: hidden;
+      }
+
+      .immersive-translate-target-wrapper {
+        display: flex;
+        min-width: 50%;
+      }
+
+      .immersive-translate-target-translation-block-wrapper {
+        display: flex;
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
+      }
+      `
+        style.appendChild(document.createTextNode(css));
+        document.head.appendChild(style);
+      }
+
+      dynamicStyle = document.getElementById('single-layout-style');
+      if (dynamicStyle) {
+        dynamicStyle.parentNode.removeChild(dynamicStyle);
+      }
+
+      let elements = document.getElementsByTagName("p")
+      for (let i = 0; i < elements.length; i++) {
+        let p = elements[i];
+        if (p.classList.contains("has-translated")) {
+          p.style.display = "flex";
+          p.style.maxWidth = "1500px";
+        } else {
+          p.style.display = "block";
+          p.style.maxWidth = "750px";
+        }
+      }
+    }
+  }
+  // 在窗口大小改变时重新设置布局
+  window.onresize = setLayout;
+  setLayout();
+
+
+  // 开启沉浸式翻译后，原本的 <p>Hello</p> 会变为 <p data-immersive-translate-paragraph="1">Hello <font class="notranslate immersive-translate-target-wrapper data-immersive-translate-translation-element-mark="1"">你好</font> </p>
+
+  // 监视所有的 <p> 标签，当 <p> 标签的子节点发生变化时，改变 <p> 标签内的结构，使其适配双栏布局
+  let targetNodeList = document.getElementsByTagName("p");
+  var observerOptions = {
+    childList: true, // 观察目标子节点的变化，是否有添加或者删除
+    attributes: false, // 观察属性变动
+    subtree: true, // 观察后代节点，默认为 false
+  };
+  var observer = new MutationObserver(observerCallback);
+  for (let i = 0; i < targetNodeList.length; i++) {
+    let targetNode = targetNodeList[i];
+    observer.observe(targetNode, observerOptions);
+  }
+
+  function observerCallback(mutationList, observer) {
+    observer.disconnect(); // 先停止监听，避免监听过程中修改了 DOM 结构导致死循环
+
+    mutationList.forEach((mutation) => {
+      let process = function (mutation) {
+        switch (mutation.type) {
+          case "childList":
+            /* 从树上添加或移除一个或更多的子节点；参见 mutation.addedNodes 与
+               mutation.removedNodes */
+
+            // console.log(mutation.addedNodes, mutation.removedNodes);
+
+            if (mutation.addedNodes.length > 0) {
+              if (mutation.addedNodes.length != 1) {
+                console.warn("mutation.addedNodes.length != 1");
+                return;
+              }
+
+              try {
+                let is_warpper = mutation.addedNodes[0].classList.contains("immersive-translate-target-wrapper");
+                if (!is_warpper) {
+                  // console.warn("mutation.addedNodes[0] not contains(\"immersive-translate-target-wrapper\")", mutation.addedNodes[0]);
+                  return;
+                }
+              } catch (e) {
+                return;
+              }
+
+              // console.log("add immersive-translate-target-wrapper")
+              set_div(mutation.target);
+
+            } else if (mutation.removedNodes.length > 0) {
+              if (mutation.removedNodes.length != 1) {
+                // console.warn("mutation.removedNodes.length != 1");
+                return;
+              }
+
+              try {
+                let is_warpper = mutation.removedNodes[0].classList.contains("immersive-translate-target-wrapper");
+                if (!is_warpper) {
+                  return;
+                }
+              } catch (e) {
+                return;
+              }
+
+              remove_div(mutation.target);
+            } else {
+              console.warn("mutation.addedNodes.length == 0 && mutation.removedNodes.length == 0");
+              return;
+            }
+            break;
+          case "attributes":
+            /* mutation.target 中某节点的一个属性值被更改；该属性名称在 mutation.attributeName 中，
+               该属性之前的值为 mutation.oldValue */
+            break;
+        }
+      };
+
+      try {
+        process(mutation)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        // 重新监听
+        for (let i = 0; i < targetNodeList.length; i++) {
+          let targetNode = targetNodeList[i];
+          observer.observe(targetNode, observerOptions);
+        }
+      }
+    });
+  }
+
+
+  // 将 p 标签内的内容分为两部分，前一部分为 div 标签，后一部分为 font 标签
+  function set_div(p_tag) {
+    if (!p_tag instanceof HTMLElement) {
+      return;
+    }
+
+    // 只处理 p 标签
+    if (p_tag.tagName != "P") {
+      console.warn("p_tag.tagName != \"P\", p_tag = ", p_tag);
+      return;
+    }
+
+    // 只处理直接挂载在 body 下的 p 标签
+    if (p_tag.parentNode != document.body) {
+      return;
+    }
+
+    // 只处理没有被处理过的 p 标签
+    if (p_tag.childNodes[0].tagName == "DIV") {
+      // console.log("p_tag.childNodes[0].tagName == \"DIV\"");
+      return;
+    }
+
+    console.log(`set_div for `, p_tag)
+    let childs = [...p_tag.childNodes]
+
+    // console.log(childs);
+
+    // console.log("before childs", childs)
+    let div_tag = document.createElement("div");
+    for (let i = 0; i < childs.length - 1; i++) {
+      // console.log(i, childs)
+      p_tag.removeChild(childs[i]);
+      div_tag.appendChild(childs[i]);
+    }
+
+    // console.log("after childs",childs)
+    // console.log(p_tag)
+
+    // div_tag.setAttribute("data-immersive-translate-effect", "1");
+    // div_tag.setAttribute("data-immersive_translate_original", p_tag.getAttribute('data-immersive_translate_original'));
+
+    div_tag.classList.add("notranslate")
+
+    p_tag.insertBefore(div_tag, childs[childs.length - 1]);
+
+    p_tag.classList.add("has-translated")
+    // console.log("after set_div, p_tag = ", p_tag)
+    setLayout();
+  }
+
+  function remove_div(p_tag) {
+    if (!p_tag instanceof HTMLElement) {
+      return;
+    }
+
+    if (p_tag.tagName != "P") {
+      // console.warn("p_tag.tagName != \"P\"");
+      return;
+    }
+
+    if (p_tag.parentNode != document.body) {
+      return;
+    }
+
+    // if (p_tag.childNodes.length != 2 || p_tag.childNodes[0].tagName != "DIV" || p_tag.childNodes[1].tagName != "FONT" ) {
+    //   // console.log("p_tag.childNodes[0].tagName != \"DIV\"");
+    //   return;
+    // }
+
+    // console.log("pre remove_div for ", p_tag, p_tag.childNodes)
+
+    let case_end_with_inline_img = p_tag.childNodes.length == 2 && p_tag.childNodes[0].tagName == "DIV" && p_tag.childNodes[1].nodeName == "#text"
+    let case_end_with_text = p_tag.childNodes.length == 1 && p_tag.childNodes[0].tagName == "DIV"
+
+    if (!case_end_with_inline_img && !case_end_with_text) {
+      // console.log("p_tag.childNodes[0].tagName != \"DIV\"");
+      return;
+    }
+    console.log("remove_div for ", p_tag)
+
+    let div_tag = p_tag.childNodes[0];
+    let childs = [...div_tag.childNodes];
+    for (let i = 0; i < childs.length; i++) {
+      p_tag.insertBefore(childs[i], div_tag);
+    }
+    p_tag.removeChild(div_tag);
+
+    p_tag.classList.remove("has-translated")
+
+    setLayout();
+  }
+</script>
+
+</html>
