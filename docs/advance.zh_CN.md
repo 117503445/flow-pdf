@@ -10,10 +10,10 @@
 docker pull registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf && docker tag registry.cn-hangzhou.aliyuncs.com/117503445-mirror/flow-pdf 117503445/flow-pdf
 ```
 
-下载 `docker-compose.yml`
+在空文件夹创建 `docker-compose.yml`
 
 ```yaml
-version: '3.9'
+# docker-compose.yml
 services:
   flow-pdf:
     image: '117503445/flow-pdf'
@@ -21,8 +21,11 @@ services:
     restart: unless-stopped
     volumes:
         - './web-data:/root/app/flow_pdf/web-data'
+    working_dir: /root/app/flow_pdf/flow_pdf
     ports:
       - '8080:8080'
+
+    # not necessary, but can be used to limit resources
     deploy:
       resources:
         limits:
